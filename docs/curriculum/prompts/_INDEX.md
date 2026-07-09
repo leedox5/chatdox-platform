@@ -17,8 +17,9 @@ dependency: []
 | # | 페이지명 | 설명 | 상태 | 기술 스택 |
 |---|---------|------|------|---------|
 | 01 | Landing Page | 메인 랜딩페이지 (Draft) | ✅ 완료 | Rails/Tailwind |
-| 01-R1 | Landing Page Revision 1 | Nav 링크 → Dummy 페이지 연결 | 🔄 진행예정 | Rails/Tailwind |
-| 02 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
+| 01-R1 | Landing Page Revision 1 | Nav 링크 → Dummy 페이지 연결 | ✅ 완료 | Rails/Tailwind |
+| 02 | Docs Preview | 문서 열람 (사이드바 + Markdown) | 🔄 진행예정 | Rails/Redcarpet |
+| 03 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
 | 03 | Pricing | 가격 플랜 페이지 | ⏳ 예정 | Rails/Tailwind |
 | 04 | Dashboard | 사용자 대시보드 | ⏳ 예정 | Rails/Tailwind |
 | 05 | Documentation | 문서 열람 페이지 | ⏳ 예정 | Rails/Markdown |
