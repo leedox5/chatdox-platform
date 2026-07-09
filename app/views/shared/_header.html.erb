@@ -10,9 +10,32 @@
       <%= link_to "가격", pricing_path, class: "transition hover:text-slate-900" %>
       <%= link_to "문서", docs_path, class: "transition hover:text-slate-900" %>
       <%= link_to "커뮤니티", community_path, class: "transition hover:text-slate-900" %>
-      <%= link_to "로그인", login_path, class: "rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:text-slate-900" %>
+
+      <% if user_signed_in? %>
+        <span class="max-w-48 truncate text-slate-500"><%= current_user.email %></span>
+        <%= link_to "로그아웃",
+          destroy_user_session_path,
+          data: { turbo_method: :delete },
+          class: "rounded-lg border border-red-200 px-4 py-2 text-red-600 transition hover:border-red-300 hover:bg-red-50" %>
+      <% else %>
+        <%= link_to "로그인",
+          new_user_session_path,
+          class: "rounded-lg border border-slate-200 px-4 py-2 text-slate-700 transition hover:border-slate-300 hover:text-slate-900" %>
+        <%= link_to "회원가입",
+          new_user_registration_path,
+          class: "rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700" %>
+      <% end %>
     </nav>
 
-    <%= link_to "시작", getting_started_path, class: "rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 md:hidden" %>
+    <% if user_signed_in? %>
+      <%= link_to "로그아웃",
+        destroy_user_session_path,
+        data: { turbo_method: :delete },
+        class: "rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 md:hidden" %>
+    <% else %>
+      <%= link_to "로그인",
+        new_user_session_path,
+        class: "rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 md:hidden" %>
+    <% end %>
   </div>
 </header>

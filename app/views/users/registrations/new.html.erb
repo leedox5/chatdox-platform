@@ -1,0 +1,55 @@
+<div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <h1 class="mb-6 text-center text-3xl font-bold text-gray-800">회원가입</h1>
+
+    <%= form_with(model: resource, as: resource_name, url: registration_path(resource_name), local: true) do |form| %>
+      <% if resource.errors.any? %>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 p-4">
+          <h2 class="mb-2 font-bold text-red-800">
+            <%= resource.errors.count %>개 오류 발생:
+          </h2>
+          <ul class="list-inside list-disc text-red-700">
+            <% resource.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-4">
+        <%= form.label :email, "이메일", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.email_field :email,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autofocus: true,
+          autocomplete: "email",
+          required: true %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :password, "비밀번호 (#{@minimum_password_length || 6}자 이상)", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.password_field :password,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autocomplete: "new-password",
+          required: true %>
+      </div>
+
+      <div class="mb-6">
+        <%= form.label :password_confirmation, "비밀번호 확인", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.password_field :password_confirmation,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autocomplete: "new-password",
+          required: true %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.submit "회원가입",
+          class: "w-full rounded-lg bg-blue-500 px-4 py-2 font-bold text-white transition hover:bg-blue-600" %>
+      </div>
+    <% end %>
+
+    <p class="text-center text-sm text-gray-600">
+      이미 계정이 있나요?
+      <%= link_to "로그인", new_user_session_path, class: "font-bold text-blue-500 hover:underline" %>
+    </p>
+  </div>
+</div>

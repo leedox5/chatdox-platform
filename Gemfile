@@ -63,3 +63,5 @@ group :development do
 end
 
 gem "pg", "~> 1.6"
+
+gem "devise", "~> 5.0"

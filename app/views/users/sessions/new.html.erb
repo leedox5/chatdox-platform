@@ -1,0 +1,54 @@
+<div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <h1 class="mb-6 text-center text-3xl font-bold text-gray-800">로그인</h1>
+
+    <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true) do |form| %>
+      <% if alert.present? %>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 p-4">
+          <p class="text-red-800">
+            <strong>로그인 실패:</strong>
+            이메일 또는 비밀번호가 올바르지 않습니다.
+          </p>
+        </div>
+      <% end %>
+
+      <div class="mb-4">
+        <%= form.label :email, "이메일", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.email_field :email,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autofocus: true,
+          autocomplete: "email",
+          required: true %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :password, "비밀번호", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.password_field :password,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autocomplete: "current-password",
+          required: true %>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="mb-6 flex items-center">
+          <%= form.check_box :remember_me, class: "mr-2 rounded border-gray-300 text-blue-500 focus:ring-blue-500" %>
+          <%= form.label :remember_me, "로그인 상태 유지", class: "text-gray-600" %>
+        </div>
+      <% end %>
+
+      <div class="mb-4">
+        <%= form.submit "로그인",
+          class: "w-full rounded-lg bg-blue-500 px-4 py-2 font-bold text-white transition hover:bg-blue-600" %>
+      </div>
+    <% end %>
+
+    <p class="mb-2 text-center text-sm text-gray-600">
+      계정이 없나요?
+      <%= link_to "회원가입", new_user_registration_path, class: "font-bold text-blue-500 hover:underline" %>
+    </p>
+    <p class="text-center text-sm text-gray-600">
+      비밀번호를 잊었나요?
+      <%= link_to "비밀번호 리셋", new_user_password_path, class: "font-bold text-blue-500 hover:underline" %>
+    </p>
+  </div>
+</div>
