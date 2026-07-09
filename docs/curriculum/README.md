@@ -92,7 +92,7 @@ chatdox-curriculum/  (이 리포 - PRIVATE)
 | **Frontend** | ERB + Tailwind CSS | Latest ✅ | UI/UX 구현 |
 | **Database** | SQLite3 → PostgreSQL | Latest | 데이터 저장 |
 | **Auth** | Devise | Latest | 사용자 인증 |
-| **Payment** | Stripe | API v1 | 결제 처리 |
+| **Payment** | Toss Payments | API v2 | 결제 처리 |
 | **Storage** | ActiveStorage + S3 | Latest | 파일 저장소 |
 | **Monitoring** | Sentry | Latest | 에러 추적 |
 | **Deployment** | Vercel / Railway | Latest | 프로덕션 배포 |

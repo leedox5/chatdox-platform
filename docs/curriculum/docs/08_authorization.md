@@ -542,7 +542,7 @@ policy.view?  # true (Admin은 전체)
 ✅ 권한 관리 완료! (Role 기반 접근 제어)
 
 다음에는:
-- **09장: 결제 (Payment)** - Stripe 월간 구독
+- **09장: 결제 (Payment)** - Toss Payments 월간 구독
 - **10장: 대시보드** - 사용자 전용 페이지
 - **11장: 가격 페이지** - 구독 CTA
 

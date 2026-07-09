@@ -515,6 +515,6 @@ rescue_from으로 사용자 친화적 메시지 표시
 ## 🚀 다음 단계
 
 다음 장에서는:
-- **09 Payment** - Stripe 월간 구독 시스템
+- **09 Payment** - Toss Payments 월간 구독 시스템
 - **10 Dashboard** - 사용자 전용 페이지
 - **11 Pricing** - 가격 페이지 (구독 CTA)
