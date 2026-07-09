@@ -145,60 +145,90 @@ Railway 대시보드에서:
 
 ### 3단계: 환경 변수 설정
 
-Railway 대시보드 → Variables 탭:
+**Railway가 자동으로 설정하는 변수 (8개):**
 
 ```
-SECRET_KEY_BASE = (자동 생성 또는 직접 입력)
-RAILS_ENV       = production
-RAILS_MASTER_KEY = (config/master.key 내용)
+DATABASE_URL     = (PostgreSQL 연결 정보 자동 생성)
+RAILS_ENV        = production
+SECRET_KEY_BASE  = (자동 생성)
+RAILS_LOG_TO_STDOUT = true
+... (기타 4개 자동 설정)
 ```
+
+**수동으로 추가해야 할 변수:**
+
+Railway 대시보드 → web Service → Variables 탭 → "Add Variable" 버튼:
+
+```
+RAILS_MASTER_KEY = (config/master.key 파일 내용 복사)
+```
+
+**RAILS_MASTER_KEY 확인하는 방법:**
 
 ```bash
-# SECRET_KEY_BASE 생성 (로컬에서)
-rails secret
-# → 긴 문자열 복사해서 Railway에 붙여넣기
-
-# RAILS_MASTER_KEY 확인
+# 로컬 터미널에서
 cat config/master.key
+# 출력된 내용을 복사해서 Railway Variables에 붙여넣기
 ```
 
-### 4단계: 배포 확인
+### 4단계: Deploy 버튼 클릭
 
 ```
-Railway가 자동으로:
-1. GitHub push 감지
-2. bundle install 실행
-3. assets:precompile 실행
-4. rails db:migrate 실행
-5. Puma 서버 시작
+Railway 대시보드 → web Service:
+1. 화면 우측 상단에 Purple "Deploy" 버튼 확인
+2. 클릭하면 배포 시작
+3. "Deployments" 탭에서 상태 모니터링
+
+배포 프로세스 (자동 실행):
+  ✅ GitHub 코드 다운로드
+  ✅ bundle install 실행
+  ✅ assets:precompile 실행
+  ✅ Puma 서버 시작
+  ⏳ rails db:migrate는 아직 실행 안 됨 (다음 단계에서)
 ```
 
 ---
 
-## 4️⃣ 배포 후 작업
+## 4️⃣ 배포 후 작업 (필수!)
 
-### DB Migration 실행
+### ⚠️ DB Migration 실행 (필수)
+
+**왜 필수인가?**
+- Deploy 버튼은 앱만 시작하고 DB 테이블 생성은 안 함
+- Migration을 실행해야 users, subscriptions 등 테이블이 생성됨
+- 이 단계를 건너뛰면 `/docs` 페이지 정상 작동 확인 불가
+
+**방법 1: Railway 대시보드 Console 사용 (권장)**
+
+```
+Railway 대시보드 → web Service → Console 탭
+1. "Create new command" 클릭
+2. 입력: rails db:migrate
+3. "Run" 클릭
+4. 로그에서 완료 확인
+```
+
+**방법 2: Railway CLI 사용**
 
 ```bash
-# Railway CLI 설치 (선택)
-npm install -g @railway/cli
-railway login
+# 로컬 터미널에서
 railway run rails db:migrate
 ```
 
-또는 Railway 대시보드 → "Run Command":
-```
-rails db:migrate
-```
-
-### 도메인 설정
+### 도메인 확인
 
 ```
-Railway 대시보드:
-1. Settings → Domains
-2. "Generate Domain" → 자동 도메인 생성
-   예: chatdox-platform.up.railway.app
-3. (선택) 커스텀 도메인 연결
+Railway 대시보드 → web Service → Settings → Networking
+1. "Public Networking" 섹션에서 자동 도메인 확인
+   예: web-production-50f0e.up.railway.app
+2. (선택) "+ Custom Domain" 버튼으로 커스텀 도메인 연결
+```
+
+**도메인으로 접속:**
+```
+https://web-production-50f0e.up.railway.app
+또는
+https://web-production-50f0e.up.railway.app/docs
 ```
 
 ---
@@ -216,14 +246,17 @@ Railway 대시보드:
 ### Railway 설정
 - [ ] Railway 프로젝트 생성
 - [ ] GitHub 저장소 연결
-- [ ] PostgreSQL 추가
-- [ ] 환경 변수 설정 (SECRET_KEY_BASE, RAILS_MASTER_KEY)
-- [ ] 첫 배포 완료 확인
+- [ ] PostgreSQL 추가 (자동 변수 설정 확인)
+- [ ] RAILS_MASTER_KEY 환경 변수 추가
+- [ ] Deploy 버튼 클릭
+- [ ] Deployments 탭에서 빌드 완료 확인
 
-### 배포 후 검증
+### 배포 후 검증 (필수)
+- [ ] **Console 탭에서 `rails db:migrate` 실행**
 - [ ] 사이트 접속 (생성된 도메인)
-- [ ] `/docs` 페이지 동작 확인
-- [ ] 에러 로그 확인 (Railway 대시보드 → Logs)
+- [ ] `/docs` 페이지 접속 확인
+- [ ] 01-06 챕터 파란색 링크, 07-20 회색 링크 확인
+- [ ] 에러 로그 확인 (Deployments → Logs 탭)
 
 ---
 
