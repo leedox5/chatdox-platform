@@ -20,6 +20,7 @@ dependency: []
 | 01-R1 | Landing Page Revision 1 | Nav 링크 → Dummy 페이지 연결 | ✅ 완료 | Rails/Tailwind |
 | 02 | Docs Preview | 문서 열람 (사이드바 + Markdown) | ✅ 완료 | Rails/Redcarpet |
 | 02-R1 | Docs Preview R1 | 20챕터 전체 목록 + 파일 존재 여부 자동 체크 | ✅ 완료 | Rails/Redcarpet |
+| 09-R1 | Payment (Stripe) | Stripe Checkout + Webhook 구독 결제 구현 | ✅ 완료 | Rails/Stripe |
 | 03 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
 | 03 | Pricing | 가격 플랜 페이지 | ⏳ 예정 | Rails/Tailwind |
 | 04 | Dashboard | 사용자 대시보드 | ⏳ 예정 | Rails/Tailwind |
@@ -126,6 +127,17 @@ dependency: []
 
 ---
 
+### ✅ 09 Payment R1 (구현 프롬프트)
+**파일:** `09_payment_r1.md`
+- Stripe Checkout 기반 구독 결제 시작
+- Webhook 서명 검증 및 이벤트 처리
+- 결제 성공/실패/해지 상태 반영
+- 로컬 테스트 카드 + Stripe CLI 검증
+
+**의존성:** 07_authentication_r1, 08_authorization_r1
+
+---
+
 ## 📅 권장 구현 순서
 
 1️⃣ **01_landing_page** ✅ (완료)
@@ -181,4 +193,5 @@ Pricing (03) ─────┘
 | 날짜 | 변경사항 |
 |------|---------|
 | 2026-07-09 | INDEX 생성, 01_landing_page 완료 |
+| 2026-07-09 | 09_payment_r1 프롬프트 추가 |
 
