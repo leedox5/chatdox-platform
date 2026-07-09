@@ -66,6 +66,8 @@ class DocsController < ApplicationController
       return
     end
 
+    authorize @current_chapter, :view?, policy_class: DocPolicy
+
     file_path = DOCS_PATH.join("#{@current_chapter[:slug]}.md")
     unless File.exist?(file_path)
       render plain: "아직 공개되지 않은 챕터입니다.", status: :not_found
@@ -96,7 +98,10 @@ class DocsController < ApplicationController
   def chapters_with_availability
     CHAPTERS.map do |chapter|
       file_path = DOCS_PATH.join("#{chapter[:slug]}.md")
-      chapter.merge(available: File.exist?(file_path))
+      chapter.merge(
+        available: File.exist?(file_path),
+        accessible: DocPolicy.new(current_user, chapter).view?
+      )
     end
   end
 

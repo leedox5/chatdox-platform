@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
   get "/docs", to: "docs#index"
   get "/docs/:id", to: "docs#show", as: :doc
+  get "/dashboard", to: "dashboard#show"
 
   get "/getting-started", to: "pages#getting_started"
   get "/pricing", to: "pages#pricing"

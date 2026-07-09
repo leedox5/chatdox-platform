@@ -10,7 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_110017) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_121000) do
+  create_table "subscriptions", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_subscriptions_on_user_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
@@ -18,8 +26,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110017) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "subscriptions", "users"
 end
