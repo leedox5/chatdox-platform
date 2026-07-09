@@ -1,9 +1,67 @@
 ---
 title: "Landing Page"
 order: 1
-status: completed
+status: "in-progress"
 tech: "Rails/Tailwind CSS"
-dependency: []
+dependency: ["docs/04_landing_page.md"]
+prompt: true
+---
+
+# 🚀 Platform 랜딩페이지 구현 프롬프트
+
+이 문서는 **chatdox-platform Rails 앱**에 Tailwind CSS 기반 랜딩페이지를 구현하기 위한 프롬프트입니다.
+
+---
+
+## 📝 실행 순서
+
+### 1단계: Rails 기본 홈페이지 제거 및 페이지 컨트롤러 생성
+
+```bash
+# 1. bin/rails server 종료 (Ctrl+C)
+# 2. 제너레이터로 페이지 컨트롤러 생성
+rails generate controller Pages home --skip-routes
+
+# 3. 생성된 파일 확인
+# app/controllers/pages_controller.rb
+# app/views/pages/home.html.erb
+```
+
+### 2단계: 라우팅 설정
+
+`config/routes.rb`에서 root 라우트 설정:
+```ruby
+Rails.application.routes.draw do
+  root "pages#home"
+end
+```
+
+### 3단계: PagesController 업데이트
+
+`app/controllers/pages_controller.rb`:
+```ruby
+class PagesController < ApplicationController
+  def home
+    # 정적 랜딩페이지 - DB 조회 없음
+  end
+end
+```
+
+---
+
+## 🎨 구현 가이드
+
+### Tailwind CSS 클래스 스타일 가이드
+
+| 섹션 | Tailwind 클래스 | 설명 |
+|------|-----------------|------|
+| Header | `sticky top-0 bg-white shadow-sm` | 스크롤 시 고정 |
+| Hero | `py-24 bg-gradient-to-b from-blue-50 to-white` | 그라데이션 배경 |
+| Section | `py-16 px-4 max-w-6xl mx-auto` | 섹션 기본 스타일 |
+| 버튼 | `px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700` | 주요 CTA |
+| 카드 | `p-6 border border-gray-200 rounded-lg hover:shadow-lg` | 박스/그리드 |
+| 텍스트 | `text-gray-900 / text-gray-600 / text-gray-400` | 명암 단계 |
+
 ---
 
 ## 🎯 헤더 / 네비게이션
@@ -130,4 +188,72 @@ A. 최신 Rails 버전, 보안 업데이트, 사용자 피드백을 반영하여
 **회사 정보** | 대표: - | 사업자등록번호: - | 통신판매업신고: - | 주소: - | 이메일: -
 
 [이용 약관](#) | [개인정보 처리 방침](#) | © 2026 채독스. All rights reserved.
+
+---
+
+## ✅ 구현 체크리스트
+
+### 준비 단계
+- [ ] `bin/rails server` 종료 (Ctrl+C)
+- [ ] `rails generate controller Pages home --skip-routes` 실행
+- [ ] `app/controllers/pages_controller.rb` 확인
+- [ ] `app/views/pages/home.html.erb` 확인
+
+### 코딩 단계
+- [ ] `config/routes.rb`에 `root "pages#home"` 추가
+- [ ] `app/controllers/pages_controller.rb`에 `home` 액션 구현
+- [ ] `app/views/pages/home.html.erb` 작성
+- [ ] `app/views/layouts/application.html.erb` 업데이트 (필요시)
+- [ ] `app/views/shared/_header.html.erb` 생성 (부분 템플릿)
+- [ ] `app/views/shared/_footer.html.erb` 생성 (부분 템플릿)
+- [ ] 모든 섹션별 partial 생성
+
+### 검증 단계
+- [ ] `bin/rails server` 실행
+- [ ] `http://localhost:3000` 접속
+- [ ] 페이지 로드 확인 (500 에러 없음)
+- [ ] 반응형 디자인 확인 (모바일/태블릿)
+- [ ] 모든 링크 확인 (#로 시작하는 것 정상)
+- [ ] Tailwind CSS 스타일 적용 확인
+
+### 완료
+- [ ] 모든 섹션이 화면에 표시됨
+- [ ] 헤더/푸터 고정 잘 작동
+- [ ] 모든 버튼/카드가 Tailwind 스타일링됨
+- [ ] 모바일에서 리스폰시브 동작 확인
+
+---
+
+## 💡 구현 팁
+
+1. **부분 템플릿(Partial) 활용**
+   ```erb
+   <%= render "shared/header" %>
+   <%= render "landing/hero" %>
+   <%= render "landing/curriculum" %>
+   ```
+
+2. **반응형 Tailwind 클래스**
+   ```
+   sm: (640px)   md: (768px)   lg: (1024px)   xl: (1280px)
+   ```
+
+3. **Git 관리**
+   ```bash
+   git add .
+   git commit -m "feat: Add landing page with Tailwind CSS"
+   git push origin main
+   ```
+
+---
+
+## 📚 참고 자료
+
+- **상세 구현**: [docs/04_landing_page.md](../docs/04_landing_page.md) 참고
+- **Tailwind 문서**: https://tailwindcss.com/docs
+- **Rails 뷰 가이드**: https://guides.rubyonrails.org/action_view_overview.html
+
+---
+
+**마지막 업데이트:** 2026-07-09
 
