@@ -284,6 +284,9 @@ A: Submodule은 더 독립적이지만 복잡합니다. Subtree가 우리 목적
 **Q: Pull 말고 다른 방법이 있나요?**  
 A: GitHub의 Webhook + Actions로 자동화 가능. (고급 주제)
 
+**Q: `git subtree pull`을 실행하면 왜 갑자기 에디터가 열리나요?**  
+A: Subtree Pull은 사실 **merge 작업**이기 때문입니다! 변경사항을 가져와서 Platform의 docs/curriculum/과 병합하면서 merge commit을 생성합니다. 에디터에서 자동 생성된 메시지를 확인하고 `:wq` (Vim) 또는 Ctrl+S로 닫으면 merge commit이 자동으로 생성됩니다. 이것이 **Subtree의 장점**입니다 (Submodule은 이렇게 자동 merge가 안 됨).
+
 ---
 
 ## 📊 Git Subtree 명령어 정리
