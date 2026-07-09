@@ -1,37 +1,40 @@
-# 09. 결제 (Stripe)
+# 09. 결제 (Toss Payments)
 
 > 월 구독 결제를 구현합니다.
-> Stripe Checkout + Webhook 기반으로 안전한 결제 플로우를 만듭니다.
+> 토스페이먼츠 결제위젯 + 승인 API + 자동결제(빌링키) 흐름으로 안전한 결제 플로우를 만듭니다.
 > 결제 성공, 실패, 취소, 갱신, 해지까지 구독 생명주기를 다룹니다.
 
 ---
 
 ## 📋 목표
 
-1. Stripe 결제 구조 이해 (Checkout + Webhook)
+1. 토스페이먼츠 결제 구조 이해 (결제위젯 + 승인 API)
 2. 결제/구독 데이터 모델 설계
-3. 구독 시작 (월 $9.99) 구현
+3. 구독 시작 (월 9,900원 예시) 구현
 4. 결제 성공/실패/취소 처리
-5. 구독 갱신/해지 처리
-6. 로컬 테스트 카드로 검증
+5. 빌링키 기반 자동결제 구현
+6. 로컬 샌드박스로 검증
 
 ---
 
-## 1️⃣ 왜 Webhook이 중요한가?
+## 1️⃣ 왜 Toss Payments인가?
 
 ### 결제 처리의 핵심 원칙
 
 ```
-클라이언트 리다이렉트 결과만 믿으면 안 된다.
-진짜 결제 상태는 Stripe 서버의 이벤트(Webhook)로 확정한다.
+클라이언트 화면만 믿으면 안 된다.
+진짜 결제 상태는 토스페이먼츠 승인 API와 조회 API로 확정한다.
 ```
 
-### 잘못된 구현 vs 올바른 구현
+### 선택 이유
 
-| 방식 | 설명 | 위험도 |
+| 항목 | 토스페이먼츠 | 비고 |
 |------|------|------|
-| 리다이렉트 URL만 사용 | success_url로 돌아오면 결제 성공으로 간주 | 높음 (조작 가능) |
-| Webhook 기반 확정 | Stripe 서명 검증 + 이벤트 처리 | 낮음 (권장) |
+| 한국 사업자 가입 | ✅ | 국내 PG |
+| 카드 결제 | ✅ | 일반 결제 |
+| 자동결제(빌링) | ✅ | 구독형 SaaS 적합 |
+| 개발자 경험 | ✅ | 결제위젯 + 샌드박스 |
+| 운영 편의성 | ✅ | 한국형 정산/현금영수증 |
 
 ---
 
@@ -40,15 +43,23 @@
 ```
 [사용자]
   ↓ 결제 버튼 클릭
-[Rails] POST /billing/checkout
-  ↓ Checkout Session 생성
-[Stripe Checkout]
-  ↓ 카드 결제 진행
-[Stripe]
-  ↓ webhook 이벤트 전송
-[Rails] POST /webhooks/stripe
+[Rails] GET /billing/checkout
+  ↓ 결제위젯 렌더링
+[Toss Payments 결제위젯]
+  ↓ 카드/간편결제 진행
+[Toss Payments]
+  ↓ successUrl 로 redirect
+[Rails] POST /billing/success
+  ↓ 결제 승인 API 호출
+[Toss Payments 결제 승인 API]
   ↓ DB 상태 확정
 [subscriptions 테이블 업데이트]
+
+[자동결제]
+  ↓ billingKey 저장
+[Rails Job] 매월 청구
+  ↓ 자동결제 승인 API
+[Toss Payments]
 ```
 
 ---
@@ -63,11 +74,12 @@
 create_table :subscriptions do |t|
   t.references :user, null: false, foreign_key: true
 
-  t.string :stripe_customer_id, null: false
-  t.string :stripe_subscription_id, null: false
-  t.string :stripe_price_id, null: false
+  t.string :toss_customer_key, null: false
+  t.string :toss_billing_key
+  t.string :toss_payment_key
+  t.string :order_id, null: false
 
-  t.string :status, null: false, default: "incomplete"
+  t.string :status, null: false, default: "pending"
   t.datetime :current_period_start
   t.datetime :current_period_end
   t.datetime :cancel_at
@@ -76,51 +88,67 @@ create_table :subscriptions do |t|
   t.timestamps
 end
 
-add_index :subscriptions, :stripe_customer_id, unique: true
-add_index :subscriptions, :stripe_subscription_id, unique: true
+add_index :subscriptions, :toss_customer_key, unique: true
+add_index :subscriptions, :order_id, unique: true
 ```
 
 ### 상태값 예시
 
 | status | 의미 |
 |------|------|
-| `incomplete` | 결제 미완료 |
+| `pending` | 결제 대기 |
 | `active` | 구독 활성 |
 | `past_due` | 결제 실패/지연 |
 | `canceled` | 해지됨 |
-| `unpaid` | 미납 |
+| `expired` | 기간 만료 |
 
 ---
 
-## 4️⃣ Stripe 설정
+## 4️⃣ 환경 설정
 
-### Step 1: 젬 설치
-
-```bash
-bundle add stripe
-```
-
-### Step 2: 환경 변수 설정
+### Step 1: 환경 변수 설정
 
 ```bash
 # .env (또는 Rails credentials)
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_PUBLISHABLE_KEY=pk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PRICE_ID=price_xxx
+TOSS_CLIENT_KEY=test_ck_xxx
+TOSS_SECRET_KEY=test_sk_xxx
+TOSS_WEBHOOK_SECRET=whsec_xxx
+TOSS_PRICE_AMOUNT=9900
 ```
 
-### Step 3: 초기화 파일
+### Step 2: 공통 헬퍼
 
 ```ruby
-# config/initializers/stripe.rb
+# app/services/toss_payments/client.rb
+require "base64"
+require "json"
+require "net/http"
 
-Stripe.api_key = ENV.fetch("STRIPE_SECRET_KEY")
+class TossPayments::Client
+  def self.basic_auth_header
+    secret_key = ENV.fetch("TOSS_SECRET_KEY")
+    "Basic #{Base64.strict_encode64("#{secret_key}:")}"
+  end
+
+  def self.post_json(url, payload)
+    uri = URI(url)
+    request = Net::HTTP::Post.new(uri)
+    request["Authorization"] = basic_auth_header
+    request["Content-Type"] = "application/json"
+    request.body = payload.to_json
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+
+    JSON.parse(response.body)
+  end
+end
 ```
 
 ---
 
-## 5️⃣ Checkout Session 생성
+## 5️⃣ 결제위젯 연결
 
 ### 결제 시작 컨트롤러
 
@@ -131,138 +159,182 @@ class BillingController < ApplicationController
   before_action :authenticate_user!
 
   def checkout
-    session = Stripe::Checkout::Session.create(
-      mode: "subscription",
-      customer_email: current_user.email,
-      line_items: [{ price: ENV.fetch("STRIPE_PRICE_ID"), quantity: 1 }],
-      success_url: billing_success_url + "?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: billing_cancel_url,
-      metadata: { user_id: current_user.id }
+    @order_id = "chatdox-#{current_user.id}-#{Time.current.to_i}"
+    @amount = ENV.fetch("TOSS_PRICE_AMOUNT").to_i
+  end
+
+  def success
+    payment_key = params[:paymentKey]
+    order_id = params[:orderId]
+    amount = params[:amount].to_i
+
+    payment = TossPayments::Client.post_json(
+      "https://api.tosspayments.com/v1/payments/confirm",
+      { paymentKey: payment_key, orderId: order_id, amount: amount }
     )
 
-    redirect_to session.url, allow_other_host: true
-  rescue Stripe::StripeError => e
-    Rails.logger.error("Stripe checkout error: #{e.message}")
-    redirect_to dashboard_path, alert: "결제 세션 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."
+    subscription = current_user.subscription || current_user.build_subscription
+    subscription.update!(
+      toss_customer_key: current_user.id.to_s,
+      toss_payment_key: payment["paymentKey"],
+      order_id: payment["orderId"],
+      status: payment["status"].downcase,
+      current_period_start: Time.current,
+      current_period_end: 1.month.from_now
+    )
+
+    redirect_to dashboard_path, notice: "결제가 완료되었습니다."
+  rescue StandardError => e
+    Rails.logger.error("Toss Payments confirm error: #{e.message}")
+    redirect_to dashboard_path, alert: "결제 승인에 실패했습니다."
+  end
+
+  def cancel
+    redirect_to dashboard_path, alert: "결제가 취소되었습니다."
+  end
+end
+```
+
+### 결제위젯 예시
+
+```erb
+<!-- app/views/billing/checkout.html.erb -->
+<script src="https://js.tosspayments.com/v2/standard"></script>
+
+<button id="pay-button" class="px-5 py-3 rounded-lg bg-blue-600 text-white font-semibold">
+  월 구독 시작
+</button>
+
+<script>
+  const tossPayments = TossPayments("<%= ENV.fetch('TOSS_CLIENT_KEY') %>");
+
+  document.getElementById("pay-button").addEventListener("click", async () => {
+    await tossPayments.requestPayment("카드", {
+      amount: <%= @amount %>,
+      orderId: "<%= @order_id %>",
+      orderName: "Chatdox 월 구독",
+      successUrl: "<%= billing_success_url %>",
+      failUrl: "<%= billing_cancel_url %>",
+      customerKey: "<%= current_user.id %>",
+      customerEmail: "<%= current_user.email %>",
+      customerName: "<%= current_user.email %>"
+    });
+  });
+</script>
+```
+
+---
+
+## 6️⃣ 자동결제(빌링키)
+
+### 빌링키 발급 흐름
+
+```text
+1. 구매자가 자동결제 동의 화면에서 인증
+2. redirect URL로 authKey + customerKey 수신
+3. 서버가 /v1/billing/authorizations/issue 호출
+4. billingKey 저장
+5. 다음 결제일에 billingKey로 자동 청구
+```
+
+### 자동결제 승인 서비스
+
+```ruby
+# app/services/toss_payments/billing_charge.rb
+
+class TossPayments::BillingCharge
+  def self.charge!(billing_key:, customer_key:, amount:, order_name:)
+    TossPayments::Client.post_json(
+      "https://api.tosspayments.com/v1/billing/#{billing_key}",
+      {
+        customerKey: customer_key,
+        amount: amount,
+        orderId: "renewal-#{Time.current.to_i}",
+        orderName: order_name
+      }
+    )
+  end
+end
+```
+
+### 결제 수단 인증 후 billingKey 발급
+
+```ruby
+# app/controllers/billing_auths_controller.rb
+
+class BillingAuthsController < ApplicationController
+  before_action :authenticate_user!
+
+  def create
+    payment = TossPayments::Client.post_json(
+      "https://api.tosspayments.com/v1/billing/authorizations/issue",
+      { authKey: params[:authKey], customerKey: current_user.id.to_s }
+    )
+
+    current_user.subscription.update!(
+      toss_customer_key: payment["customerKey"],
+      toss_billing_key: payment["billingKey"],
+      status: "active"
+    )
+
+    redirect_to dashboard_path, notice: "자동결제가 활성화되었습니다."
   end
 end
 ```
 
 ---
 
-## 6️⃣ Webhook 처리 (핵심)
+## 7️⃣ 결제 상태 동기화
 
-### 라우트
+### 웹훅 또는 재조회 방식
 
-```ruby
-# config/routes.rb
-post "/webhooks/stripe", to: "webhooks/stripe#receive"
-```
+결제 상태는 아래 둘 중 하나로 동기화합니다.
 
-### 컨트롤러
+1. 결제 성공 콜백에서 승인 API 호출 후 바로 저장
+2. 상태 변경 웹훅을 수신하면 `paymentKey`로 다시 조회해서 최신 상태 반영
 
 ```ruby
-# app/controllers/webhooks/stripe_controller.rb
+# app/controllers/webhooks/toss_payments_controller.rb
 
-class Webhooks::StripeController < ApplicationController
+class Webhooks::TossPaymentsController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def receive
-    payload = request.raw_post
-    sig_header = request.env["HTTP_STRIPE_SIGNATURE"]
-    secret = ENV.fetch("STRIPE_WEBHOOK_SECRET")
+    payload = JSON.parse(request.raw_post)
+    return head :bad_request if payload["secret"] != ENV.fetch("TOSS_WEBHOOK_SECRET")
 
-    event = Stripe::Webhook.construct_event(payload, sig_header, secret)
+    payment_key = payload["paymentKey"]
+    payment = TossPayments::Client.post_json(
+      "https://api.tosspayments.com/v1/payments/#{payment_key}",
+      {}
+    )
 
-    case event.type
-    when "checkout.session.completed"
-      handle_checkout_completed(event.data.object)
-    when "customer.subscription.updated"
-      handle_subscription_updated(event.data.object)
-    when "customer.subscription.deleted"
-      handle_subscription_deleted(event.data.object)
-    when "invoice.payment_failed"
-      handle_payment_failed(event.data.object)
-    end
+    subscription = Subscription.find_by(toss_payment_key: payment["paymentKey"])
+    return head :ok unless subscription
 
+    subscription.update!(status: payment["status"].downcase)
     head :ok
-  rescue JSON::ParserError, Stripe::SignatureVerificationError => e
-    Rails.logger.warn("Webhook signature/parse error: #{e.message}")
-    head :bad_request
   rescue StandardError => e
-    Rails.logger.error("Webhook processing error: #{e.message}")
+    Rails.logger.error("Toss webhook error: #{e.message}")
     head :internal_server_error
-  end
-
-  private
-
-  def handle_checkout_completed(session)
-    user = User.find_by(id: session.metadata.user_id)
-    return unless user
-
-    subscription_id = session.subscription
-    subscription = Stripe::Subscription.retrieve(subscription_id)
-
-    record = user.subscription || user.build_subscription
-    record.update!(
-      stripe_customer_id: subscription.customer,
-      stripe_subscription_id: subscription.id,
-      stripe_price_id: subscription.items.data.first.price.id,
-      status: subscription.status,
-      current_period_start: Time.at(subscription.current_period_start),
-      current_period_end: Time.at(subscription.current_period_end),
-      canceled_at: nil
-    )
-  end
-
-  def handle_subscription_updated(subscription)
-    record = Subscription.find_by(stripe_subscription_id: subscription.id)
-    return unless record
-
-    record.update!(
-      status: subscription.status,
-      current_period_start: Time.at(subscription.current_period_start),
-      current_period_end: Time.at(subscription.current_period_end),
-      cancel_at: subscription.cancel_at ? Time.at(subscription.cancel_at) : nil,
-      canceled_at: subscription.canceled_at ? Time.at(subscription.canceled_at) : nil
-    )
-  end
-
-  def handle_subscription_deleted(subscription)
-    record = Subscription.find_by(stripe_subscription_id: subscription.id)
-    return unless record
-
-    record.update!(status: "canceled", canceled_at: Time.current)
-  end
-
-  def handle_payment_failed(invoice)
-    customer_id = invoice.customer
-    record = Subscription.find_by(stripe_customer_id: customer_id)
-    return unless record
-
-    record.update!(status: "past_due")
   end
 end
 ```
 
 ---
 
-## 7️⃣ 결제 문제(실패) 대응
-
-### 자주 발생하는 문제
+## 8️⃣ 자주 발생하는 문제
 
 | 문제 | 원인 | 대응 |
 |------|------|------|
-| 결제 완료했는데 권한 미반영 | Webhook 미수신/검증 실패 | Stripe CLI로 재전송, 서버 로그 확인 |
-| 중복 구독 생성 | 여러 번 결제 버튼 클릭 | user 당 단일 subscription 제약 |
-| 카드 실패 후 접근 가능 | 상태 체크 누락 | `active` 상태만 유료 권한 부여 |
-| 해지했는데 계속 접근 | 취소 이벤트 미처리 | `customer.subscription.deleted` 처리 |
+| 결제 완료했는데 권한 미반영 | 승인 API 누락 | 승인 응답 저장 후 재조회 |
+| 중복 결제 | 결제 버튼 중복 클릭 | order_id 유니크 처리 |
+| 자동결제 실패 | billingKey 미저장 | 빌링키 발급 여부 확인 |
+| 결제 취소 후 계속 접근 | status 동기화 누락 | status가 `active`일 때만 허용 |
 
 ### 권한 체크 예시
 
 ```ruby
-# app/models/user.rb
-
 def subscribed?
   subscription&.status == "active" &&
     subscription.current_period_end.present? &&
@@ -272,43 +344,29 @@ end
 
 ---
 
-## 8️⃣ 로컬 테스트 방법
+## 9️⃣ 로컬 테스트 방법
 
-### Stripe CLI 설치 후 Webhook 포워딩
+### 샌드박스/테스트 키 사용
 
-```bash
-stripe listen --forward-to localhost:3000/webhooks/stripe
-```
+토스페이먼츠 개발자센터에서 샌드박스 키를 발급받고, 결제위젯이 샌드박스 환경에서 동작하는지 확인합니다.
 
-명령 실행 결과로 출력되는 `whsec_...` 값을 `STRIPE_WEBHOOK_SECRET`로 설정합니다.
+### 확인 포인트
 
-### 테스트 카드
-
-| 카드 번호 | 결과 |
-|------|------|
-| `4242 4242 4242 4242` | 성공 |
-| `4000 0000 0000 9995` | 거절 (insufficient_funds) |
-| `4000 0025 0000 3155` | 인증 필요 (3D Secure) |
-
----
-
-## 9️⃣ 운영 체크포인트
-
-1. Webhook 엔드포인트는 HTTPS만 허용
-2. Stripe 서명 검증 필수
-3. 결제 로그 + 에러 로그 분리
-4. 결제 실패 사용자 알림 메일 발송
-5. 중복 이벤트 대비 idempotency 고려
+1. 결제위젯이 로드되는가
+2. `successUrl`로 `paymentKey/orderId/amount`가 전달되는가
+3. 승인 API가 성공하는가
+4. subscription 상태가 `active`로 바뀌는가
+5. billingKey 발급 후 자동결제가 되는가
 
 ---
 
 ## ✅ 챕터 9 체크리스트
 
-- [ ] Stripe Checkout으로 구독 결제를 시작할 수 있다
-- [ ] Webhook으로 결제 결과를 서버에서 확정한다
+- [ ] 토스페이먼츠 결제위젯으로 구독 결제를 시작할 수 있다
+- [ ] 승인 API로 결제 결과를 서버에서 확정한다
 - [ ] `active / past_due / canceled` 상태를 DB에 반영한다
-- [ ] 구독 상태 기반 접근 제어를 적용했다
-- [ ] 테스트 카드로 성공/실패 흐름을 검증했다
+- [ ] billingKey 기반 자동결제를 구현했다
+- [ ] 샌드박스 결제수단으로 성공/실패 흐름을 검증했다
 
 ---
 
