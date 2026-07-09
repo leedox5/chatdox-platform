@@ -15,16 +15,53 @@
 
 ---
 
-## 1️⃣ 왜 Railway인가?
+## 1️⃣ Railway란?
 
-| 서비스 | 특징 | 무료 플랜 |
-|--------|------|----------|
-| **Railway** | Rails 최적화, 자동 감지, 간단 설정 | 월 $5 크레딧 |
-| Render | 무료 플랜 있음, 슬립 모드 문제 | 무료 (슬립) |
-| Fly.io | 컨테이너 기반, 학습 곡선 | 무료 |
-| Heroku | 유명하지만 유료화됨 | 없음 |
+### 개념
+
+```
+Railway = 클라우드 호스팅 플랫폼
+
+GitHub 저장소를 연결하면:
+  1. 코드 자동 감지 (Rails, Node, Python 등)
+  2. 빌드 & 배포 자동 실행
+  3. git push 할 때마다 자동 재배포
+```
+
+### Railway 핵심 구성요소
+
+| 구성요소 | 설명 | 예시 |
+|---------|------|------|
+| **Project** | 앱 전체 묶음 | chatdox-platform |
+| **Service** | 앱 하나 (GitHub 연결) | Rails 앱 |
+| **Database** | 관리형 DB | PostgreSQL |
+| **Variables** | 환경 변수 저장소 | SECRET_KEY_BASE |
+| **Domain** | 외부 접근 URL | chatdox.up.railway.app |
+
+### 왜 Railway인가?
+
+| 서비스 | 특징 | 요금 |
+|--------|------|------|
+| **Railway** | Rails 자동 감지, PostgreSQL 통합, 간단 설정 | 월 $5 크레딧 (무료 시작) |
+| Render | 무료 플랜, 슬립 모드 문제 (15분 비활성 시 절전) | 무료 (느림) |
+| Fly.io | Docker 기반, 학습 곡선 있음 | 무료 |
+| Heroku | 유명하지만 2022년 무료 플랜 폐지 | 유료만 |
 
 **→ Chatdox는 Railway 사용** (Rails 자동 감지, PostgreSQL 통합 간편)
+
+### Railway 요금 이해
+
+```
+Hobby Plan: 월 $5 고정
+  - 포함: $5 크레딧
+  - Rails 앱 + PostgreSQL 합산 사용량
+  - 소규모 프로젝트는 $5 이내로 운영 가능
+
+사용량 예시 (소규모):
+  - Rails 앱: ~$2/월
+  - PostgreSQL: ~$1/월
+  - 합계: ~$3/월 → $5 크레딧 내 처리
+```
 
 ---
 
