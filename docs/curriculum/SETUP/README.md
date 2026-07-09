@@ -10,19 +10,20 @@
 
 ### 저장소 관리
 
-| # | 제목 | 설명 | 소요 시간 |
-|---|------|------|---------|
-| [01](01_github_repo_setup.md) | GitHub 저장소 생성 및 푸시 | `chatdox-curriculum` 생성 | ~5분 |
-| 02 | (예정) Subtree 통합 | `chatdox-platform`에 curriculum 연결 | ~10분 |
-| 03 | (예정) 협력자 권한 설정 | 팀원 초대 및 권한 관리 | ~5분 |
+| # | 제목 | 설명 | 소요 시간 | 상태 |
+|---|------|------|---------|------|
+| [01](01_github_repo_setup.md) | GitHub 저장소 생성 및 푸시 | `chatdox-curriculum` 생성 | ~5분 | ✅ |
+| [02](02_rails_platform_setup.md) | Rails 플랫폼 생성 및 초기 실행 | `chatdox-platform` 생성 + Subtree 통합 | ~15분 | ✅ |
+| 03 | (예정) Git Subtree 관리 | Subtree 업데이트 및 트러블슈팅 | ~10분 | - |
+| 04 | (예정) 협력자 권한 설정 | 팀원 초대 및 권한 관리 | ~5분 | - |
 
 ### 배포 & 운영 (추후)
 
 | # | 제목 | 설명 |
 |---|------|------|
-| 04 | (예정) CI/CD 파이프라인 | GitHub Actions 설정 |
-| 05 | (예정) 환경 변수 관리 | .env 파일 관리 |
-| 06 | (예정) 배포 체크리스트 | 프로덕션 배포 전 확인사항 |
+| 05 | (예정) CI/CD 파이프라인 | GitHub Actions 설정 |
+| 06 | (예정) 환경 변수 관리 | .env 파일 관리 |
+| 07 | (예정) 배포 체크리스트 | 프로덕션 배포 전 확인사항 |
 
 ---
 
@@ -35,14 +36,14 @@
    # 로컬 코드를 GitHub에 푸시
    ```
 
-2. **[02. Subtree 통합](02_subtree_integration.md)** (예정)
+2. **[02. Rails 플랫폼 생성 및 초기 실행](02_rails_platform_setup.md)** ✅
    ```bash
-   # chatdox-platform에 curriculum 연결
+   # Rails 앱 생성 + Subtree 통합 + 서버 실행
    ```
 
-3. **[03. 협력자 권한 설정](03_team_collaboration.md)** (예정)
+3. **[03. Git Subtree 관리](03_git_subtree_management.md)** (예정)
    ```bash
-   # 팀원 초대 및 권한 부여
+   # Subtree 업데이트 및 트러블슈팅
    ```
 
 ### 기존 프로젝트에 참여하는 경우
@@ -86,12 +87,17 @@ chatdox-curriculum/
 
 현재 프로젝트 상태:
 
-- [x] 로컬 프로젝트 구조 완성 (docs/, prompts/, QA/)
-- [ ] GitHub `chatdox-curriculum` 리포 생성
-- [ ] 로컬 코드 푸시
-- [ ] `chatdox-platform` 리포 생성
-- [ ] Subtree 통합
+- [x] 로컬 프로젝트 구조 완성 (docs/, prompts/, QA/, SETUP/, TIPS/)
+- [x] GitHub `chatdox-curriculum` 리포 생성
+- [x] 로컬 코드 푸시
+- [x] GitHub `chatdox-platform` 리포 생성
+- [x] Rails 8.1.3 앱 생성
+- [x] Subtree 통합 (curriculum 연결)
+- [x] 개발 서버 실행 (localhost:3000 ✅)
+- [ ] 랜딩 페이지 구현
+- [ ] 인증 (Devise) 추가
 - [ ] CI/CD 파이프라인 설정
+- [ ] 프로덕션 배포
 
 ---
 

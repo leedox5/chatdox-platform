@@ -44,7 +44,12 @@ chatdox-curriculum/  (이 리포 - PRIVATE)
 │
 ├─ SETUP/            🛠️ 개발자 가이드
 │  ├─ README.md                         ✅ SETUP 목차
-│  └─ 01_github_repo_setup.md           ✅ GitHub 리포 생성
+│  ├─ 01_github_repo_setup.md           ✅ GitHub 리포 생성
+│  └─ 02_rails_platform_setup.md        ✅ Rails 앱 생성 및 실행
+│
+├─ TIPS/             💡 개발자 노하우
+│  ├─ README.md                         ✅ TIPS 목차
+│  └─ 01_github_tips.md                 ✅ GitHub 설정 가이드
 │
 └─ README.md         ← 현재 문서 (프로젝트 개요)
 ```
@@ -82,9 +87,9 @@ chatdox-curriculum/  (이 리포 - PRIVATE)
 
 | 계층 | 기술 | 버전 | 역할 |
 |------|------|------|------|
-| **Backend** | Rails | 8.1.x | 웹 애플리케이션 프레임워크 |
-| **Language** | Ruby | 3.3.x | 서버 사이드 언어 |
-| **Frontend** | ERB + Tailwind CSS | Latest | UI/UX 구현 |
+| **Backend** | Rails | 8.1.3 ✅ | 웹 애플리케이션 프레임워크 |
+| **Language** | Ruby | 3.4.9 ✅ | 서버 사이드 언어 |
+| **Frontend** | ERB + Tailwind CSS | Latest ✅ | UI/UX 구현 |
 | **Database** | SQLite3 → PostgreSQL | Latest | 데이터 저장 |
 | **Auth** | Devise | Latest | 사용자 인증 |
 | **Payment** | Stripe | API v1 | 결제 처리 |
@@ -113,7 +118,7 @@ chatdox-curriculum/  (이 리포 - PRIVATE)
    ⏳ 17-20: 모니터링, 보안, 성능, 결론
 ```
 
-**현재 진행률:** 4/20 **20%** ✅
+**현재 진행률:** 4/20 **20%** (curriculum 챕터) + chatdox-platform 생성 및 실행 ✅
 
 ---
 
@@ -141,12 +146,21 @@ cd chatdox-curriculum
 cat SETUP/01_github_repo_setup.md
 ```
 
-### 4단계: Git Subtree로 통합 (예정)
+### 4단계: chatdox-platform Rails 앱 생성
+
+[SETUP/02_rails_platform_setup.md](SETUP/02_rails_platform_setup.md) 참고
 
 ```bash
-cd ../chatdox-platform
+cd ../
+rails new chatdox-platform --css tailwind --database sqlite3 --skip-test
+cd chatdox-platform
+```
+
+### 5단계: Git Subtree로 통합 (완료) ✅
+
+```bash
 git subtree add --prefix docs/curriculum \
-  git@github.com:[USERNAME]/chatdox-curriculum.git main
+  https://github.com:[USERNAME]/chatdox-curriculum.git main
 ```
 
 ---
