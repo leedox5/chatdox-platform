@@ -7,8 +7,6 @@ class PagesController < ApplicationController
 
   def pricing; end
 
-  def docs; end
-
   def community; end
 
   def login; end

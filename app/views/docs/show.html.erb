@@ -1,0 +1,67 @@
+<div class="min-h-screen bg-white">
+  <%= render "shared/header" %>
+
+  <div class="flex">
+    <aside class="sticky top-14 hidden h-[calc(100vh-56px)] w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50 md:block">
+      <div class="p-6">
+        <div class="mb-6">
+          <%= link_to "← 문서 목록", docs_path, class: "mb-3 block text-sm text-gray-500 hover:text-blue-600" %>
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">커리큘럼</h2>
+        </div>
+
+        <nav class="space-y-1">
+          <% @chapters.each_with_index do |chapter, index| %>
+            <% is_current = chapter[:id] == @current_id %>
+            <%= link_to doc_path(chapter[:id]),
+                  class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors #{
+                    is_current ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }" do %>
+              <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-xs <%= is_current ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>">
+                <%= format("%02d", index + 1) %>
+              </span>
+              <span class="leading-tight"><%= chapter[:title] %></span>
+            <% end %>
+          <% end %>
+
+          <div class="mt-4 border-t border-gray-200 pt-4">
+            <p class="px-3 text-xs text-gray-400">05~20 챕터 공개 예정</p>
+          </div>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="min-w-0 flex-1 overflow-y-auto">
+      <div class="mx-auto max-w-3xl px-4 py-10 sm:px-8 sm:py-12">
+        <div class="mb-8 border-b border-gray-100 pb-6">
+          <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600"><%= @current_chapter[:subtitle] %></p>
+          <h1 class="text-3xl font-bold text-gray-900"><%= @current_chapter[:title] %></h1>
+        </div>
+
+        <div class="doc-content max-w-none">
+          <%= @content_html %>
+        </div>
+
+        <% current_index = @chapters.index { |chapter| chapter[:id] == @current_id } %>
+        <div class="mt-16 flex justify-between border-t border-gray-100 pt-8">
+          <% if current_index.positive? %>
+            <% prev_chapter = @chapters[current_index - 1] %>
+            <%= link_to doc_path(prev_chapter[:id]), class: "flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600" do %>
+              <span>←</span>
+              <span><%= prev_chapter[:title] %></span>
+            <% end %>
+          <% else %>
+            <div></div>
+          <% end %>
+
+          <% if current_index < @chapters.length - 1 %>
+            <% next_chapter = @chapters[current_index + 1] %>
+            <%= link_to doc_path(next_chapter[:id]), class: "flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600" do %>
+              <span><%= next_chapter[:title] %></span>
+              <span>→</span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
