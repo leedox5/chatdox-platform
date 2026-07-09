@@ -361,6 +361,22 @@ A: 드문 경우들:
   - 배포 직전 심각한 오류
   - 이런 경우 Platform에서 수정 후, 나중에 curriculum 팀이 검토/승인
 
+**Q: `git subtree pull` 실행 시 "fatal: working tree has modifications. Cannot add." 에러가 나요.**  
+A: Platform에 커밋되지 않은 변경사항이 있다는 뜻입니다. Git merge 작업이 필요한데 working tree가 깨끗해야 합니다.
+
+해결:
+```bash
+# 방법 1: 커밋하고 pull (권장)
+git add .
+git commit -m "feat: update landing page"
+git subtree pull --prefix docs/curriculum https://... main --squash
+
+# 방법 2: Stash & pull
+git stash
+git subtree pull --prefix docs/curriculum https://... main --squash
+git stash pop
+```
+
 **Q: Subtree Pull 중 충돌이 나면?**  
 A: 
   1) Platform에서 docs/curriculum 파일을 수정한 경우
