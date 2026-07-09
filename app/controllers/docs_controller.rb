@@ -1,6 +1,30 @@
 class DocsController < ApplicationController
   DOCS_PATH = Rails.root.join("docs/curriculum/docs")
 
+  PHASES = [
+    {
+      key: "phase_1",
+      label: "Phase 1",
+      title: "기초 & 환경",
+      description: "전체 구조 이해부터 프로젝트 구조 설계까지",
+      range: 1..5
+    },
+    {
+      key: "phase_2",
+      label: "Phase 2",
+      title: "핵심 기능 구현",
+      description: "인증, 데이터, API, 결제, 운영 준비까지",
+      range: 6..16
+    },
+    {
+      key: "phase_3",
+      label: "Phase 3",
+      title: "프로덕션 운영",
+      description: "모니터링, 보안, 성능 최적화, 런칭",
+      range: 17..20
+    }
+  ].freeze
+
   CHAPTERS = [
     { id: "01", slug: "01_overview", title: "채독스 전체 구조 이해" },
     { id: "02", slug: "02_rails_basics", title: "Ruby on Rails 기초" },
@@ -26,12 +50,14 @@ class DocsController < ApplicationController
 
   def index
     @chapters = chapters_with_availability
+    @phase_chapters = chapters_by_phase(@chapters)
   end
 
   def show
     request.format = :html
 
     @chapters = chapters_with_availability
+    @phase_chapters = chapters_by_phase(@chapters)
     @current_id = params[:id]
     @current_chapter = CHAPTERS.find { |chapter| chapter[:id] == @current_id }
 
@@ -71,6 +97,19 @@ class DocsController < ApplicationController
     CHAPTERS.map do |chapter|
       file_path = DOCS_PATH.join("#{chapter[:slug]}.md")
       chapter.merge(available: File.exist?(file_path))
+    end
+  end
+
+  def chapters_by_phase(chapters)
+    PHASES.map do |phase|
+      phase_chapters = chapters.select { |chapter| phase[:range].cover?(chapter[:id].to_i) }
+      available_count = phase_chapters.count { |chapter| chapter[:available] }
+
+      phase.merge(
+        chapters: phase_chapters,
+        available_count: available_count,
+        total_count: phase_chapters.size
+      )
     end
   end
 end

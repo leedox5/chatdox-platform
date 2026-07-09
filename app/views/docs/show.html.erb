@@ -2,43 +2,61 @@
   <%= render "shared/header" %>
 
   <div class="flex">
-    <aside class="sticky top-14 hidden h-[calc(100vh-56px)] w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50 md:block">
+    <aside class="sticky top-14 hidden h-[calc(100vh-56px)] w-60 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50 md:block">
       <div class="p-6">
         <div class="mb-6">
           <%= link_to "← 문서 목록", docs_path, class: "mb-3 block text-sm text-gray-500 hover:text-blue-600" %>
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">커리큘럼</h2>
         </div>
 
-        <nav class="space-y-1">
-          <% @chapters.each do |chapter| %>
-            <% is_current = chapter[:id] == @current_id %>
+        <nav class="space-y-2">
+          <% @phase_chapters.each do |phase| %>
+            <% current_in_phase = phase[:chapters].any? { |chapter| chapter[:id] == @current_id } %>
 
-            <% if chapter[:available] %>
-              <%= link_to doc_path(chapter[:id]),
-                    class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors #{
-                      is_current ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }" do %>
-                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-xs <%= is_current ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>">
-                  <%= chapter[:id] %>
-                </span>
-                <span class="leading-tight"><%= chapter[:title] %></span>
-              <% end %>
-            <% else %>
-              <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-50">
-                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">
-                  <%= chapter[:id] %>
-                </span>
-                <span class="leading-tight text-gray-400"><%= chapter[:title] %></span>
-                <span class="ml-auto text-xs text-gray-300">예정</span>
+            <details class="group overflow-hidden rounded-xl border border-gray-200 bg-white" <%= "open" if current_in_phase %>>
+              <summary class="flex cursor-pointer list-none items-center gap-2 px-3 py-2 hover:bg-gray-50">
+                <div class="min-w-0 flex-1">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-600"><%= phase[:label] %></p>
+                  <p class="truncate text-sm font-medium text-gray-800"><%= phase[:title] %></p>
+                </div>
+
+                <span class="text-xs font-semibold text-gray-500"><%= phase[:available_count] %>/<%= phase[:total_count] %></span>
+                <span class="text-xs text-gray-400 transition-transform group-open:rotate-180">⌄</span>
+              </summary>
+
+              <div class="space-y-1 border-t border-gray-100 p-2">
+                <% phase[:chapters].each do |chapter| %>
+                  <% is_current = chapter[:id] == @current_id %>
+
+                  <% if chapter[:available] %>
+                    <%= link_to doc_path(chapter[:id]),
+                          class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors #{
+                            is_current ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }" do %>
+                      <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-xs <%= is_current ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>">
+                        <%= chapter[:id] %>
+                      </span>
+                      <span class="leading-tight"><%= chapter[:title] %></span>
+                    <% end %>
+                  <% else %>
+                    <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-50">
+                      <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">
+                        <%= chapter[:id] %>
+                      </span>
+                      <span class="leading-tight text-gray-400"><%= chapter[:title] %></span>
+                      <span class="ml-auto text-xs text-gray-300">예정</span>
+                    </div>
+                  <% end %>
+                <% end %>
               </div>
-            <% end %>
+            </details>
           <% end %>
         </nav>
       </div>
     </aside>
 
     <main class="min-w-0 flex-1 overflow-y-auto">
-      <div class="mx-auto max-w-3xl px-4 py-10 sm:px-8 sm:py-12">
+      <div class="max-w-3xl px-5 py-10 sm:px-7 sm:py-12">
         <div class="mb-8 border-b border-gray-100 pb-6">
           <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">Chapter <%= @current_chapter[:id] %></p>
           <h1 class="text-3xl font-bold text-gray-900"><%= @current_chapter[:title] %></h1>
