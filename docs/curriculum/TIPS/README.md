@@ -14,8 +14,9 @@
 |---|------|------|-------|
 | [01](01_github_tips.md) | GitHub Repository 설정 가이드 | Description, License, .gitignore 선택 | 2026-07-09 |
 | [02](02_git_subtree.md) | Git Subtree 개념과 실무 활용 | Subtree 원리, Pull 타이밍, 주의사항 | 2026-07-09 |
-| 03 | (예정) Git Workflow 팁 | Commit 메시지, Branch 전략 | - |
-| 04 | (예정) SSH vs HTTPS | 인증 방식 선택 | - |
+| [03](03_subtree_collaboration.md) | Subtree 협업 규칙 & 읽기 전용 정책 | Platform/Curriculum 분리, 변경 요청 방법 | 2026-07-09 |
+| 04 | (예정) Git Workflow 팁 | Commit 메시지, Branch 전략 | - |
+| 05 | (예정) SSH vs HTTPS | 인증 방식 선택 | - |
 
 ### Rails & 개발
 
@@ -60,6 +61,8 @@
 - Copilot "Jumpstart" 기능은? → [TIPS/01](01_github_tips.md#jumpstart-your-project-with-copilot)
 - Git Subtree가 뭔가요? → [TIPS/02](02_git_subtree.md)
 - Subtree Pull은 언제 필요한가? → [TIPS/02](02_git_subtree.md#-pull만-하면-되나-질문에-대한-답)
+- Platform에서 curriculum 수정할 수 있나? → [TIPS/03](03_subtree_collaboration.md#-규칙-docscurriculum은-읽기-전용)
+- Curriculum 변경을 어떻게 요청하나? → [TIPS/03](03_subtree_collaboration.md#-변경-요청하기-3가지-방법)
 
 ### 기술 선택
 - Ruby on Rails를 선택한 이유? → [QA/01_github_strategy.md](../QA/01_github_strategy.md)
