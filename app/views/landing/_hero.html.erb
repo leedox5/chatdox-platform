@@ -16,12 +16,8 @@
       </p>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <a href="#pricing" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
-          7일 무료 체험 시작
-        </a>
-        <a href="#docs" class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900">
-          자세히 보기
-        </a>
+        <%= link_to "7일 무료 체험 시작", getting_started_path, class: "inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700" %>
+        <%= link_to "자세히 보기", pricing_path, class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900" %>
       </div>
     </div>
   </div>

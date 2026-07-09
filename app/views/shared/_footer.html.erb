@@ -6,8 +6,8 @@
     </div>
 
     <div class="mt-4 flex flex-wrap gap-4 text-slate-600">
-      <a href="#" class="transition hover:text-slate-900">이용 약관</a>
-      <a href="#" class="transition hover:text-slate-900">개인정보 처리 방침</a>
+      <%= link_to "이용 약관", terms_path, class: "transition hover:text-slate-900" %>
+      <%= link_to "개인정보 처리 방침", privacy_path, class: "transition hover:text-slate-900" %>
     </div>
   </div>
 </footer>
