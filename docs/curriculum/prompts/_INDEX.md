@@ -16,7 +16,7 @@ dependency: []
 
 | # | 페이지명 | 설명 | 상태 | 기술 스택 |
 |---|---------|------|------|---------|
-| 01 | Landing Page | 메인 랜딩페이지 | ✅ 완료 | Rails/Tailwind |
+| 01 | Landing Page | 메인 랜딩페이지 | 🔄 진행중 | Rails/Tailwind |
 | 02 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
 | 03 | Pricing | 가격 플랜 페이지 | ⏳ 예정 | Rails/Tailwind |
 | 04 | Dashboard | 사용자 대시보드 | ⏳ 예정 | Rails/Tailwind |
@@ -29,16 +29,19 @@ dependency: []
 
 ## 🏗️ 페이지별 설명
 
-### ✅ 01 Landing Page
+### ✅ 01 Landing Page (구현 진행중)
 **파일:** `01_landing_page.md`
-- 헤더/네비게이션
-- Hero 섹션
-- 커리큘럼 안내
-- 상품 비교표
-- 가격 요약
-- 기술 스택
-- FAQ
-- Footer
+- 실행 순서 명시 (절차적 가이드)
+- Tailwind CSS 클래스 스타일 가이드 표
+- 구현 체크리스트
+- 부분 템플릿(Partial) 활용법
+- 참고 자료 링크
+
+**프롬프트 특징:**
+- Rails 기본 홈페이지 삭제 및 재생성
+- `PagesController#home` 구현
+- Tailwind CSS 반응형 디자인
+- 8개 섹션 구현
 
 **상세:** [01_landing_page.md](01_landing_page.md)
 
