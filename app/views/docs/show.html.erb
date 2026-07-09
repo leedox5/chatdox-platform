@@ -10,22 +10,29 @@
         </div>
 
         <nav class="space-y-1">
-          <% @chapters.each_with_index do |chapter, index| %>
+          <% @chapters.each do |chapter| %>
             <% is_current = chapter[:id] == @current_id %>
-            <%= link_to doc_path(chapter[:id]),
-                  class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors #{
-                    is_current ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }" do %>
-              <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-xs <%= is_current ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>">
-                <%= format("%02d", index + 1) %>
-              </span>
-              <span class="leading-tight"><%= chapter[:title] %></span>
+
+            <% if chapter[:available] %>
+              <%= link_to doc_path(chapter[:id]),
+                    class: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors #{
+                      is_current ? 'bg-blue-50 font-semibold text-blue-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }" do %>
+                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-xs <%= is_current ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500' %>">
+                  <%= chapter[:id] %>
+                </span>
+                <span class="leading-tight"><%= chapter[:title] %></span>
+              <% end %>
+            <% else %>
+              <div class="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-50">
+                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">
+                  <%= chapter[:id] %>
+                </span>
+                <span class="leading-tight text-gray-400"><%= chapter[:title] %></span>
+                <span class="ml-auto text-xs text-gray-300">예정</span>
+              </div>
             <% end %>
           <% end %>
-
-          <div class="mt-4 border-t border-gray-200 pt-4">
-            <p class="px-3 text-xs text-gray-400">05~20 챕터 공개 예정</p>
-          </div>
         </nav>
       </div>
     </aside>
@@ -33,7 +40,7 @@
     <main class="min-w-0 flex-1 overflow-y-auto">
       <div class="mx-auto max-w-3xl px-4 py-10 sm:px-8 sm:py-12">
         <div class="mb-8 border-b border-gray-100 pb-6">
-          <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600"><%= @current_chapter[:subtitle] %></p>
+          <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">Chapter <%= @current_chapter[:id] %></p>
           <h1 class="text-3xl font-bold text-gray-900"><%= @current_chapter[:title] %></h1>
         </div>
 
@@ -42,9 +49,10 @@
         </div>
 
         <% current_index = @chapters.index { |chapter| chapter[:id] == @current_id } %>
+        <% prev_chapter = @chapters[0...current_index].reverse.find { |chapter| chapter[:available] } %>
+        <% next_chapter = @chapters[(current_index + 1)..].find { |chapter| chapter[:available] } %>
         <div class="mt-16 flex justify-between border-t border-gray-100 pt-8">
-          <% if current_index.positive? %>
-            <% prev_chapter = @chapters[current_index - 1] %>
+          <% if prev_chapter %>
             <%= link_to doc_path(prev_chapter[:id]), class: "flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600" do %>
               <span>←</span>
               <span><%= prev_chapter[:title] %></span>
@@ -53,8 +61,7 @@
             <div></div>
           <% end %>
 
-          <% if current_index < @chapters.length - 1 %>
-            <% next_chapter = @chapters[current_index + 1] %>
+          <% if next_chapter %>
             <%= link_to doc_path(next_chapter[:id]), class: "flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600" do %>
               <span><%= next_chapter[:title] %></span>
               <span>→</span>
