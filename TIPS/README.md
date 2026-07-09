@@ -13,8 +13,9 @@
 | # | 제목 | 주제 | 작성일 |
 |---|------|------|-------|
 | [01](01_github_tips.md) | GitHub Repository 설정 가이드 | Description, License, .gitignore 선택 | 2026-07-09 |
-| 02 | (예정) Git Workflow 팁 | Commit 메시지, Branch 전략 | - |
-| 03 | (예정) SSH vs HTTPS | 인증 방식 선택 | - |
+| [02](02_git_subtree.md) | Git Subtree 개념과 실무 활용 | Subtree 원리, Pull 타이밍, 주의사항 | 2026-07-09 |
+| 03 | (예정) Git Workflow 팁 | Commit 메시지, Branch 전략 | - |
+| 04 | (예정) SSH vs HTTPS | 인증 방식 선택 | - |
 
 ### Rails & 개발
 
@@ -57,6 +58,8 @@
 - Repository Description은 뭐라고? → [TIPS/01](01_github_tips.md#repository-description)
 - License는 어떤 걸 선택? → [TIPS/01](01_github_tips.md#license-선택)
 - Copilot "Jumpstart" 기능은? → [TIPS/01](01_github_tips.md#jumpstart-your-project-with-copilot)
+- Git Subtree가 뭔가요? → [TIPS/02](02_git_subtree.md)
+- Subtree Pull은 언제 필요한가? → [TIPS/02](02_git_subtree.md#-pull만-하면-되나-질문에-대한-답)
 
 ### 기술 선택
 - Ruby on Rails를 선택한 이유? → [QA/01_github_strategy.md](../QA/01_github_strategy.md)
