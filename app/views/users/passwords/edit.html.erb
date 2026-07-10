@@ -1,25 +1,53 @@
-<h2>Change your password</h2>
+<%= render "shared/header" %>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
-  <%= f.hidden_field :reset_password_token %>
+<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <h1 class="mb-2 text-center text-3xl font-bold text-gray-800">새 비밀번호 설정</h1>
+    <p class="mb-6 text-center text-sm text-gray-600">보안을 위해 새 비밀번호를 입력해 주세요.</p>
 
-  <div class="field">
-    <p><%= f.label :password, "New password" %></p>
-    <% if @minimum_password_length %>
-      <p><em>(<%= @minimum_password_length %> characters minimum)</em></p>
+    <%= form_with(model: resource, as: resource_name, url: password_path(resource_name), method: :put, local: true) do |form| %>
+      <% if resource.errors.any? %>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 p-4">
+          <h2 class="mb-2 font-bold text-red-800"><%= resource.errors.count %>개 오류 발생:</h2>
+          <ul class="list-inside list-disc text-red-700">
+            <% resource.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form.hidden_field :reset_password_token %>
+
+      <div class="mb-4">
+        <%= form.label :password, "새 비밀번호", class: "mb-2 block font-bold text-gray-700" %>
+        <% if @minimum_password_length %>
+          <p class="mb-2 text-xs text-gray-500"><%= @minimum_password_length %>자 이상 입력해 주세요.</p>
+        <% end %>
+        <%= form.password_field :password,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autofocus: true,
+          autocomplete: "new-password",
+          required: true %>
+      </div>
+
+      <div class="mb-6">
+        <%= form.label :password_confirmation, "새 비밀번호 확인", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.password_field :password_confirmation,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autocomplete: "new-password",
+          required: true %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.submit "비밀번호 변경",
+          class: "w-full rounded-lg bg-blue-500 px-4 py-2 font-bold text-white transition hover:bg-blue-600" %>
+      </div>
     <% end %>
-    <p><%= f.password_field :password, autofocus: true, autocomplete: "new-password" %></p>
-  </div>
 
-  <div class="field">
-    <p><%= f.label :password_confirmation, "Confirm new password" %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
+    <p class="text-center text-sm text-gray-600">
+      로그인 화면으로 돌아가기
+      <%= link_to "로그인", new_user_session_path, class: "font-bold text-blue-500 hover:underline" %>
+    </p>
   </div>
-
-  <div class="actions">
-    <%= f.submit "Change my password" %>
-  </div>
-<% end %>
-
-<%= render "users/shared/links" %>
+</div>

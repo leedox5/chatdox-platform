@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   get "/docs", to: "docs#index"
   get "/docs/:id", to: "docs#show", as: :doc
   get "/dashboard", to: "dashboard#show"
+  get "/mypage", to: "mypage#show", as: :mypage
   resources :chapter_progresses, only: :create
   delete "/chapter_progresses", to: "chapter_progresses#destroy"
 
@@ -32,12 +33,18 @@ Rails.application.routes.draw do
   get "/admin/payment-docs", to: redirect("/refs"), as: :admin_payment_docs
   get "/admin/payment-docs/:section", to: redirect("/refs/payment-%{section}"), as: :admin_payment_docs_section
 
+  namespace :admin do
+    get "/dashboard", to: "dashboard#show", as: :dashboard
+    resources :users, only: %i[index update]
+  end
+
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
   get  "/billing/success",  to: "billing#success",   as: :billing_success
   post "/billing/success",  to: "billing#success"
   get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
 
   post "/billing/auths", to: "billing_auths#create", as: :billing_auths
+  resources :premium_waitlists, only: :create
   post "/webhooks/toss_payments", to: "webhooks/toss_payments#receive"
   post "/webhooks/portone", to: "webhooks/portone#receive"
 end

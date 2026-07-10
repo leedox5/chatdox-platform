@@ -2,13 +2,13 @@
 
 <div class="mx-auto max-w-md px-4 py-16">
   <div class="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-    <h1 class="text-2xl font-bold text-slate-900">Chatdox 월 구독</h1>
+    <h1 class="text-2xl font-bold text-slate-900">Chatdox 기본형 월 구독</h1>
     <p class="mt-2 text-slate-600">월 <%= number_to_currency(@amount, unit: "₩", format: "%u%n", precision: 0) %> · 언제든 취소 가능</p>
 
     <ul class="mt-6 space-y-2 text-sm text-slate-600">
       <li>✅ 전체 커리큘럼 무제한 접근</li>
       <li>✅ 신규 강의 자동 포함</li>
-      <li>✅ 커뮤니티 참여</li>
+      <li>✅ 결제/구독 상태 관리</li>
     </ul>
 
     <% if @payment_provider == "portone" %>

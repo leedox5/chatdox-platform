@@ -14,10 +14,18 @@
         누구나 단계별로 프로덕션 준비 완료된 SaaS를 직접 구현합니다.
         20개 완전한 문서, GitHub 템플릿 코드, 운영 노하우까지 한 번에 제공합니다.
       </p>
+      <p class="mx-auto max-w-2xl rounded-lg border border-blue-100 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700">
+        가입 후 10분 안에 첫 SaaS 골격을 실행해볼 수 있습니다.
+      </p>
+
+      <div class="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-2 text-xs font-semibold text-slate-600">
+        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">카드 등록 없이 시작</span>
+        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">7일 체험 중 언제든 취소</span>
+        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">체험 중 1~5챕터 이용 가능</span>
+      </div>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <%= link_to "7일 무료 체험 시작", getting_started_path, class: "inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700" %>
-        <%= link_to "자세히 보기", pricing_path, class: "inline-flex items-center justify-center rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900" %>
+        <%= link_to "7일 무료 체험 시작", new_user_session_path, class: "inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700" %>
       </div>
     </div>
   </div>

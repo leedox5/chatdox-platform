@@ -11,8 +11,8 @@ class ApplicationController < ActionController::Base
 
   private
 
-  def after_sign_in_path_for(_resource)
-    dashboard_path
+  def after_sign_in_path_for(resource)
+    resource.admin? ? admin_dashboard_path : dashboard_path
   end
 
   def user_not_authorized

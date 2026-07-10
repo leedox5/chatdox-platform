@@ -1,9 +1,11 @@
-<div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+<%= render "shared/header" %>
+
+<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
   <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
     <h1 class="mb-6 text-center text-3xl font-bold text-gray-800">로그인</h1>
 
     <%= form_with(model: resource, as: resource_name, url: session_path(resource_name), local: true) do |form| %>
-      <% if alert.present? %>
+      <% if alert.present? && action_name == "create" %>
         <div class="mb-4 rounded border border-red-200 bg-red-50 p-4">
           <p class="text-red-800">
             <strong>로그인 실패:</strong>

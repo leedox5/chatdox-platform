@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_10_131200) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_153000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -35,6 +35,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_131200) do
     t.index ["order_id"], name: "index_payment_transactions_on_order_id", unique: true
     t.index ["provider", "provider_payment_id"], name: "index_payment_transactions_on_provider_and_provider_payment_id", unique: true
     t.index ["subscription_id"], name: "index_payment_transactions_on_subscription_id"
+  end
+
+  create_table "premium_waitlists", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "source", default: "landing_pricing", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_premium_waitlists_on_email", unique: true
   end
 
   create_table "subscriptions", force: :cascade do |t|

@@ -1,16 +1,40 @@
-<h2>Forgot your password?</h2>
+<%= render "shared/header" %>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
+<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div class="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <h1 class="mb-2 text-center text-3xl font-bold text-gray-800">비밀번호 재설정</h1>
+    <p class="mb-6 text-center text-sm text-gray-600">가입한 이메일 주소로 재설정 링크를 보내드립니다.</p>
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+    <%= form_with(model: resource, as: resource_name, url: password_path(resource_name), local: true) do |form| %>
+      <% if resource.errors.any? %>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 p-4">
+          <h2 class="mb-2 font-bold text-red-800"><%= resource.errors.count %>개 오류 발생:</h2>
+          <ul class="list-inside list-disc text-red-700">
+            <% resource.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-6">
+        <%= form.label :email, "이메일", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.email_field :email,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autofocus: true,
+          autocomplete: "email",
+          required: true %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.submit "재설정 링크 받기",
+          class: "w-full rounded-lg bg-blue-500 px-4 py-2 font-bold text-white transition hover:bg-blue-600" %>
+      </div>
+    <% end %>
+
+    <p class="text-center text-sm text-gray-600">
+      로그인 화면으로 돌아가기
+      <%= link_to "로그인", new_user_session_path, class: "font-bold text-blue-500 hover:underline" %>
+    </p>
   </div>
-
-  <div class="actions">
-    <%= f.submit "Send me password reset instructions" %>
-  </div>
-<% end %>
-
-<%= render "users/shared/links" %>
+</div>
