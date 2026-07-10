@@ -1,13 +1,6 @@
 class DocsController < ApplicationController
   DOCS_PATH = Rails.root.join("docs/curriculum/docs")
 
-  # Pre-compute trusted file paths from the hardcoded CHAPTERS constant so that
-  # user input is never used to construct a file path — only to select among
-  # these pre-approved paths.
-  CHAPTER_FILE_PATHS = Curriculum::CHAPTERS.each_with_object({}) do |chapter, hash|
-    hash[chapter[:id]] = DOCS_PATH.join("#{chapter[:slug]}.md").freeze
-  end.freeze
-
   def index
     @chapters = chapters_with_availability
     @phase_chapters = chapters_by_phase(@chapters)
@@ -28,7 +21,28 @@ class DocsController < ApplicationController
 
     authorize @current_chapter, :view?, policy_class: DocPolicy
 
-    file_path = CHAPTER_FILE_PATHS[@current_id]
+    file_path = case @current_id
+    when "01" then DOCS_PATH.join("01_overview.md")
+    when "02" then DOCS_PATH.join("02_rails_basics.md")
+    when "03" then DOCS_PATH.join("03_dev_setup.md")
+    when "04" then DOCS_PATH.join("04_landing_page.md")
+    when "05" then DOCS_PATH.join("05_project_structure.md")
+    when "06" then DOCS_PATH.join("06_database.md")
+    when "07" then DOCS_PATH.join("07_authentication.md")
+    when "08" then DOCS_PATH.join("08_authorization.md")
+    when "09" then DOCS_PATH.join("09_payment.md")
+    when "10" then DOCS_PATH.join("10_dashboard.md")
+    when "11" then DOCS_PATH.join("11_admin.md")
+    when "12" then DOCS_PATH.join("12_email.md")
+    when "13" then DOCS_PATH.join("13_file_upload.md")
+    when "14" then DOCS_PATH.join("14_api.md")
+    when "15" then DOCS_PATH.join("15_testing.md")
+    when "16" then DOCS_PATH.join("16_performance.md")
+    when "17" then DOCS_PATH.join("17_security.md")
+    when "18" then DOCS_PATH.join("18_deployment.md")
+    when "19" then DOCS_PATH.join("19_monitoring.md")
+    when "20" then DOCS_PATH.join("20_launch.md")
+    end
     unless file_path && File.exist?(file_path)
       render plain: "아직 공개되지 않은 챕터입니다.", status: :not_found
       return
