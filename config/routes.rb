@@ -31,8 +31,10 @@ Rails.application.routes.draw do
 
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
   get  "/billing/success",  to: "billing#success",   as: :billing_success
+  post "/billing/success",  to: "billing#success"
   get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
 
   post "/billing/auths", to: "billing_auths#create", as: :billing_auths
   post "/webhooks/toss_payments", to: "webhooks/toss_payments#receive"
+  post "/webhooks/portone", to: "webhooks/portone#receive"
 end

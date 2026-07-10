@@ -1,5 +1,9 @@
 class Subscription < ApplicationRecord
-  belongs_to :user
+  PROVIDERS = %w[toss portone].freeze
 
-  validates :toss_customer_key, :order_id, :status, presence: true
+  belongs_to :user
+  has_many :payment_transactions, dependent: :destroy
+
+  validates :provider, inclusion: { in: PROVIDERS }
+  validates :provider_customer_id, :status, presence: true
 end

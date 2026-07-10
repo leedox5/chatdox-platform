@@ -18,7 +18,7 @@ class PagesController < ApplicationController
   PAYMENT_DOCS_PATH = Rails.root.join("public/docs/payment")
 
   PAYMENT_SECTIONS = [
-    { id: "00", slug: "00_overview", title: "토스페이먼츠 결제 시스템" },
+    { id: "00", slug: "00_overview", title: "토스페이먼츠 / 포트원 결제 시스템" },
     { id: "01", slug: "01_setup", title: "환경 설정" },
     { id: "02", slug: "02_implementation", title: "구현 상세" },
     { id: "03", slug: "03_troubleshooting", title: "문제 해결" },

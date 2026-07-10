@@ -16,7 +16,21 @@ class Webhooks::TossPaymentsController < ApplicationController
     subscription = Subscription.find_by(toss_payment_key: payment["paymentKey"])
     return head :ok unless subscription
 
-    subscription.update!(status: payment["status"].downcase)
+    status = subscription_status(payment["status"])
+
+    ApplicationRecord.transaction do
+      subscription.update!(status: status, active: status == "active")
+      subscription.payment_transactions.find_or_initialize_by(
+        provider: "toss",
+        provider_payment_id: payment["paymentKey"]
+      ).update!(
+        order_id: payment["orderId"] || subscription.order_id,
+        status: status,
+        amount: payment["totalAmount"] || 0,
+        currency: payment["currency"] || "KRW",
+        provider_payload: payment
+      )
+    end
     head :ok
   rescue JSON::ParserError => e
     Rails.logger.warn("Toss webhook parse error: #{e.message}")
@@ -24,5 +38,20 @@ class Webhooks::TossPaymentsController < ApplicationController
   rescue StandardError => e
     Rails.logger.error("Toss webhook error: #{e.message}")
     head :internal_server_error
+  end
+
+  private
+
+  def subscription_status(provider_status)
+    case provider_status
+    when "DONE"
+      "active"
+    when "CANCELED", "PARTIAL_CANCELED"
+      "canceled"
+    when "ABORTED", "EXPIRED"
+      "past_due"
+    else
+      provider_status.to_s.downcase
+    end
   end
 end
