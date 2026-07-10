@@ -1,8 +1,73 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50">
-  <div class="max-w-md px-4 text-center">
-    <div class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">이용 약관</div>
-    <h1 class="mb-4 text-3xl font-bold text-gray-900">준비 중입니다</h1>
-    <p class="mb-8 text-gray-500">이용 약관 페이지입니다. 준비 중입니다.</p>
-    <%= link_to "← 홈으로 돌아가기", root_path, class: "font-medium text-blue-600 hover:underline" %>
+<% content_for :title, "이용 약관 - Chatdox" %>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6">
+    <div class="mb-10">
+      <div class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">Terms of Service</div>
+      <h1 class="text-3xl font-bold text-gray-900">이용 약관</h1>
+      <p class="mt-3 text-sm text-gray-500">시행일: 2026년 7월 10일</p>
+    </div>
+
+    <div class="space-y-8 rounded-xl border border-gray-200 bg-white p-6 text-sm leading-7 text-gray-600 shadow-sm sm:p-8">
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제1조 목적</h2>
+        <p>이 약관은 Chatdox가 제공하는 온라인 교육 콘텐츠 및 관련 서비스의 이용 조건과 절차, 회사와 이용자의 권리와 의무를 정하는 것을 목적으로 합니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제2조 서비스 이용</h2>
+        <p>이용자는 회원가입, 로그인, 결제 등 회사가 정한 절차에 따라 서비스를 이용할 수 있습니다. 회사는 서비스의 안정적인 제공을 위해 필요한 경우 서비스 내용, 운영 시간, 이용 방법을 변경할 수 있습니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제3조 회원 계정</h2>
+        <p>이용자는 본인의 정확한 정보를 바탕으로 계정을 관리해야 하며, 계정의 무단 사용이나 보안 문제가 발생한 경우 즉시 회사에 알려야 합니다. 계정 관리 소홀로 발생한 손해는 이용자에게 책임이 있을 수 있습니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제4조 결제 및 구독</h2>
+        <p>유료 서비스는 결제가 완료된 후 이용할 수 있습니다. 구독형 상품의 이용 기간, 결제 금액, 갱신 조건은 결제 화면 또는 별도 안내에 따릅니다. 결제 취소나 환불은 관련 법령과 회사의 환불 기준에 따라 처리됩니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제5조 콘텐츠의 권리</h2>
+        <p>서비스에서 제공되는 강의, 문서, 이미지, 코드 예제 등 콘텐츠에 대한 권리는 회사 또는 정당한 권리자에게 있습니다. 이용자는 회사의 사전 동의 없이 콘텐츠를 복제, 배포, 판매, 공개 전송하거나 상업적으로 이용할 수 없습니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제6조 금지 행위</h2>
+        <ul class="list-disc space-y-2 pl-5">
+          <li>타인의 계정 또는 결제 정보를 무단으로 사용하는 행위</li>
+          <li>서비스의 정상적인 운영을 방해하거나 보안을 침해하는 행위</li>
+          <li>콘텐츠를 무단으로 복제, 공유, 판매하는 행위</li>
+          <li>법령 또는 공서양속에 반하는 정보를 게시하거나 전송하는 행위</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제7조 서비스 중단</h2>
+        <p>회사는 시스템 점검, 장애 대응, 외부 서비스 문제, 기타 운영상 필요한 경우 서비스의 전부 또는 일부를 일시적으로 중단할 수 있습니다. 회사는 가능한 범위에서 사전에 안내하도록 노력합니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제8조 책임의 제한</h2>
+        <p>회사는 천재지변, 통신 장애, 결제대행사 또는 외부 플랫폼 장애 등 회사가 통제하기 어려운 사유로 인한 서비스 이용 장애에 대해 책임이 제한될 수 있습니다. 다만 회사의 고의 또는 중대한 과실이 있는 경우에는 관련 법령에 따릅니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제9조 약관 변경</h2>
+        <p>회사는 필요한 경우 이 약관을 변경할 수 있으며, 변경 사항은 서비스 내 공지 또는 적절한 방법으로 안내합니다. 변경된 약관은 안내된 시행일부터 적용됩니다.</p>
+      </section>
+
+      <section>
+        <h2 class="mb-3 text-lg font-semibold text-gray-900">제10조 문의</h2>
+        <p>서비스 이용과 관련한 문의는 아래 연락처로 접수할 수 있습니다.</p>
+        <p class="mt-2">이메일: leedox@naver.com</p>
+      </section>
+    </div>
+
+    <div class="mt-8">
+      <%= link_to "← 홈으로 돌아가기", root_path, class: "font-medium text-blue-600 hover:underline" %>
+    </div>
   </div>
 </div>
