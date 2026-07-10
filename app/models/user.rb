@@ -5,6 +5,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_one :subscription, dependent: :destroy
+  has_many :chapter_progresses, dependent: :destroy
 
   enum :role, { user: 0, admin: 1 }
 

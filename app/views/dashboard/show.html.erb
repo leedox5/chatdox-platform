@@ -1,55 +1,136 @@
 <div class="min-h-screen bg-gray-50">
   <%= render "shared/header" %>
 
-  <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="mb-10">
-      <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-blue-600">Dashboard</p>
-      <h1 class="text-4xl font-bold text-gray-900">계정 상태</h1>
-      <p class="mt-3 max-w-2xl text-base text-gray-600">
-        현재 계정의 Trial, 구독, 관리자 권한을 한눈에 확인할 수 있습니다.
-      </p>
-    </div>
-
-    <div class="grid gap-6 md:grid-cols-3">
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p class="text-sm font-semibold text-gray-500">Trial</p>
-        <p class="mt-3 text-3xl font-bold text-gray-900"><%= @trial_days_remaining %>일</p>
-        <p class="mt-2 text-sm text-gray-600">
-          <%= current_user.trial_active? ? "7일 무료 Trial이 활성화되어 있습니다." : "Trial 기간이 종료되었습니다." %>
-        </p>
+  <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-blue-600">My Dashboard</p>
+        <h1 class="mt-1 text-3xl font-bold text-gray-900">
+          안녕하세요, <%= current_user.email %>님
+        </h1>
+        <p class="mt-2 text-gray-600">구독 상태와 학습 흐름을 확인하고 다음 챕터로 이어가세요.</p>
       </div>
 
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p class="text-sm font-semibold text-gray-500">Subscription</p>
-        <p class="mt-3 text-3xl font-bold text-gray-900"><%= @subscription_active ? "Active" : "Inactive" %></p>
-        <p class="mt-2 text-sm text-gray-600">
-          <%= @subscription_active ? "유료 구독이 연결되어 있습니다." : "구독 정보가 없습니다." %>
-        </p>
-      </div>
+      <%= link_to "전체 문서 보기",
+        docs_path,
+        class: "rounded-lg bg-blue-600 px-4 py-2.5 text-center font-semibold text-white transition hover:bg-blue-700" %>
+    </header>
 
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p class="text-sm font-semibold text-gray-500">Access</p>
-        <p class="mt-3 text-3xl font-bold text-gray-900"><%= @accessible_chapters %>/20</p>
-        <p class="mt-2 text-sm text-gray-600">
-          현재 계정으로 열람 가능한 문서 수입니다.
-        </p>
-      </div>
-    </div>
+    <section aria-label="이용 현황" class="grid gap-5 md:grid-cols-3">
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="font-semibold text-gray-900">이용 상태</h2>
+          <%= subscription_badge(@subscription) %>
+        </div>
 
-    <div class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <p class="text-sm font-semibold uppercase tracking-wide text-gray-500">Role</p>
-      <div class="mt-3 flex flex-wrap items-center gap-3">
-        <span class="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700"><%= current_user.role %></span>
-        <% if current_user.admin? %>
-          <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">Admin access</span>
+        <p class="mt-5 text-sm text-gray-600">
+          <%= subscription_period_text(current_user, @subscription) %>
+        </p>
+
+        <% if @subscription&.status == "past_due" %>
+          <%= link_to "결제 수단 확인",
+            billing_checkout_path,
+            class: "mt-4 inline-block text-sm font-semibold text-amber-700 hover:text-amber-800" %>
         <% elsif current_user.subscribed? %>
-          <span class="rounded-full bg-violet-50 px-3 py-1 text-sm font-semibold text-violet-700">Subscriber</span>
-        <% elsif current_user.trial_active? %>
-          <span class="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">Trial</span>
+          <span class="mt-4 inline-block text-sm font-semibold text-emerald-700">전체 커리큘럼 이용 가능</span>
         <% else %>
-          <span class="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700">Guest access</span>
+          <%= link_to "구독 시작",
+            billing_checkout_path,
+            class: "mt-4 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700" %>
         <% end %>
+      </article>
+
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500">접근 가능 문서</p>
+        <p class="mt-3 text-3xl font-bold text-gray-900"><%= @accessible_chapters %>/<%= @total_chapters %></p>
+        <p class="mt-2 text-sm text-gray-600">
+          실제 문서 접근은 계정 권한에 따라 매번 확인됩니다.
+        </p>
+      </article>
+
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500">계정 역할</p>
+        <p class="mt-3 text-3xl font-bold text-gray-900"><%= current_user.role.humanize %></p>
+        <p class="mt-2 text-sm text-gray-600">
+          <% if current_user.admin? %>
+            관리자 권한으로 전체 문서를 볼 수 있습니다.
+          <% elsif current_user.subscribed? %>
+            구독자로 전체 커리큘럼을 학습할 수 있습니다.
+          <% elsif current_user.trial_active? %>
+            Trial 기간 동안 일부 챕터를 학습할 수 있습니다.
+          <% else %>
+            공개 챕터만 이용할 수 있습니다.
+          <% end %>
+        </p>
+      </article>
+    </section>
+
+    <section aria-label="학습 진도" class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">학습 진도</h2>
+          <p class="mt-1 text-sm text-gray-600">
+            전체 <%= @total_chapters %>개 중 <%= @completed_count %>개 완료
+          </p>
+        </div>
+        <strong class="text-3xl text-blue-600"><%= @progress_percent %>%</strong>
       </div>
-    </div>
-  </div>
+
+      <div class="mt-5 h-3 overflow-hidden rounded-full bg-gray-100"
+           role="progressbar"
+           aria-label="커리큘럼 학습 진도"
+           aria-valuenow="<%= @progress_percent %>"
+           aria-valuemin="0"
+           aria-valuemax="100">
+        <div class="h-full rounded-full bg-blue-600 transition-all"
+             style="width: <%= @progress_percent %>%"></div>
+      </div>
+    </section>
+
+    <section class="mt-8 grid gap-8 lg:grid-cols-3">
+      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-lg font-bold text-gray-900">최근 완료한 챕터</h2>
+          <%= link_to "전체 보기", docs_path, class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+        </div>
+
+        <% if @recent_chapters.any? %>
+          <ul class="mt-4 divide-y divide-gray-100">
+            <% @recent_chapters.each do |chapter| %>
+              <li class="flex items-center justify-between gap-4 py-4">
+                <div class="min-w-0">
+                  <p class="text-sm text-gray-500">Chapter <%= chapter[:id] %></p>
+                  <p class="truncate font-medium text-gray-900"><%= chapter[:title] %></p>
+                </div>
+                <%= link_to "다시 보기",
+                  doc_path(chapter[:id]),
+                  class: "shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="mt-4 rounded-lg bg-gray-50 p-6 text-center">
+            <p class="text-gray-600">아직 완료한 챕터가 없습니다.</p>
+            <%= link_to "첫 챕터 시작",
+              doc_path("01"),
+              class: "mt-3 inline-block font-semibold text-blue-600 hover:text-blue-700" %>
+          </div>
+        <% end %>
+      </article>
+
+      <aside class="rounded-lg bg-gray-900 p-6 text-white shadow-sm">
+        <p class="text-sm font-semibold uppercase tracking-wide text-blue-300">Next Step</p>
+        <% if @next_chapter %>
+          <h2 class="mt-3 text-xl font-bold"><%= @next_chapter[:title] %></h2>
+          <p class="mt-2 text-sm text-gray-300">Chapter <%= @next_chapter[:id] %></p>
+          <%= link_to "이어서 학습",
+            doc_path(@next_chapter[:id]),
+            class: "mt-6 block rounded-lg bg-white px-4 py-2.5 text-center font-semibold text-gray-900 transition hover:bg-gray-100" %>
+        <% else %>
+          <h2 class="mt-3 text-xl font-bold">모든 챕터를 완료했습니다.</h2>
+          <p class="mt-2 text-sm text-gray-300">필요한 챕터를 다시 복습해 보세요.</p>
+        <% end %>
+      </aside>
+    </section>
+  </main>
 </div>

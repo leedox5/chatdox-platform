@@ -73,6 +73,35 @@
           <%= @content_html %>
         </div>
 
+        <% if user_signed_in? %>
+          <div class="mt-10 rounded-lg border border-gray-200 bg-gray-50 p-5">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 class="font-semibold text-gray-900">학습 상태</h2>
+                <p class="mt-1 text-sm text-gray-600">
+                  <% if @chapter_progress&.completed? %>
+                    이 챕터를 완료한 상태입니다.
+                  <% else %>
+                    완료한 챕터로 표시하면 대시보드 진도에 반영됩니다.
+                  <% end %>
+                </p>
+              </div>
+
+              <% if @chapter_progress&.completed? %>
+                <%= button_to "완료 표시 취소",
+                  chapter_progresses_path(chapter_id: @current_id),
+                  method: :delete,
+                  class: "rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-100" %>
+              <% else %>
+                <%= button_to "이 챕터 완료",
+                  chapter_progresses_path(chapter_id: @current_id),
+                  method: :post,
+                  class: "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
         <% current_index = @chapters.index { |chapter| chapter[:id] == @current_id } %>
         <% prev_chapter = @chapters[0...current_index].reverse.find { |chapter| chapter[:available] && chapter[:accessible] } %>
         <% next_chapter = @chapters[(current_index + 1)..].find { |chapter| chapter[:available] && chapter[:accessible] } %>

@@ -1,0 +1,4 @@
+ko:
+  date:
+    formats:
+      long: "%Y년 %-m월 %-d일"

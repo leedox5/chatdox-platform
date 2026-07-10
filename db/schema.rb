@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_155208) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
+  create_table "chapter_progresses", force: :cascade do |t|
+    t.string "chapter_id", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "chapter_id"], name: "index_chapter_progresses_on_user_id_and_chapter_id", unique: true
+    t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.boolean "active", default: false, null: false
     t.datetime "cancel_at"
@@ -43,5 +53,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_155208) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "chapter_progresses", "users"
   add_foreign_key "subscriptions", "users"
 end
