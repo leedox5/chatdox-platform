@@ -1,6 +1,6 @@
-require 'net/http'
-require 'json'
-require 'base64'
+require "net/http"
+require "json"
+require "base64"
 
 module TossPayments
   class Client
