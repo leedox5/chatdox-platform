@@ -10,7 +10,8 @@
         <h3 class="text-xl font-bold text-slate-900">기본형</h3>
         <p class="mt-2 text-4xl font-black text-slate-900">$29<span class="text-base font-medium text-slate-500">/월</span></p>
         <p class="mt-2 text-sm text-slate-600">연간 결제 $199 (36% 할인)</p>
-        <a href="#" class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">기본형 시작하기</a>
+        <%= link_to "기본형 시작하기", billing_checkout_path,
+          class: "mt-6 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700" %>
       </article>
 
       <article class="relative rounded-xl border-2 border-blue-300 bg-blue-50 p-8 shadow-lg shadow-blue-100">
@@ -18,7 +19,8 @@
         <h3 class="text-xl font-bold text-slate-900">프리미엄형</h3>
         <p class="mt-2 text-4xl font-black text-slate-900">$79<span class="text-base font-medium text-slate-500">/월</span></p>
         <p class="mt-2 text-sm text-slate-600">연간 결제 $599 (36% 할인)</p>
-        <a href="#" class="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">프리미엄 시작하기</a>
+        <%= link_to "프리미엄 시작하기", billing_checkout_path,
+          class: "mt-6 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700" %>
       </article>
     </div>
   </div>

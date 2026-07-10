@@ -15,6 +15,10 @@
         <%= link_to "대시보드", dashboard_path, class: "transition hover:text-slate-900" %>
       <% end %>
 
+      <% if user_signed_in? && current_user.admin? %>
+        <%= link_to "참조", admin_payment_docs_path, class: "transition hover:text-slate-900" %>
+      <% end %>
+
       <% if user_signed_in? %>
         <span class="max-w-48 truncate text-slate-500"><%= current_user.email %></span>
         <%= link_to "로그아웃",

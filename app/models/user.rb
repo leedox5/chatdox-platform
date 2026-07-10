@@ -27,7 +27,9 @@ class User < ApplicationRecord
   end
 
   def subscribed?
-    subscription&.active? || false
+    subscription&.status == "active" &&
+      subscription.current_period_end.present? &&
+      subscription.current_period_end > Time.current
   end
 
   def can_view_chapter?(chapter_num)

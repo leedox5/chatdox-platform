@@ -10,12 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_155208) do
   create_table "subscriptions", force: :cascade do |t|
     t.boolean "active", default: false, null: false
+    t.datetime "cancel_at"
+    t.datetime "canceled_at"
     t.datetime "created_at", null: false
+    t.datetime "current_period_end"
+    t.datetime "current_period_start"
+    t.string "order_id"
+    t.string "status", default: "pending"
+    t.string "toss_billing_key"
+    t.string "toss_customer_key"
+    t.string "toss_payment_key"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["order_id"], name: "index_subscriptions_on_order_id", unique: true
+    t.index ["toss_customer_key"], name: "index_subscriptions_on_toss_customer_key", unique: true
     t.index ["user_id"], name: "index_subscriptions_on_user_id", unique: true
   end
 

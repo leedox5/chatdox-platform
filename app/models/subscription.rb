@@ -1,5 +1,5 @@
 class Subscription < ApplicationRecord
   belongs_to :user
 
-  scope :active, -> { where(active: true) }
+  validates :toss_customer_key, :order_id, :status, presence: true
 end

@@ -23,4 +23,14 @@ Rails.application.routes.draw do
   get "/login", to: "pages#login"
   get "/terms", to: "pages#terms"
   get "/privacy", to: "pages#privacy"
+
+  get "/admin/payment-docs", to: "pages#payment_docs", as: :admin_payment_docs
+  get "/admin/payment-docs/:section", to: "pages#payment_docs", as: :admin_payment_docs_section
+
+  get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
+  get  "/billing/success",  to: "billing#success",   as: :billing_success
+  get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
+
+  post "/billing/auths", to: "billing_auths#create", as: :billing_auths
+  post "/webhooks/toss_payments", to: "webhooks/toss_payments#receive"
 end
