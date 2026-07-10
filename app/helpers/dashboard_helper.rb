@@ -7,10 +7,10 @@ module DashboardHelper
     "pending" => [ "결제 대기", "bg-blue-100 text-blue-700" ]
   }.freeze
 
-  def subscription_badge(subscription)
+  def subscription_badge(user, subscription)
     label, classes = SUBSCRIPTION_BADGES.fetch(
       subscription&.status,
-      [ "무료 Trial", "bg-violet-100 text-violet-700" ]
+      fallback_badge(user)
     )
 
     tag.span(label, class: "inline-flex rounded-full px-3 py-1 text-sm font-semibold #{classes}")
@@ -23,6 +23,16 @@ module DashboardHelper
       "무료 Trial #{user.trial_days_remaining}일 남음"
     else
       "이용 가능한 구독이 없습니다"
+    end
+  end
+
+  private
+
+  def fallback_badge(user)
+    if user.trial_active?
+      [ "무료 Trial", "bg-violet-100 text-violet-700" ]
+    else
+      [ "이용 불가", "bg-gray-100 text-gray-700" ]
     end
   end
 end

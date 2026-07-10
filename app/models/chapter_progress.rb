@@ -4,7 +4,7 @@ class ChapterProgress < ApplicationRecord
   validates :chapter_id,
     presence: true,
     uniqueness: { scope: :user_id },
-    format: { with: /\A(0[1-9]|1[0-9]|20)\z/ }
+    inclusion: { in: ->(_progress) { Curriculum.all.pluck(:id) } }
 
   scope :completed, -> { where.not(completed_at: nil) }
 
