@@ -70,7 +70,7 @@
         </div>
 
         <div class="doc-content max-w-none">
-          <%= @content_html %>
+          <%= sanitize @content_html %>
         </div>
 
         <% if user_signed_in? %>

@@ -21,7 +21,7 @@ class DocsController < ApplicationController
 
     authorize @current_chapter, :view?, policy_class: DocPolicy
 
-    file_path = DOCS_PATH.join("#{@current_chapter[:slug]}.md")
+    file_path = DOCS_PATH.join("#{File.basename(@current_chapter[:slug].to_s)}.md")
     unless File.exist?(file_path)
       render plain: "아직 공개되지 않은 챕터입니다.", status: :not_found
       return
