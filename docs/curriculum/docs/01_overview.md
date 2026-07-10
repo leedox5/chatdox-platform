@@ -45,14 +45,14 @@
 [Rails 8.1 애플리케이션]
   ├─ 랜딩페이지 (Tailwind CSS)
   ├─ 인증 (Devise)
-  ├─ 구독 관리 (Toss Payments)
+  ├─ 구독 관리 (Toss Payments / PortOne)
   ├─ 문서 시스템 (Markdown Renderer)
   └─ API 엔드포인트 (RESTful)
       ↓
 [SQLite3 → PostgreSQL]  ← 데이터베이스
       ↓
 [외부 서비스]
-  ├─ Toss Payments  (결제)
+  ├─ Toss Payments 또는 PortOne  (결제)
   ├─ S3      (파일 저장)
   └─ Sentry  (에러 모니터링)
 ```
@@ -68,7 +68,7 @@
 | **데이터베이스** | SQLite3 → PostgreSQL | - | 개발 → 프로덕션 |
 | **인증** | Devise | - | 회원가입/로그인 |
 | **UI** | Tailwind CSS | - | 스타일링 |
-| **결제** | Toss Payments | - | 구독 결제 처리 |
+| **결제** | Toss Payments / PortOne | 선택형 | 구독 결제 처리 |
 | **파일** | ActiveStorage + S3 | - | 파일 업로드/저장 |
 | **배포** | Vercel / Railway | - | 서버 배포 |
 | **모니터링** | Sentry | - | 에러 추적 |
@@ -143,7 +143,8 @@ Subscription (구독)
   ├─ user_id
   ├─ plan                  # basic / premium
   ├─ status                # active / cancelled
-  └─ toss_billing_key
+  ├─ provider              # toss / portone
+  └─ billing_key           # 공급자 빌링키 (암호화 저장)
 
 Document (문서)
   ├─ title
@@ -168,7 +169,7 @@ Phase 2: 핵심 기능 구현 (챕터 6~16)
   6.  Database & Migrations
   7.  Authentication (Devise)
   8.  Authorization & 권한 관리
-  9.  Payment (Toss Payments)
+  9.  Payment (Toss Payments / PortOne)
   10. 사용자 대시보드
   11. 관리자 대시보드
   12. Email & 알림

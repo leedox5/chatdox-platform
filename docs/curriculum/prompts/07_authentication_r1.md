@@ -434,5 +434,5 @@ before_action :authenticate_user!
 
 다음 장에서는:
 - **08 Authorization** - 역할 기반 접근 제어 (Pundit)
-- **09 Payment** - Toss Payments 결제 시스템
+- **09 Payment** - Toss Payments / PortOne 선택형 결제 시스템
 - **10 Dashboard** - 사용자 전용 페이지

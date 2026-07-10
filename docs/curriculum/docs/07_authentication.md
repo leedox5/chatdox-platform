@@ -710,7 +710,7 @@ user.valid_password?('wrong')
 
 다음에는:
 - **08장: 인가 (Authorization)** - 역할 관리 (Admin, User, etc.)
-- **09장: 결제 (Payment)** - Toss Payments 결제 시스템
+- **09장: 결제 (Payment)** - Toss Payments / PortOne 선택형 결제 시스템
 - **10장: 대시보드** - 사용자 전용 페이지
 
 ---
