@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_131200) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -21,21 +21,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
     t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
   end
 
+  create_table "payment_transactions", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "KRW", null: false
+    t.string "order_id", null: false
+    t.string "provider", null: false
+    t.json "provider_payload"
+    t.string "provider_payment_id", null: false
+    t.string "status", default: "pending", null: false
+    t.integer "subscription_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_payment_transactions_on_order_id", unique: true
+    t.index ["provider", "provider_payment_id"], name: "index_payment_transactions_on_provider_and_provider_payment_id", unique: true
+    t.index ["subscription_id"], name: "index_payment_transactions_on_subscription_id"
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.boolean "active", default: false, null: false
+    t.string "billing_key"
     t.datetime "cancel_at"
     t.datetime "canceled_at"
     t.datetime "created_at", null: false
     t.datetime "current_period_end"
     t.datetime "current_period_start"
     t.string "order_id"
-    t.string "status", default: "pending"
+    t.string "provider", null: false
+    t.string "provider_customer_id", null: false
+    t.string "status", default: "pending", null: false
     t.string "toss_billing_key"
     t.string "toss_customer_key"
     t.string "toss_payment_key"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["order_id"], name: "index_subscriptions_on_order_id", unique: true
+    t.index ["provider", "provider_customer_id"], name: "index_subscriptions_on_provider_and_provider_customer_id", unique: true
     t.index ["toss_customer_key"], name: "index_subscriptions_on_toss_customer_key", unique: true
     t.index ["user_id"], name: "index_subscriptions_on_user_id", unique: true
   end
@@ -54,5 +74,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_120000) do
   end
 
   add_foreign_key "chapter_progresses", "users"
+  add_foreign_key "payment_transactions", "subscriptions"
   add_foreign_key "subscriptions", "users"
 end

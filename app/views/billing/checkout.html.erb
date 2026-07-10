@@ -11,8 +11,14 @@
       <li>✅ 커뮤니티 참여</li>
     </ul>
 
-    <div id="payment-widget" class="mt-8"></div>
-    <div id="agreement-widget" class="mt-4"></div>
+    <% if @payment_provider == "portone" %>
+      <div class="mt-8 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
+        포트원 결제창으로 이동해 카드 결제를 진행합니다.
+      </div>
+    <% else %>
+      <div id="payment-widget" class="mt-8"></div>
+      <div id="agreement-widget" class="mt-4"></div>
+    <% end %>
 
     <button id="pay-button"
       class="mt-6 w-full rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
@@ -21,46 +27,94 @@
   </div>
 </div>
 
-<script src="https://js.tosspayments.com/v2/standard"></script>
-<script>
-  const clientKey = "<%= ENV.fetch('TOSS_CLIENT_KEY', '') %>";
-  const customerKey = "user-<%= current_user.id %>";
-  const orderId = "<%= @order_id %>";
-  const amount = <%= @amount %>;
+<% if @payment_provider == "portone" %>
+  <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+  <script>
+    const payButton = document.getElementById("pay-button");
+    const storeId = <%= @portone_store_id.to_json.html_safe %>;
+    const channelKey = <%= @portone_channel_key.to_json.html_safe %>;
+    const orderId = <%= @order_id.to_json.html_safe %>;
+    const amount = <%= @amount %>;
+    const currency = <%= @currency.to_json.html_safe %>;
 
-  console.log('clientKey:', clientKey);
-  console.log('orderId:', orderId);
-  console.log('amount:', amount);
+    if (!storeId || !channelKey) {
+      payButton.disabled = true;
+      payButton.textContent = "환경설정 오류";
+    }
 
-  if (!clientKey) {
-    console.error('TOSS_CLIENT_KEY is empty!');
-    document.getElementById("pay-button").disabled = true;
-    document.getElementById("pay-button").textContent = '환경설정 오류';
-  }
-
-  try {
-    const tossPayments = TossPayments(clientKey);
-    const widgets = tossPayments.widgets({ customerKey });
-
-    (async () => {
-      await widgets.setAmount({ currency: "KRW", value: amount });
-      await Promise.all([
-        widgets.renderPaymentMethods({ selector: "#payment-widget", variantKey: "DEFAULT" }),
-        widgets.renderAgreement({ selector: "#agreement-widget", variantKey: "AGREEMENT" })
-      ]);
-    })();
-
-    document.getElementById("pay-button").addEventListener("click", async () => {
-      await widgets.requestPayment({
-        orderId,
+    payButton.addEventListener("click", async () => {
+      const response = await PortOne.requestPayment({
+        storeId,
+        channelKey,
+        paymentId: orderId,
         orderName: "Chatdox 월 구독",
-        successUrl: "<%= billing_success_url %>",
-        failUrl: "<%= billing_cancel_url %>",
-        customerEmail: "<%= current_user.email %>",
-        customerName: "<%= current_user.email %>"
+        totalAmount: amount,
+        currency,
+        payMethod: "CARD",
+        customer: { email: <%= current_user.email.to_json.html_safe %> }
       });
+
+      if (response.code !== undefined) {
+        alert(response.message);
+        return;
+      }
+
+      const confirmResponse = await fetch("<%= billing_success_path %>", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector("meta[name=csrf-token]").content
+        },
+        body: JSON.stringify({ paymentId: response.paymentId, orderId })
+      });
+      const confirmResult = await confirmResponse.json().catch(() => ({}));
+
+      if (confirmResponse.ok && confirmResult.ok) {
+        window.location.href = confirmResult.redirectUrl || <%= dashboard_path.to_json.html_safe %>;
+      } else {
+        alert(confirmResult.message || "결제 승인에 실패했습니다.");
+      }
     });
-  } catch (error) {
-    console.error('Payment initialization error:', error);
-  }
-</script>
+  </script>
+<% else %>
+  <script src="https://js.tosspayments.com/v2/standard"></script>
+  <script>
+    const clientKey = <%= ENV.fetch("TOSS_CLIENT_KEY", "").to_json.html_safe %>;
+    const customerKey = <%= "user-#{current_user.id}".to_json.html_safe %>;
+    const orderId = <%= @order_id.to_json.html_safe %>;
+    const amount = <%= @amount %>;
+    const currency = <%= @currency.to_json.html_safe %>;
+
+    if (!clientKey) {
+      console.error('TOSS_CLIENT_KEY is empty!');
+      document.getElementById("pay-button").disabled = true;
+      document.getElementById("pay-button").textContent = '환경설정 오류';
+    }
+
+    try {
+      const tossPayments = TossPayments(clientKey);
+      const widgets = tossPayments.widgets({ customerKey });
+
+      (async () => {
+        await widgets.setAmount({ currency, value: amount });
+        await Promise.all([
+          widgets.renderPaymentMethods({ selector: "#payment-widget", variantKey: "DEFAULT" }),
+          widgets.renderAgreement({ selector: "#agreement-widget", variantKey: "AGREEMENT" })
+        ]);
+      })();
+
+      document.getElementById("pay-button").addEventListener("click", async () => {
+        await widgets.requestPayment({
+          orderId,
+          orderName: "Chatdox 월 구독",
+          successUrl: "<%= billing_success_url %>",
+          failUrl: "<%= billing_cancel_url %>",
+          customerEmail: <%= current_user.email.to_json.html_safe %>,
+          customerName: <%= current_user.email.to_json.html_safe %>
+        });
+      });
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+    }
+  </script>
+<% end %>
