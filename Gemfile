@@ -67,4 +67,4 @@ gem "pg", "~> 1.6"
 
 gem "devise", "~> 5.0"
 
-gem "dotenv-rails", "~> 3.2", groups: [:development, :test]
+gem "dotenv-rails", "~> 3.2", groups: [ :development, :test ]
