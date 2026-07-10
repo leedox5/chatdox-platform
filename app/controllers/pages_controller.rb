@@ -25,6 +25,10 @@ class PagesController < ApplicationController
     { id: "04", slug: "04_testing", title: "테스트 결과" }
   ].freeze
 
+  PAYMENT_DOC_FILES = PAYMENT_SECTIONS.to_h do |section|
+    [ section[:slug], PAYMENT_DOCS_PATH.join("#{section[:slug]}.md") ]
+  end.freeze
+
   def payment_docs
     unless current_user&.admin?
       redirect_to root_path, alert: "권한이 없습니다."
@@ -45,7 +49,7 @@ class PagesController < ApplicationController
       return
     end
 
-    doc_path = PAYMENT_DOCS_PATH.join("#{section_slug}.md")
+    doc_path = PAYMENT_DOC_FILES[@current_section[:slug]]
     unless File.exist?(doc_path)
       redirect_to admin_payment_docs_path, alert: "문서를 찾을 수 없습니다."
       return
@@ -65,7 +69,14 @@ class PagesController < ApplicationController
       superscript: true
     )
 
-    @content_html = markdown.render(raw_markdown).html_safe
+    @content_html = helpers.sanitize(
+      markdown.render(raw_markdown),
+      tags: %w[
+        h1 h2 h3 h4 h5 h6 p br hr ul ol li pre code blockquote strong em a
+        table thead tbody tr th td
+      ],
+      attributes: %w[href target rel]
+    )
     @all_sections = PAYMENT_SECTIONS
     @current_index = @all_sections.find_index { |s| s[:slug] == section_slug }
     @prev_section = @current_index&.positive? ? @all_sections[@current_index - 1] : nil
