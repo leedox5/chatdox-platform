@@ -11,6 +11,10 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def after_sign_in_path_for(_resource)
+    dashboard_path
+  end
+
   def user_not_authorized
     flash[:alert] = if current_user.present?
       "이 작업을 할 권한이 없습니다."

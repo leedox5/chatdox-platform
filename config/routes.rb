@@ -16,6 +16,8 @@ Rails.application.routes.draw do
   get "/docs", to: "docs#index"
   get "/docs/:id", to: "docs#show", as: :doc
   get "/dashboard", to: "dashboard#show"
+  resources :chapter_progresses, only: :create
+  delete "/chapter_progresses", to: "chapter_progresses#destroy"
 
   get "/getting-started", to: "pages#getting_started"
   get "/pricing", to: "pages#pricing"

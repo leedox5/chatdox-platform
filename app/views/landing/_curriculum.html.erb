@@ -1,6 +1,6 @@
 <section id="docs" class="py-16">
-  <% chapters = DocsController::CHAPTERS %>
-  <% phases = DocsController::PHASES %>
+  <% chapters = Curriculum.all %>
+  <% phases = Curriculum.phases %>
 
   <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
     <div class="mb-10">
