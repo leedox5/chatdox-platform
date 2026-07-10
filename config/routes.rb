@@ -26,8 +26,11 @@ Rails.application.routes.draw do
   get "/terms", to: "pages#terms"
   get "/privacy", to: "pages#privacy"
 
-  get "/admin/payment-docs", to: "pages#payment_docs", as: :admin_payment_docs
-  get "/admin/payment-docs/:section", to: "pages#payment_docs", as: :admin_payment_docs_section
+  get "/refs", to: "refs#index", as: :refs
+  get "/refs/:id", to: "refs#show", as: :ref
+
+  get "/admin/payment-docs", to: redirect("/refs"), as: :admin_payment_docs
+  get "/admin/payment-docs/:section", to: redirect("/refs/payment-%{section}"), as: :admin_payment_docs_section
 
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
   get  "/billing/success",  to: "billing#success",   as: :billing_success
