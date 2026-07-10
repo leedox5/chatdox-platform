@@ -16,7 +16,7 @@
       <% end %>
 
       <% if user_signed_in? && current_user.admin? %>
-        <%= link_to "참조", admin_payment_docs_path, class: "transition hover:text-slate-900" %>
+        <%= link_to "참조", refs_path, class: "transition hover:text-slate-900" %>
       <% end %>
 
       <% if user_signed_in? %>

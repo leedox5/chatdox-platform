@@ -114,7 +114,7 @@ class Curriculum
     { id: "06", slug: "06_database", title: "데이터베이스" },
     { id: "07", slug: "07_authentication", title: "인증 (Devise)" },
     { id: "08", slug: "08_authorization", title: "권한 (Pundit)" },
-    { id: "09", slug: "09_payment", title: "결제 (Toss Payments)" },
+    { id: "09", slug: "09_payment", title: "결제 (Toss / PortOne)" },
     { id: "10", slug: "10_dashboard", title: "사용자 대시보드" },
     { id: "11", slug: "11_admin", title: "관리자 대시보드" },
     { id: "12", slug: "12_email", title: "Email & 알림" },
