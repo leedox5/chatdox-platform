@@ -2,7 +2,7 @@ class BillingAuthsController < ApplicationController
   before_action :authenticate_user!
 
   def create
-    if ENV.fetch("PAYMENT_PROVIDER", "toss") == "portone"
+    if Payments::Gateway.current.provider == "portone"
       activate_portone_billing_key
       return redirect_to dashboard_path, notice: "자동결제가 활성화되었습니다."
     end
@@ -26,7 +26,7 @@ class BillingAuthsController < ApplicationController
 
     redirect_to dashboard_path, notice: "자동결제가 활성화되었습니다."
   rescue StandardError => e
-    Rails.logger.error("Toss billing auth error: #{e.message}")
+    Rails.logger.error("Billing auth error: #{e.message}")
     redirect_to dashboard_path, alert: "빌링키 발급에 실패했습니다."
   end
 

@@ -34,9 +34,10 @@ class RefsController < ApplicationController
     end
 
     @content_html = render_markdown(File.read(doc_path))
-    @current_index = @references.find_index { |reference| reference[:id] == @current_ref[:id] }
-    @prev_ref = @current_index&.positive? ? @references[@current_index - 1] : nil
-    @next_ref = @current_index && @current_index < @references.length - 1 ? @references[@current_index + 1] : nil
+    @available_references = @references.select { |reference| reference[:available] }
+    @current_index = @available_references.find_index { |reference| reference[:id] == @current_ref[:id] }
+    @prev_ref = @current_index&.positive? ? @available_references[@current_index - 1] : nil
+    @next_ref = @current_index && @current_index < @available_references.length - 1 ? @available_references[@current_index + 1] : nil
   end
 
   private

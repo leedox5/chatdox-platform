@@ -22,5 +22,7 @@ class AddProviderFieldsToSubscriptions < ActiveRecord::Migration[8.1]
     end
 
     add_index :subscriptions, %i[provider provider_customer_id], unique: true
+    change_column_null :subscriptions, :provider, false
+    change_column_null :subscriptions, :provider_customer_id, false
   end
 end

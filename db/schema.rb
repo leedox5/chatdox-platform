@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_10_131100) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_10_131200) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -46,9 +46,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_131100) do
     t.datetime "current_period_end"
     t.datetime "current_period_start"
     t.string "order_id"
-    t.string "provider"
-    t.string "provider_customer_id"
-    t.string "status", default: "pending"
+    t.string "provider", null: false
+    t.string "provider_customer_id", null: false
+    t.string "status", default: "pending", null: false
     t.string "toss_billing_key"
     t.string "toss_customer_key"
     t.string "toss_payment_key"

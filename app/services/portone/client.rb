@@ -3,6 +3,10 @@ require "json"
 
 module Portone
   class Client
+    class Error < StandardError; end
+    class TransportError < Error; end
+    class ApiError < Error; end
+
     BASE_URL = "https://api.portone.io"
 
     def self.get_payment(payment_id)
@@ -21,13 +25,34 @@ module Portone
       request["Content-Type"] = "application/json"
 
       response = http.request(request)
-      result = JSON.parse(response.body)
 
       unless response.is_a?(Net::HTTPSuccess)
-        raise "PortOne API error: #{result['message'] || result['type'] || response.code}"
+        error = parse_json(response.body)
+        message = api_error_message(error, response)
+        raise ApiError, "PortOne API error: #{message}"
       end
 
-      result
+      JSON.parse(response.body)
+    rescue Timeout::Error,
+           Errno::ECONNREFUSED,
+           SocketError,
+           Net::OpenTimeout,
+           Net::ReadTimeout => e
+      raise TransportError.new("PortOne network error: #{e.message}"), cause: e
+    end
+
+    def self.parse_json(body)
+      JSON.parse(body)
+    rescue JSON::ParserError
+      nil
+    end
+
+    def self.api_error_message(error, response)
+      if error.is_a?(Hash)
+        error["message"].presence || error["type"].presence || response.body.presence || response.code
+      else
+        response.body.presence || response.code
+      end
     end
   end
 end

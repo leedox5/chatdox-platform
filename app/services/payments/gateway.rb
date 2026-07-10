@@ -1,5 +1,7 @@
 module Payments
   class Gateway
+    PROVIDERS = %w[toss portone].freeze
+
     def self.current
       self.for(ENV.fetch("PAYMENT_PROVIDER", "toss"))
     end

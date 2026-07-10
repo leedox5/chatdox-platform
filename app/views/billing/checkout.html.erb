@@ -31,10 +31,11 @@
   <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
   <script>
     const payButton = document.getElementById("pay-button");
-    const storeId = "<%= @portone_store_id %>";
-    const channelKey = "<%= @portone_channel_key %>";
-    const orderId = "<%= @order_id %>";
+    const storeId = <%= @portone_store_id.to_json.html_safe %>;
+    const channelKey = <%= @portone_channel_key.to_json.html_safe %>;
+    const orderId = <%= @order_id.to_json.html_safe %>;
     const amount = <%= @amount %>;
+    const currency = <%= @currency.to_json.html_safe %>;
 
     if (!storeId || !channelKey) {
       payButton.disabled = true;
@@ -48,9 +49,9 @@
         paymentId: orderId,
         orderName: "Chatdox 월 구독",
         totalAmount: amount,
-        currency: "<%= @currency %>",
+        currency,
         payMethod: "CARD",
-        customer: { email: "<%= current_user.email %>" }
+        customer: { email: <%= current_user.email.to_json.html_safe %> }
       });
 
       if (response.code !== undefined) {
@@ -66,21 +67,23 @@
         },
         body: JSON.stringify({ paymentId: response.paymentId, orderId })
       });
+      const confirmResult = await confirmResponse.json().catch(() => ({}));
 
-      if (confirmResponse.ok || confirmResponse.redirected) {
-        window.location.href = "<%= dashboard_path %>";
+      if (confirmResponse.ok && confirmResult.ok) {
+        window.location.href = confirmResult.redirectUrl || <%= dashboard_path.to_json.html_safe %>;
       } else {
-        alert("결제 승인에 실패했습니다.");
+        alert(confirmResult.message || "결제 승인에 실패했습니다.");
       }
     });
   </script>
 <% else %>
   <script src="https://js.tosspayments.com/v2/standard"></script>
   <script>
-    const clientKey = "<%= ENV.fetch('TOSS_CLIENT_KEY', '') %>";
-    const customerKey = "user-<%= current_user.id %>";
-    const orderId = "<%= @order_id %>";
+    const clientKey = <%= ENV.fetch("TOSS_CLIENT_KEY", "").to_json.html_safe %>;
+    const customerKey = <%= "user-#{current_user.id}".to_json.html_safe %>;
+    const orderId = <%= @order_id.to_json.html_safe %>;
     const amount = <%= @amount %>;
+    const currency = <%= @currency.to_json.html_safe %>;
 
     if (!clientKey) {
       console.error('TOSS_CLIENT_KEY is empty!');
@@ -93,7 +96,7 @@
       const widgets = tossPayments.widgets({ customerKey });
 
       (async () => {
-        await widgets.setAmount({ currency: "<%= @currency %>", value: amount });
+        await widgets.setAmount({ currency, value: amount });
         await Promise.all([
           widgets.renderPaymentMethods({ selector: "#payment-widget", variantKey: "DEFAULT" }),
           widgets.renderAgreement({ selector: "#agreement-widget", variantKey: "AGREEMENT" })
@@ -106,8 +109,8 @@
           orderName: "Chatdox 월 구독",
           successUrl: "<%= billing_success_url %>",
           failUrl: "<%= billing_cancel_url %>",
-          customerEmail: "<%= current_user.email %>",
-          customerName: "<%= current_user.email %>"
+          customerEmail: <%= current_user.email.to_json.html_safe %>,
+          customerName: <%= current_user.email.to_json.html_safe %>
         });
       });
     } catch (error) {

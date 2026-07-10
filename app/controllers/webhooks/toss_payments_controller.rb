@@ -51,7 +51,7 @@ class Webhooks::TossPaymentsController < ApplicationController
     when "ABORTED", "EXPIRED"
       "past_due"
     else
-      provider_status.to_s.downcase
+      "pending"
     end
   end
 end

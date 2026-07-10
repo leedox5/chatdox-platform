@@ -4,6 +4,7 @@ require "openssl"
 module Portone
   class WebhookVerifier
     class VerificationError < StandardError; end
+    TOLERANCE = 5.minutes
 
     def self.verify!(secret:, payload:, headers:)
       new(secret: secret, payload: payload, headers: headers).verify!
@@ -18,6 +19,8 @@ module Portone
     def verify!
       raise VerificationError, "missing webhook secret" if @secret.blank?
       raise VerificationError, "missing webhook headers" if webhook_id.blank? || timestamp.blank? || signature.blank?
+      raise VerificationError, "invalid webhook timestamp" unless timestamp_time
+      raise VerificationError, "stale webhook timestamp" if (Time.current - timestamp_time).abs > TOLERANCE
 
       expected = Base64.strict_encode64(
         OpenSSL::HMAC.digest("SHA256", decoded_secret, "#{webhook_id}.#{timestamp}.#{@payload}")
@@ -36,6 +39,12 @@ module Portone
 
     def timestamp
       header("webhook-timestamp")
+    end
+
+    def timestamp_time
+      Time.zone.at(Integer(timestamp))
+    rescue ArgumentError, TypeError
+      nil
     end
 
     def signature

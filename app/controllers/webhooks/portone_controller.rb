@@ -32,28 +32,41 @@ class Webhooks::PortoneController < ApplicationController
 
   def sync_payment!(payment)
     provider_payment_id = payment["id"] || payment["paymentId"]
-    transaction = PaymentTransaction.find_by(provider: "portone", provider_payment_id: provider_payment_id)
-    subscription = transaction&.subscription || subscription_from_payment_id(provider_payment_id)
-    return unless subscription
+    transaction = PaymentTransaction.find_or_initialize_by(
+      provider: "portone",
+      provider_payment_id: provider_payment_id
+    )
+    subscription = transaction.subscription
+    unless subscription
+      Rails.logger.warn("PortOne webhook missing pending transaction: payment_id=#{provider_payment_id}")
+      return
+    end
 
     status = subscription_status(payment["status"])
+    order_id = transaction.order_id.presence || provider_payment_id
 
     ApplicationRecord.transaction do
-      transaction&.update!(
+      transaction.update!(
+        subscription: subscription,
+        order_id: order_id,
         status: status,
-        amount: payment.dig("amount", "total") || transaction.amount,
-        currency: payment["currency"] || transaction.currency,
+        amount: payment.dig("amount", "total") || transaction.amount || 0,
+        currency: payment["currency"] || transaction.currency || "KRW",
         provider_payload: payment
       )
-      subscription.update!(status: status, active: status == "active")
+      subscription.update!(subscription_attributes(subscription, status, order_id))
     end
   end
 
-  def subscription_from_payment_id(payment_id)
-    user_id = payment_id.to_s[/\Achatdox-(\d+)-/, 1]
-    return unless user_id
+  def subscription_attributes(subscription, status, order_id)
+    attributes = { status: status, active: status == "active" }
+    return attributes unless status == "active"
 
-    User.find_by(id: user_id)&.subscription
+    attributes.merge(
+      provider: "portone",
+      provider_customer_id: subscription.provider_customer_id.presence || "user-#{subscription.user_id}",
+      order_id: order_id
+    )
   end
 
   def subscription_status(provider_status)
