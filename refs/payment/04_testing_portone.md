@@ -106,6 +106,55 @@ PaymentTransaction.last.status
 # => "active"
 ```
 
+### 실제 성공 결과
+
+2026-07-10 로컬 테스트에서 PortOne 테스트 결제가 성공했고, 결제 완료 후 대시보드로 정상 이동했습니다.
+
+Subscription 저장 결과:
+
+```ruby
+{
+  id: 1,
+  user_id: 1,
+  provider: "portone",
+  provider_customer_id: "user-1",
+  status: "active",
+  active: true,
+  order_id: "chatdox-1-1783658052",
+  current_period_start: "2026-07-10 04:36:27 UTC",
+  current_period_end: "2026-08-10 04:36:27 UTC",
+  billing_key_present: false
+}
+```
+
+PaymentTransaction 저장 결과:
+
+```ruby
+{
+  id: 2,
+  subscription_id: 1,
+  provider: "portone",
+  provider_payment_id: "chatdox-1-1783658052",
+  order_id: "chatdox-1-1783658052",
+  status: "active",
+  amount: 9900,
+  currency: "KRW"
+}
+```
+
+사용자 구독 판정:
+
+```ruby
+User.find(1).subscribed?
+# => true
+```
+
+참고:
+
+- 기존 `subscriptions.toss_*` 컬럼은 토스 회귀 테스트와 기존 데이터 보존을 위해 유지합니다.
+- 현재 결제 공급자 기준은 `subscriptions.provider == "portone"`과 `payment_transactions.provider == "portone"`입니다.
+- 이번 테스트는 일반 결제 성공 검증이며, PortOne billing key 발급은 별도 테스트가 필요합니다.
+
 ---
 
 ## 6. 웹훅 테스트
