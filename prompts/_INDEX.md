@@ -20,7 +20,7 @@ dependency: []
 | 01-R1 | Landing Page Revision 1 | Nav 링크 → Dummy 페이지 연결 | ✅ 완료 | Rails/Tailwind |
 | 02 | Docs Preview | 문서 열람 (사이드바 + Markdown) | ✅ 완료 | Rails/Redcarpet |
 | 02-R1 | Docs Preview R1 | 20챕터 전체 목록 + 파일 존재 여부 자동 체크 | ✅ 완료 | Rails/Redcarpet |
-| 09-R1 | Payment (Toss Payments) | 결제위젯 + 승인 API + 자동결제 구현 | ✅ 완료 | Rails/Toss Payments |
+| 09-R1 | Payment (Toss / PortOne) | 공급자 선택 + 승인/조회 + 자동결제 구현 | ✅ 완료 | Rails/Payments |
 | 03 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
 | 03 | Pricing | 가격 플랜 페이지 | ⏳ 예정 | Rails/Tailwind |
 | 04 | Dashboard | 사용자 대시보드 | ⏳ 예정 | Rails/Tailwind |
@@ -129,7 +129,7 @@ dependency: []
 
 ### ✅ 09 Payment R1 (구현 프롬프트)
 **파일:** `09_payment_r1.md`
-- 토스페이먼츠 결제위젯 기반 구독 결제 시작
+- 토스페이먼츠 직접 연동 또는 포트원 V2 기반 구독 결제 시작
 - 승인 API로 결제 결과 확정
 - 빌링키 기반 자동결제 상태 반영
 - 샌드박스 키 + 테스트 결제수단 검증
@@ -193,5 +193,5 @@ Pricing (03) ─────┘
 | 날짜 | 변경사항 |
 |------|---------|
 | 2026-07-09 | INDEX 생성, 01_landing_page 완료 |
-| 2026-07-10 | 09_payment_r1 토스페이먼츠 버전으로 전환 |
+| 2026-07-10 | 09_payment_r1 토스페이먼츠/포트원 선택형 버전으로 확장 |
 

@@ -177,7 +177,7 @@ class Curriculum
     Chapter.new(id: "06", slug: "06_database", title: "Database & Migrations"),
     Chapter.new(id: "07", slug: "07_authentication", title: "Authentication (Devise)"),
     Chapter.new(id: "08", slug: "08_authorization", title: "Authorization & 권한 관리"),
-    Chapter.new(id: "09", slug: "09_payment", title: "Payment (Toss Payments)"),
+    Chapter.new(id: "09", slug: "09_payment", title: "Payment (Toss / PortOne)"),
     Chapter.new(id: "10", slug: "10_dashboard", title: "사용자 대시보드"),
     Chapter.new(id: "11", slug: "11_admin", title: "관리자 대시보드"),
     Chapter.new(id: "12", slug: "12_email", title: "Email & 알림"),
