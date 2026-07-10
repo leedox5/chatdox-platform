@@ -1,6 +1,13 @@
 class DocsController < ApplicationController
   DOCS_PATH = Rails.root.join("docs/curriculum/docs")
 
+  # Pre-compute trusted file paths from the hardcoded CHAPTERS constant so that
+  # user input is never used to construct a file path — only to select among
+  # these pre-approved paths.
+  CHAPTER_FILE_PATHS = Curriculum::CHAPTERS.each_with_object({}) do |chapter, hash|
+    hash[chapter[:id]] = DOCS_PATH.join("#{chapter[:slug]}.md").freeze
+  end.freeze
+
   def index
     @chapters = chapters_with_availability
     @phase_chapters = chapters_by_phase(@chapters)
@@ -21,8 +28,8 @@ class DocsController < ApplicationController
 
     authorize @current_chapter, :view?, policy_class: DocPolicy
 
-    file_path = DOCS_PATH.join("#{File.basename(@current_chapter[:slug].to_s)}.md")
-    unless File.exist?(file_path)
+    file_path = CHAPTER_FILE_PATHS[@current_id]
+    unless file_path && File.exist?(file_path)
       render plain: "아직 공개되지 않은 챕터입니다.", status: :not_found
       return
     end
