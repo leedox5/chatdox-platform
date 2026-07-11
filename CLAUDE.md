@@ -13,6 +13,7 @@ Chatdox (Chat-GPT + Leedox): a fully-documented educational SaaS build. See [REA
 - **QNA.md** — Q&A log of questions Tommy asks about how Claude/Claude Code works, written as `[질문]` / `[답변]` pairs in Korean.
 - **progress.md** — checklist tracking which chapters have real content (✅) vs. header-only placeholder (⬜), synced with `setup.md`. Update it whenever a chapter file gains content or `setup.md`'s chapter list changes.
 - **memory_seed.md** — portable snapshot of my (Claudox's) cross-session memory (user identity, standing rules, project vision, root motivation). This travels with `git clone`; the real memory system under `~/.claude/projects/.../memory/` does not (it's local to this PC/user profile — see [08_qna.md](CLAUDE/08_qna.md)).
+- **99_service_desk.md** — Tommy's request queue for this repo (outside the 1-20 chapter numbering, deliberately at 99 as an appendix). Format: `REQ_NNNN> 요청내용`. When a request is fulfilled, append a `[처리완료] → 무엇을 했는지` line directly under it rather than deleting the request.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
 
@@ -32,3 +33,4 @@ If this project is opened somewhere my local memory doesn't already have Tommy/C
 - **Keep memory_seed.md in sync**: whenever a new fact/rule gets saved to local memory, mirror it into `CLAUDE/memory_seed.md` in the same session — otherwise a clone on another machine bootstraps from a stale snapshot.
 - **Root motivation**: all of the above traces back to one thing — Tommy doesn't want to lose a single conversation with Claudox. When a judgment call is ambiguous, default to whichever choice preserves more of the record.
 - **Summarize, don't transcribe**: covering every conversation (per the TOC coverage rule) means capturing the substance, not pasting the dialogue verbatim. Compress into narrative prose by default; reserve `>` blockquotes for the rare line worth quoting exactly.
+- **Bare chapter number shorthand**: when Tommy refers to a chapter by number alone (e.g. "01", "3", "19") with no other qualifier, he means `CLAUDE/NN_slug.md`. When he asks to evaluate/finish/commit "01"-style, resolve it against `setup.md`/`progress.md` rather than asking which file he means.
