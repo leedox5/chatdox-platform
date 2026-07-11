@@ -4,3 +4,4 @@
 
 REQ_0001> 01문서에 Fre, Pro, Max의 차이점을 간단하게 기술
 [처리완료] → 01_first_meeting.md에 Free/Pro/Max 요금제 비교 3줄 추가
+
