@@ -13,9 +13,10 @@ Chatdox (Chat-GPT + Leedox): a fully-documented educational SaaS build. See [REA
 - **QNA.md** — Q&A log of questions Tommy asks about how Claude/Claude Code works, written as `[질문]` / `[답변]` pairs in Korean.
 - **88_progress.md** — checklist tracking each chapter's `완성도` (completeness %, a qualitative call on whether the chapter's arc feels complete) and derived ✅/⬜ status (✅ at ≥80%), synced with `setup.md`. Update it whenever a chapter file gains content or `setup.md`'s chapter list changes.
 - **memory_seed.md** — portable snapshot of my (Claudox's) cross-session memory (user identity, standing rules, project vision, root motivation). This travels with `git clone`; the real memory system under `~/.claude/projects/.../memory/` does not (it's local to this PC/user profile — see [08_qna.md](CLAUDE/08_qna.md)).
+- **97_commands.md** — quick-reference table of Tommy's shorthand keywords (`SYNC`, bare chapter numbers, `GO`) and what they resolve to. The canonical, detailed rule text still lives in this file's Standing rules and in `memory_seed.md`; this is just the lookup table.
 - **99_service_desk.md** — Tommy's request queue for this repo. Format: `REQ_NNNN> 요청내용`. When a request is fulfilled, append a `[처리완료] → 무엇을 했는지` line directly under it rather than deleting the request.
 
-`88_progress.md` and `99_service_desk.md` are deliberately numbered outside the 1-20 chapter range — an 80s/90s "appendix" block for meta/infrastructure files, distinct from the story chapters.
+`88_progress.md`, `97_commands.md`, and `99_service_desk.md` are deliberately numbered outside the 1-20 chapter range — an 80s/90s "appendix" block for meta/infrastructure files, distinct from the story chapters.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
 
@@ -37,3 +38,4 @@ If this project is opened somewhere my local memory doesn't already have Tommy/C
 - **Summarize, don't transcribe**: covering every conversation (per the TOC coverage rule) means capturing the substance, not pasting the dialogue verbatim. Compress into narrative prose by default; reserve `>` blockquotes for the rare line worth quoting exactly.
 - **Bare chapter number shorthand**: when Tommy refers to a chapter by number alone (e.g. "01", "3", "19") with no other qualifier, he means `CLAUDE/NN_slug.md`. When he asks to evaluate/finish/commit "01"-style, resolve it against `setup.md`/`88_progress.md` rather than asking which file he means.
 - **"SYNC" keyword**: when Tommy says/writes `SYNC`, it means "go all the way through to the final git push" — stage the pending changes, commit with a descriptive message, and push to `origin/main` without asking again.
+- **Keep 97_commands.md in sync**: whenever a new shorthand keyword gets established (like `SYNC` or the bare-number convention), add a row to `CLAUDE/97_commands.md` in the same session.
