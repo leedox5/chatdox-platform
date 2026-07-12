@@ -56,3 +56,6 @@ service-desk/_log/
 
 # Tommy 로컬 전용 커맨드/메모, 커밋 대상 아님
 .local/
+
+# chatdox-platform/request/ 미러 (로컬 동기화 전용, REQ 0019), 커밋 대상 아님
+service-desk/_platform_sync/
