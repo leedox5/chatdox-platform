@@ -48,6 +48,7 @@ class DocsController < ApplicationController
       return
     end
 
+    @last_updated_at = File.mtime(file_path)
     raw_markdown = File.read(file_path)
     @chapter_progress = if user_signed_in?
       current_user.chapter_progresses.find_by(chapter_id: @current_id)
