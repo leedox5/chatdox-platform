@@ -11,7 +11,7 @@
 |------|------|------|------|
 | 1 | Git | 최신 | 버전 관리 |
 | 2 | rbenv | 최신 | Ruby 버전 관리 |
-| 3 | Ruby | 3.3.x | 프로그래밍 언어 |
+| 3 | Ruby | 3.4.x | 프로그래밍 언어 |
 | 4 | Rails | 8.1.x | 웹 프레임워크 |
 | 5 | Node.js *(선택)* | LTS | 기본 스택(tailwindcss-rails + importmap-rails)에는 불필요 |
 | 6 | VS Code | 최신 | 코드 편집기 |
@@ -65,18 +65,18 @@ brew install rbenv ruby-build
 echo 'eval "$(rbenv init -)"' >> ~/.zshrc
 source ~/.zshrc
 
-# Ruby 3.3 설치
-rbenv install 3.3.6
-rbenv global 3.3.6
+# Ruby 3.4 설치
+rbenv install 3.4.9
+rbenv global 3.4.9
 
 # 설치 확인
 ruby --version
-# ruby 3.3.6
+# ruby 3.4.9
 ```
 
 ### Windows
 
-[RubyInstaller](https://rubyinstaller.org/downloads/) 에서 **Ruby+Devkit 3.3.x (x64)** 다운로드 후 설치
+[RubyInstaller](https://rubyinstaller.org/downloads/) 에서 **Ruby+Devkit 3.4.x (x64)** 다운로드 후 설치
 
 ```bash
 # 설치 확인
@@ -104,13 +104,13 @@ source ~/.bashrc
 
 git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 
-# Ruby 3.3 설치
-rbenv install 3.3.6
-rbenv global 3.3.6
+# Ruby 3.4 설치
+rbenv install 3.4.9
+rbenv global 3.4.9
 
 # 설치 확인
 ruby --version
-# ruby 3.3.6
+# ruby 3.4.9
 ```
 
 > 💡 VS Code에서 WSL 안의 프로젝트를 열려면 [WSL 확장](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)을 설치하고, WSL 터미널에서 `code .`를 실행하세요.
@@ -285,7 +285,7 @@ git push -u origin main
 
 ```bash
 git --version     # git version 2.x.x
-ruby --version    # ruby 3.3.x
+ruby --version    # ruby 3.4.x
 rails --version   # Rails 8.1.x
 node --version    # v20.x.x 이상 (Node.js를 설치했다면)
 ```
@@ -320,14 +320,14 @@ PORT=3001 bin/dev  # 다른 포트 사용
 # libffi, libyaml 누락이 원인. 위 "빌드에 필요한 패키지 설치" 명령에
 # libffi-dev libyaml-dev가 빠졌다면 추가 설치 후 재시도
 sudo apt install -y libffi-dev libyaml-dev
-rbenv install 3.3.6
+rbenv install 3.4.9
 ```
 
 ---
 
 ## ✅ 챕터 3 체크리스트
 
-- [ ] Ruby 3.3.x 설치 완료
+- [ ] Ruby 3.4.x 설치 완료
 - [ ] Rails 8.1.x 설치 완료
 - [ ] (선택) Node.js LTS 설치 완료
 - [ ] VS Code + 권장 확장 프로그램 설치

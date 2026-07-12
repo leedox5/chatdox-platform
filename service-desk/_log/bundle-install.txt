@@ -1,0 +1,2 @@
+leedox@DESKTOP-PK9LEFC:~/dev/chatdox-platform$ bundle install
+rbenv: version `ruby-3.4.9' is not installed (set by /home/leedox/dev/chatdox-platform/.ruby-version)
