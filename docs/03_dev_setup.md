@@ -13,7 +13,7 @@
 | 2 | rbenv | 최신 | Ruby 버전 관리 |
 | 3 | Ruby | 3.3.x | 프로그래밍 언어 |
 | 4 | Rails | 8.1.x | 웹 프레임워크 |
-| 5 | Node.js | LTS | Tailwind CSS 빌드 |
+| 5 | Node.js *(선택)* | LTS | 기본 스택(tailwindcss-rails + importmap-rails)에는 불필요 |
 | 6 | VS Code | 최신 | 코드 편집기 |
 | 7 | GitHub 계정 | - | 코드 저장소 |
 
@@ -130,9 +130,11 @@ rails --version
 
 ---
 
-## 4️⃣ Node.js 설치
+## 4️⃣ Node.js 설치 (선택사항)
 
-Tailwind CSS 빌드에 필요합니다.
+> 💡 **이 커리큘럼에서는 Node.js가 필수가 아닙니다.** `rails new --css tailwind`로 생성하면 **tailwindcss-rails** gem이 Tailwind의 standalone CLI(Ruby 플랫폼별 네이티브 바이너리)를 내장해서 Node.js 없이도 CSS를 빌드합니다. JavaScript도 **importmap-rails**를 쓰기 때문에 esbuild/webpack 같은 번들러가 필요 없고, 따라서 Node.js/npm도 필요 없습니다.
+>
+> 이후 챕터에서 `cssbundling-rails`/`jsbundling-rails`로 전환하거나, npm 패키지가 필요한 별도 JS 도구를 쓰고 싶다면 이 단계를 설치하세요. 그게 아니라면 건너뛰어도 됩니다.
 
 ### macOS
 
@@ -255,7 +257,7 @@ git push -u origin main
 git --version     # git version 2.x.x
 ruby --version    # ruby 3.3.x
 rails --version   # Rails 8.1.x
-node --version    # v20.x.x 이상
+node --version    # v20.x.x 이상 (Node.js를 설치했다면)
 ```
 
 ---
@@ -297,7 +299,7 @@ rbenv install 3.3.6
 
 - [ ] Ruby 3.3.x 설치 완료
 - [ ] Rails 8.1.x 설치 완료
-- [ ] Node.js LTS 설치 완료
+- [ ] (선택) Node.js LTS 설치 완료
 - [ ] VS Code + 권장 확장 프로그램 설치
 - [ ] GitHub SSH 연결 완료
 - [ ] `rails new chatdox` 프로젝트 생성 완료

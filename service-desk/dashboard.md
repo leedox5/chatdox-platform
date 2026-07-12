@@ -1,6 +1,6 @@
 # 종합현황
 
-완료율: **87%** · 요청 8 · 신규 1 · 진행중 0 · 완료 0 · 확인 7
+완료율: **88%** · 요청 9 · 신규 1 · 진행중 0 · 완료 1 · 확인 7
 
 | ID | Date | Subject | Status |
 |---|---|---|---|
@@ -12,6 +12,7 @@
 | 0006 | 2026.07.12 | WSL rbenv install 시 fiddle/psych 빌드 실패 (libffi/libyaml 누락) | Confirmed |
 | 0007 | 2026.07.12 | 폴더 이동 방식 대신 상태값만으로 요청을 관리하도록 구조 변경 | Confirmed |
 | 0008 | 2026.07.12 | dashboard.md 자동 생성 스크립트 추가 | Confirmed |
+| 0009 | 2026.07.12 | docs/03_dev_setup.md의 Node.js 필수 표기를 실제 스택과 맞게 정정 | Completed |
 
 ---
 
