@@ -85,6 +85,36 @@ ruby --version
 
 > 💡 설치 마지막 단계에서 **"Run 'ridk install'"** 체크박스를 반드시 체크하세요.
 
+### Windows (WSL)
+
+WSL(Windows Subsystem for Linux)을 쓰면 Windows에서도 macOS/Linux와 동일한 방식으로 rbenv를 사용할 수 있습니다. RubyInstaller 대신 이 방법을 쓰고 싶다면 아래를 따라하세요.
+
+> 💡 WSL2 + Ubuntu가 이미 설치되어 있다는 전제입니다. 아직이라면 PowerShell(관리자 권한)에서 `wsl --install` 실행 후 재부팅하세요.
+
+```bash
+# 빌드에 필요한 패키지 설치
+sudo apt update
+sudo apt install -y build-essential libssl-dev libreadline-dev zlib1g-dev
+
+# rbenv + ruby-build 설치
+git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+source ~/.bashrc
+
+git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+
+# Ruby 3.3 설치
+rbenv install 3.3.6
+rbenv global 3.3.6
+
+# 설치 확인
+ruby --version
+# ruby 3.3.6
+```
+
+> 💡 VS Code에서 WSL 안의 프로젝트를 열려면 [WSL 확장](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)을 설치하고, WSL 터미널에서 `code .`를 실행하세요.
+
 ---
 
 ## 3️⃣ Rails 설치

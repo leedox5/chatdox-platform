@@ -15,6 +15,7 @@
 | [01](01_github_tips.md) | GitHub Repository 설정 가이드 | Description, License, .gitignore 선택 | 2026-07-09 |
 | [02](02_git_subtree.md) | Git Subtree 개념과 실무 활용 | Subtree 원리, Pull 타이밍, 주의사항 | 2026-07-09 |
 | [03](03_subtree_collaboration.md) | Subtree 협업 규칙 & 읽기 전용 정책 | Platform/Curriculum 분리, 변경 요청 방법 | 2026-07-09 |
+| [07](07_gitignore_gitkeep.md) | .gitignore 폴더 규칙과 .gitkeep의 역할 | 폴더 단위 ignore, 빈 폴더를 git에 남기는 법 | 2026-07-12 |
 
 ### Rails & 마크다운
 
@@ -68,6 +69,8 @@
 - Subtree Pull은 언제 필요한가? → [TIPS/02](02_git_subtree.md#-pull만-하면-되나-질문에-대한-답)
 - Platform에서 curriculum 수정할 수 있나? → [TIPS/03](03_subtree_collaboration.md#-규칙-docscurriculum은-읽기-전용)
 - Curriculum 변경을 어떻게 요청하나? → [TIPS/03](03_subtree_collaboration.md#-변경-요청하기-3가지-방법)
+- 폴더째로 .gitignore 하려면? → [TIPS/07](07_gitignore_gitkeep.md#-배경-왜-_screen_shot을-통째로-무시하나)
+- .gitkeep은 뭔가요? → [TIPS/07](07_gitignore_gitkeep.md#-gitkeep은-무엇인가)
 
 ### Rails & 마크다운
 - Redcarpet이 뭔가요? → [TIPS/04](04_redcarpet_guide.md#-redcarpet이란)
