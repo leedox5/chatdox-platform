@@ -382,7 +382,21 @@ git remote -v  # origin이 git@github.com:... 형태인지 확인
 # 해결 2: HTTPS를 계속 쓰고 싶다면 비밀번호 대신 Personal Access Token 발급
 # GitHub → Settings → Developer settings → Personal access tokens → Generate new token
 # 이후 비밀번호를 물어볼 때 그 토큰을 붙여넣는다
+
+# 해결 3 (제일 간편): GitHub CLI(gh)로 인증을 통째로 맡긴다
+# 설치 (WSL/Ubuntu)
+sudo apt install gh -y
+# 설치 (macOS)
+brew install gh
+# 설치 (Windows) - https://cli.github.com 에서 설치 프로그램 다운로드
+
+# 인증 (한 번만 하면 됨)
+gh auth login
+# GitHub.com 선택 → HTTPS 또는 SSH 선택 → 브라우저로 로그인
+# 이후 git push/pull이 gh가 관리하는 인증으로 자동 처리된다
 ```
+
+> 💡 SSH 키를 직접 만들고 등록하는 것도 번거롭게 느껴진다면, `gh auth login` 하나로 인증까지 끝내는 게 제일 간편합니다 — SSH/PAT를 따로 설정할 필요가 없습니다.
 
 ---
 
