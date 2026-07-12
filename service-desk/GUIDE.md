@@ -58,7 +58,16 @@ Job :
 - 완료되면 `Status`를 `Completed`로 바꾸고 `Job`을 채운다.
 - `Confirmed`는 **Leedox가 관여했을 때만** 붙인다 — 직접 손으로 재현해봤든(예: REQ 0006), 검토 후 "이것도 Confirmed 처리해줘"라고 명시적으로 승인했든(예: REQ 0001~0004) 상관없다. 핵심은 Claudox 혼자 판단해서 스스로 올리지 않는다는 것 — Claudox가 자체적으로 재확인만 한 것(예: REQ 0007의 첫 시도)은 `Completed`에 머무른다. Leedox의 확인 내용은 새 처리 ID로 `Job`에 이어 적는다.
 - 요청은 삭제하지 않는다 — 어떤 상태든 `requests/`에 그대로 남겨 기록으로 유지한다.
-- 새 요청이 생기거나 상태가 바뀌면 [dashboard.md](dashboard.md)의 종합현황과 표도 같이 갱신한다.
+- 새 요청이 생기거나 상태가 바뀌면 [dashboard.md](dashboard.md)를 갱신한다 — 손으로 고치는 대신 아래 스크립트를 실행하면 된다.
+
+## dashboard.md 자동 갱신
+
+`requests/*.md`를 스캔해서 `dashboard.md`를 통째로 다시 만들어주는 스크립트.
+
+- Git Bash: `./status.sh` (또는 `bash status.sh`)
+- PowerShell: `./status.ps1`
+
+각 요청 파일의 `ID`/`Date`/`Subject`/`Status`를 읽어서 상태별 건수와 표를 다시 계산하므로, 손으로 개수를 세거나 표를 다시 쓸 필요가 없다. 새 요청을 만들거나 `Status`를 바꾼 뒤에는 이 스크립트만 실행하면 된다.
 
 ### Requester: 아이디어를 낸 사람이 아니라 폼을 작성한 사람
 

@@ -1,4 +1,4 @@
-# Create a new service-desk request from requests/_FORM.md with the next ID.
+﻿# Create a new service-desk request from requests/_FORM.md with the next ID.
 $ErrorActionPreference = "Stop"
 Push-Location -Path $PSScriptRoot
 try {
@@ -14,7 +14,7 @@ try {
     }
 
     $today = Get-Date -Format "yyyy.MM.dd"
-    (Get-Content "requests/_FORM.md") `
+    (Get-Content "requests/_FORM.md" -Encoding UTF8) `
         -replace "ID : NNNN", "ID : $next" `
         -replace "Date : YYYY.MM.DD", "Date : $today" |
         Set-Content -Encoding utf8 $dest

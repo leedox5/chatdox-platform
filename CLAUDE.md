@@ -21,10 +21,12 @@ Chatdox (Chat-GPT + Leedox): a fully-documented educational SaaS build. See [REA
 
 The request queue for this repo, evolved from the old `CLAUDE/99_service_desk.md` flat file into a folder (`01_new/02_in_progress/03_completed`), then flattened again per REQ 0007 into a single `requests/` folder driven entirely by the `Status` field. See [service-desk/GUIDE.md](service-desk/GUIDE.md) for the full request-file format.
 
-- All request files (`requests/NNNN.md`, 4-digit ID) live in one place, permanently — no folder moves. `Status` alone tracks progress: `New` → `In Progress` → `Completed` → `Confirmed` (the last only once the result has actually been re-verified, not just implemented).
+- All request files (`requests/NNNN.md`, 4-digit ID) live in one place, permanently — no folder moves. `Status` alone tracks progress: `New` → `In Progress` → `Completed` → `Confirmed`.
+- **`Confirmed` requires Tommy's involvement** — hands-on reproduction or an explicit review sign-off, not Claudox self-checking its own work. Unilateral self-verification stays at `Completed`.
 - When Tommy files a new request, process it by editing its `Status`/`Job` fields in place rather than moving the file anywhere.
 - **Scope is explicit-only**: unlike the `CLAUDE/` TOC coverage rule (which captures *every* conversation), service-desk only tracks requests Tommy actually files (via `new.sh`/`new.ps1` or by hand). Don't auto-create tickets for things discussed in chat.
 - `requests/_FORM.md` is a reusable blank template — copy it for a new request, don't edit or delete it. `new.sh` (Git Bash) / `new.ps1` (PowerShell) automate the copy + next-ID numbering + date fill.
+- `status.sh` / `status.ps1` regenerate `dashboard.md` (counts + table) by scanning `requests/*.md` — run after any `Status` change instead of hand-editing the dashboard.
 - **Requester = who filed the form, not who had the idea**: if an idea comes up in chat and Tommy asks me to turn it into a ticket, `Requester` is `Claudox` (I filed it), even though the idea may have originated from either of us in conversation.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
