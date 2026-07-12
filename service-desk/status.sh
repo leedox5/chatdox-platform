@@ -24,10 +24,15 @@ for f in requests/[0-9][0-9][0-9][0-9].md; do
   rows="${rows}| ${id} | ${date} | ${subject} | ${status} |"$'\n'
 done
 
+rate=0
+if [ "$total" -gt 0 ]; then
+  rate=$(( (comp + conf) * 100 / total ))
+fi
+
 {
   echo "# 종합현황"
   echo
-  echo "요청 ${total} · 신규 ${new} · 진행중 ${inprog} · 완료 ${comp} · 확인 ${conf}"
+  echo "완료율: **${rate}%** · 요청 ${total} · 신규 ${new} · 진행중 ${inprog} · 완료 ${comp} · 확인 ${conf}"
   echo
   echo "| ID | Date | Subject | Status |"
   echo "|---|---|---|---|"

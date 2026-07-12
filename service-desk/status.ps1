@@ -18,10 +18,11 @@ try {
     }
 
     $total = $files.Count
+    $rate = if ($total -gt 0) { [Math]::Floor(($counts['Completed'] + $counts['Confirmed']) * 100 / $total) } else { 0 }
     $lines = @(
         "# 종합현황",
         "",
-        "요청 $total · 신규 $($counts['New']) · 진행중 $($counts['In Progress']) · 완료 $($counts['Completed']) · 확인 $($counts['Confirmed'])",
+        "완료율: **$rate%** · 요청 $total · 신규 $($counts['New']) · 진행중 $($counts['In Progress']) · 완료 $($counts['Completed']) · 확인 $($counts['Confirmed'])",
         "",
         "| ID | Date | Subject | Status |",
         "|---|---|---|---|"

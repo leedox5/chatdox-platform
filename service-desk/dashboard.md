@@ -1,6 +1,6 @@
-﻿# 종합현황
+# 종합현황
 
-요청 8 · 신규 1 · 진행중 0 · 완료 1 · 확인 6
+완료율: **87%** · 요청 8 · 신규 1 · 진행중 0 · 완료 0 · 확인 7
 
 | ID | Date | Subject | Status |
 |---|---|---|---|
@@ -11,7 +11,7 @@
 | 0005 | 2026.07.12 | docs/01_overview.md 기술 스택 표가 chatdox-platform에서 안 깨진 채로 렌더링되도록 수정 | New |
 | 0006 | 2026.07.12 | WSL rbenv install 시 fiddle/psych 빌드 실패 (libffi/libyaml 누락) | Confirmed |
 | 0007 | 2026.07.12 | 폴더 이동 방식 대신 상태값만으로 요청을 관리하도록 구조 변경 | Confirmed |
-| 0008 | 2026.07.12 | dashboard.md 자동 생성 스크립트 추가 | Completed |
+| 0008 | 2026.07.12 | dashboard.md 자동 생성 스크립트 추가 | Confirmed |
 
 ---
 
