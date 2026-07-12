@@ -27,19 +27,25 @@
 
 ## 요청 파일 작성 형식
 
-파일명은 `NNNN.md` (4자리 ID, 예: `0001.md`).
+파일명은 `NNNN.md` (4자리 ID, 예: `0001.md`). `Description`과 `Job`은 요청자/Claudox가 여러 줄로 자유롭게 적는 부분이라, 그 내용만 `text` 코드펜스로 감싼다 — 감싸지 않으면 Markdown 렌더링 시 여러 줄이 한 문단으로 뭉개진다.
 
-```
+````text
          ID : 0001
        Date : YYYY.MM.DD
   Requester : 요청자 이름
     Subject : 한 줄 제목
      Status : New | In Progress | Completed
-Description : 요청 내용 상세
 
-        Job :
+Description :
+```text
+요청 내용 상세 (여러 줄 가능)
+```
+
+Job :
+```text
 (완료 시 작성 — 무엇을, 어떻게 처리했는지)
 ```
+````
 
 - 새 요청은 `01_new/_FORM.md`를 복사해서 다음 ID 번호로 만든다 (직전 최대 ID + 1). `_FORM.md` 자체는 빈 템플릿이니 지우거나 번호를 매기지 않는다.
 - 처리를 시작하면 `02_in_progress/`로 옮기고 `Status`를 갱신한다.
