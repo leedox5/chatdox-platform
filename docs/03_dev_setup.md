@@ -291,7 +291,7 @@ rails db:prepare
 bin/dev
 ```
 
-> 💡 `git clone`이 SSH로 안 되면 6️⃣에서 등록한 SSH 키를 먼저 확인하세요. 또는 `https://github.com/[username]/chatdox.git` 형태로 HTTPS 클론도 가능합니다.
+> 💡 `git clone`이 SSH로 안 되면 6️⃣에서 등록한 SSH 키를 먼저 확인하세요. `https://github.com/[username]/chatdox.git` 형태로 HTTPS 클론도 가능하지만, **HTTPS는 `git push`할 때 비밀번호 입력이 막혀있어** 별도로 Personal Access Token을 발급해야 합니다 (아래 트러블슈팅 참고). 가능하면 SSH를 쓰는 걸 권장합니다.
 
 두 방법 모두 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속 → Rails 기본 화면(A) 또는 채독스 화면(B)이 보이면 성공!
 
@@ -367,6 +367,21 @@ rbenv install 3.4.9
 # ~/.gitconfig가 따로 없으면 나는 에러. WSL 터미널에서 다시 설정
 git config --global user.name "이름"
 git config --global user.email "이메일@example.com"
+```
+
+**`git push` 시 "Invalid username or token. Password authentication is not supported"**
+```text
+원인: 리포지토리 remote가 HTTPS(https://github.com/...)로 설정되어 있고,
+GitHub는 2021년부터 git push/pull에 비밀번호 로그인을 지원하지 않는다.
+```
+```bash
+# 해결 1 (권장): remote를 SSH로 바꾼다 — 6️⃣에서 등록한 SSH 키를 그대로 사용
+git remote set-url origin git@github.com:[username]/chatdox.git
+git remote -v  # origin이 git@github.com:... 형태인지 확인
+
+# 해결 2: HTTPS를 계속 쓰고 싶다면 비밀번호 대신 Personal Access Token 발급
+# GitHub → Settings → Developer settings → Personal access tokens → Generate new token
+# 이후 비밀번호를 물어볼 때 그 토큰을 붙여넣는다
 ```
 
 ---

@@ -51,5 +51,8 @@ temp/
 # 로그/스크린샷 폴더 (예: service-desk/_screen_shot/), 커밋 대상 아님
 _screen_shot/
 
+# 터미널 로그 (호스트명/사용자명 등 개인정보 포함 가능), 커밋 대상 아님
+service-desk/_log/
+
 # Tommy 로컬 전용 커맨드/메모, 커밋 대상 아님
 .local/
