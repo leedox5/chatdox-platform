@@ -1,6 +1,6 @@
 ﻿# 종합현황
 
-완료율: **88%** · 요청 17 · 신규 0 · 진행중 2 · 완료 0 · 확인 15
+완료율: **83%** · 요청 18 · 신규 1 · 진행중 2 · 완료 0 · 확인 15
 
 | ID | Date | Subject | Status | Visibility |
 |---|---|---|---|---|
@@ -21,6 +21,7 @@
 | 0015 | 2026.07.12 | [SUB-B/0014] CLAUDE+서비스데스크 상품화 방향 결정 | Confirmed | Private |
 | 0016 | 2026.07.12 | [SUB-A/0014] CLAUDE+서비스데스크 컨텐츠 공개 범위 정의 | Confirmed | Public |
 | 0017 | 2026.07.12 | auto-compact/컨텍스트 압축 설명을 CLAUDE/08_qna.md에 반영 | Confirmed | Public |
+| 0018 | 2026.07.12 | [SUB-C/0014] CLAUDE+서비스데스크 웹 뷰어 구현 | New | Public |
 
 ---
 
