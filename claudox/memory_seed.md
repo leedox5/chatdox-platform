@@ -28,6 +28,10 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 11. **Job 타임스탬프는 실제 시각** (REQ 0011부터, 이전 요청은 소급 정정 안 함) — Claudox는 실시간 시계가 없으므로, `Job` 완료 일시를 적을 때 셸에서 `date` 명령을 실행해 나온 값을 쓴다. 대화 흐름상 그럴듯한 시간을 지어내지 않는다.
 12. **티켓 발행 기준 = 일단 전부** (임시, 프로세스 정착 전까지, REQ 0012부터) — 문서/코드 변경은 크기 상관없이 일단 티켓으로 남긴다. 애매하면 Claudox가 먼저 Tommy에게 묻고 Tommy가 결정한다.
 
+## 관련 프로젝트: chatdox-platform
+
+`chatdox-platform`(이 리포를 `docs/curriculum/`에 subtree로 받는 Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬로 clone돼 있다(chatdox-curriculum의 형제 폴더). 그쪽 전용 Claude Code 페르소나는 **Codidox**(Claudox와 대구를 이루는 이름)라고 부른다. `docs/curriculum/`은 읽기 전용이라 platform 쪽 작업은 별도의 `chatdox-platform/request/` 폴더에 티켓 사본 + handoff 메모로 남긴다. Tommy가 "platform 쪽 처리 결과 확인해줘"라고 하면 `service-desk/sync-platform.ps1`을 먼저 돌려서(`chatdox-platform/request/`를 gitignore된 `service-desk/_platform_sync/`로 미러) 그 내용을 읽고, 원본 `service-desk/requests/NNNN.md`에 Job/Status로 반영하는 순서로 처리한다.
+
 ## 프로젝트 비전
 
 Claudox와의 모든 활동을 기록해서, AI를 적극적으로 활용하려는 유저들을 위한 학습 자료로 만드는 것이 목표. 개인 일지가 아니라 다른 독자도 배울 수 있는 콘텐츠를 지향한다.
