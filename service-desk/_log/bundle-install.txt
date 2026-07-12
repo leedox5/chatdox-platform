@@ -1,2 +1,26 @@
 leedox@DESKTOP-PK9LEFC:~/dev/chatdox-platform$ bundle install
 rbenv: version `ruby-3.4.9' is not installed (set by /home/leedox/dev/chatdox-platform/.ruby-version)
+
+leedox@DESKTOP-PK9LEFC:~/dev/chatdox-platform$ bundle install
+Bundler 2.6.9 is running, but your lockfile was generated with 4.0.15. Installing Bundler 4.0.15 and restarting using that version.
+Fetching gem metadata from https://rubygems.org/.
+Fetching bundler 4.0.15
+Installing bundler 4.0.15
+Fetching gem metadata from https://rubygems.org/.........
+...
+Post-install message from solid_queue:
+Upgrading from Solid Queue < 1.0? Check details on breaking changes and upgrade instructions
+--> https://github.com/rails/solid_queue/blob/main/UPGRADING.md
+Post-install message from tailwindcss-rails:
+== Upgrading to Tailwind CSS v4 ==
+
+If you are upgrading to tailwindcss-rails 4.x, please read the upgrade guide at:
+
+  https://github.com/rails/tailwindcss-rails/blob/main/README.md#upgrading-your-application-from-tailwind-v3-to-v4
+
+If you're not ready to upgrade yet, please pin to version 3 in your Gemfile:
+
+  gem "tailwindcss-rails", "~> 3.3.1"
+
+1 installed gem you directly depend on is looking for funding.
+  Run `bundle fund` for details
