@@ -12,6 +12,8 @@ for f in requests/[0-9][0-9][0-9][0-9].md; do
   date=$(grep -m1 'Date :' "$f" | sed -E 's/^[[:space:]]*Date[[:space:]]*:[[:space:]]*//')
   subject=$(grep -m1 'Subject :' "$f" | sed -E 's/^[[:space:]]*Subject[[:space:]]*:[[:space:]]*//')
   status=$(grep -m1 'Status :' "$f" | sed -E 's/^[[:space:]]*Status[[:space:]]*:[[:space:]]*//')
+  visibility=$(grep -m1 'Visibility :' "$f" | sed -E 's/^[[:space:]]*Visibility[[:space:]]*:[[:space:]]*//')
+  [ -n "$visibility" ] || visibility="Public"
 
   case "$status" in
     New) new=$((new+1)) ;;
@@ -21,7 +23,7 @@ for f in requests/[0-9][0-9][0-9][0-9].md; do
   esac
   total=$((total+1))
 
-  rows="${rows}| ${id} | ${date} | ${subject} | ${status} |"$'\n'
+  rows="${rows}| ${id} | ${date} | ${subject} | ${status} | ${visibility} |"$'\n'
 done
 
 rate=0
@@ -34,8 +36,8 @@ fi
   echo
   echo "완료율: **${rate}%** · 요청 ${total} · 신규 ${new} · 진행중 ${inprog} · 완료 ${comp} · 확인 ${conf}"
   echo
-  echo "| ID | Date | Subject | Status |"
-  echo "|---|---|---|---|"
+  echo "| ID | Date | Subject | Status | Visibility |"
+  echo "|---|---|---|---|---|"
   printf '%s' "$rows"
   echo
   echo "---"
