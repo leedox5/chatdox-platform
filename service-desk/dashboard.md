@@ -1,6 +1,6 @@
 ﻿# 종합현황
 
-완료율: **89%** · 요청 19 · 신규 1 · 진행중 1 · 완료 1 · 확인 16
+완료율: **89%** · 요청 19 · 신규 1 · 진행중 1 · 완료 0 · 확인 17
 
 | ID | Date | Subject | Status | Visibility |
 |---|---|---|---|---|
@@ -22,7 +22,7 @@
 | 0016 | 2026.07.12 | [SUB-A/0014] claudox+서비스데스크 컨텐츠 공개 범위 정의 | Confirmed | Public |
 | 0017 | 2026.07.12 | auto-compact/컨텍스트 압축 설명을 claudox/08_qna.md에 반영 | Confirmed | Public |
 | 0018 | 2026.07.12 | [SUB-C/0014] claudox+서비스데스크 웹 뷰어 구현 | New | Public |
-| 0019 | 2026.07.12 | platform repo 의 서비스데스크 처리 결과 가져오기 | Completed | Public |
+| 0019 | 2026.07.12 | platform repo 의 서비스데스크 처리 결과 가져오기 | Confirmed | Public |
 
 ---
 
