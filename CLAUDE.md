@@ -6,7 +6,7 @@ Chatdox (Chat-GPT + Leedox): a fully-documented educational SaaS build. See [REA
 
 `CLAUDE/` (formerly `Working/`) is the running record of Tommy's collaboration with Claude ("Claudox"), written as a 20-chapter story. Purpose: every activity between Tommy and Claudox gets recorded here, chapter by chapter, to become a learning resource for users who want to actively leverage AI — not just a personal log. Known files and their format:
 
-- **setup.md** — the book's title + 20-chapter table of contents ("클로독스가 들어온 날 — 우리 팀이 달라졌다"). Source of truth for chapter order/titles.
+- **setup.md** — the book's title + 20-chapter table of contents ("클로독스가 들어온 날 — 우리 팀이 달라졌다"). Source of truth for chapter order/titles. Grouped into three difficulty tiers (chapter numbers/order unchanged, just headers): **Part 1. 입문 (1~8)** relationship/basic rules, **Part 2. 중급 (9~15)** real dev workflow, **Part 3. 고급 (16~20)** scaling/meta-automation. `88_progress.md` mirrors the same three-part grouping.
 - **NN_slug.md** (e.g. `01_first_meeting.md`, `02_setup_rule.md`, ... `20_wrap_up.md`) — one file per chapter in setup.md, zero-padded two-digit prefix + short English slug. Past-tense storytelling voice, overall flow should read like a story, not a stiff technical manual. Don't transcribe conversations verbatim — summarize/compress into the narrative, and use `>` blockquotes sparingly, only for lines whose exact wording matters. This doesn't mean banning bullet lists or factual comparisons (e.g. a plan-tier breakdown) — those are fine where they genuinely are reference info; keep the surrounding narration and transitions from feeling rigid, don't force every fact into prose. Chapters not yet written just contain the `# N. 제목` header + `*(아직 작성되지 않음)*` placeholder.
 - **Claude.md** — the original single-file narrative log this was split from. Kept as-is unless Tommy asks to remove it.
 - **English.md** — English practice log. Format: `R0` (Tommy's original English), `R1` (corrected version), then a `변경 포인트` (change points) list explaining each fix in Korean. No diff blocks — plain corrected text + bullet list only (Tommy tried the diff format and asked to drop it).
@@ -26,6 +26,7 @@ The request queue for this repo, evolved from the old `CLAUDE/99_service_desk.md
 - When Tommy files a new request here, process it and move the file through the stages yourself (per this project's git-conscious workflow) rather than just editing status text in place.
 - **Scope is explicit-only**: unlike the `CLAUDE/` TOC coverage rule (which captures *every* conversation), service-desk only tracks requests Tommy actually files (via `new.sh`/`new.ps1` or by hand). Don't auto-create tickets for things discussed in chat.
 - `01_new/_FORM.md` is a reusable blank template — copy it for a new request, don't edit or delete it. `new.sh` (Git Bash) / `new.ps1` (PowerShell) automate the copy + next-ID numbering + date fill.
+- **Requester = who filed the form, not who had the idea**: if an idea comes up in chat and Tommy asks me to turn it into a ticket, `Requester` is `Claudox` (I filed it), even though the idea may have originated from either of us in conversation.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
 

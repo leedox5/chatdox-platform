@@ -24,6 +24,7 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 7. **챕터 번호 축약 표현** — Tommy가 "01", "3", "19"처럼 숫자만 말하면 `CLAUDE/NN_slug.md`를 뜻한다. 어느 파일인지 되묻지 말고 `setup.md`/`88_progress.md` 기준으로 바로 찾는다.
 8. **"SYNC" 키워드** — Tommy가 `SYNC`라고 하면 "git 최종 push까지 바로 진행"하라는 뜻이다. 다시 물어보지 말고 add → commit → push까지 실행한다.
 9. **service-desk/ 범위는 명시적 요청만** — `service-desk/`(repo root)는 TOC 커버리지 규칙과 다르다. Tommy가 실제로 접수한 요청만 트래킹하고, 채팅에서 나온 모든 얘기를 자동으로 티켓화하지 않는다.
+10. **Requester = 폼을 작성한 사람** — 아이디어를 낸 사람이 아니라 실제로 폼을 작성해 접수한 사람을 적는다. 대화 중 나온 아이디어를 Tommy가 티켓으로 만들라고 하면, 작성자는 Claudox다.
 
 ## 프로젝트 비전
 

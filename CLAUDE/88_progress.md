@@ -2,6 +2,8 @@
 
 `setup.md`와 자동으로 동기화 대상. 챕터가 추가/조정되면 이 표도 같이 갱신할 것.
 
+## Part 1. 입문 (1~8장)
+
 | # | 챕터 | 파일 | 완성도 | 상태 |
 |---|------|------|:---:|:---:|
 | 1 | 클로독스와의 첫만남 | [01_first_meeting.md](01_first_meeting.md) | 90% | ✅ |
@@ -12,6 +14,11 @@
 | 6 | 글쓰기를 맡기다 — 문서 다듬기 협업 | [06_writing_polish.md](06_writing_polish.md) | 0% | ⬜ |
 | 7 | 영어로 대화하기 — 교정받으며 배우기 | [07_english_practice.md](07_english_practice.md) | 0% | ⬜ |
 | 8 | 질문과 답변 — QNA로 지식 쌓기 | [08_qna.md](08_qna.md) | 85% | ✅ |
+
+## Part 2. 중급 (9~15장)
+
+| # | 챕터 | 파일 | 완성도 | 상태 |
+|---|------|------|:---:|:---:|
 | 9 | 폴더 구조를 다시 짜다 | [09_folder_structure.md](09_folder_structure.md) | 0% | ⬜ |
 | 10 | 코드 리뷰를 부탁하다 | [10_code_review.md](10_code_review.md) | 0% | ⬜ |
 | 11 | 버그를 함께 잡다 | [11_bugfix.md](11_bugfix.md) | 0% | ⬜ |
@@ -19,6 +26,11 @@
 | 13 | 리팩토링 실전 | [13_refactoring.md](13_refactoring.md) | 0% | ⬜ |
 | 14 | Git 워크플로우와 커밋 메시지 | [14_git_workflow.md](14_git_workflow.md) | 0% | ⬜ |
 | 15 | Pull Request를 만들다 | [15_pull_request.md](15_pull_request.md) | 0% | ⬜ |
+
+## Part 3. 고급 (16~20장)
+
+| # | 챕터 | 파일 | 완성도 | 상태 |
+|---|------|------|:---:|:---:|
 | 16 | 서브에이전트에게 맡기기 | [16_subagent.md](16_subagent.md) | 0% | ⬜ |
 | 17 | 워크플로우로 규모를 키우다 | [17_workflow_scale.md](17_workflow_scale.md) | 0% | ⬜ |
 | 18 | 스킬(Skill)로 반복 작업 줄이기 | [18_skill_automation.md](18_skill_automation.md) | 0% | ⬜ |
