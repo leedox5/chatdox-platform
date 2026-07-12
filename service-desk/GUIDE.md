@@ -35,7 +35,7 @@
        Date : YYYY.MM.DD
   Requester : 요청자 이름
     Subject : 한 줄 제목
-     Status : New | In Progress | Completed
+     Status : New | In Progress | Completed | Confirmed
 ```
 
 Description :
@@ -54,6 +54,7 @@ Job :
 - 처리를 시작하면 `02_in_progress/`로 옮기고 `Status`를 갱신한다.
 - 완료되면 `03_completed/`로 옮기고 `Status`를 `Completed`로, `Job`을 채운다.
 - 요청은 삭제하지 않고 항상 `03_completed/`에 기록으로 남긴다.
+- 실제로 동작을 재현/재시도해서 결과를 검증했다면 `Status`를 `Confirmed`로 올린다. 폴더는 그대로 `03_completed/`에 둔다 — 검증은 상태값으로만 구분하고, 검증할 대상이 없는 문서 작업은 `Completed`에 머무른다. 검증한 내용은 새 처리 ID로 `Job`에 이어 적는다.
 - 새 요청이 생기거나 상태가 바뀌면 [dashboard.md](dashboard.md)의 종합현황과 표도 같이 갱신한다.
 
 ### Requester: 아이디어를 낸 사람이 아니라 폼을 작성한 사람
