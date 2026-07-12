@@ -206,9 +206,11 @@ ssh -T git@github.com
 
 ---
 
-## 7️⃣ 프로젝트 생성
+## 7️⃣ 프로젝트 준비
 
-환경 설치가 완료되면 채독스 프로젝트를 생성합니다.
+환경 설치가 완료되면 채독스 프로젝트를 준비합니다. 상황에 따라 둘 중 하나를 선택하세요.
+
+### A. 새로 생성하기 (처음 시작하는 경우)
 
 ```bash
 # 원하는 경로로 이동
@@ -223,15 +225,43 @@ rails new chatdox \
 # 생성된 폴더로 이동
 cd chatdox
 
-# 서버 실행
-rails server
+# 서버 실행 (Tailwind CSS 워처까지 함께 뜨는 bin/dev 사용)
+bin/dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000) 접속 → Rails 기본 화면이 보이면 성공!
+> 💡 `--css tailwind`로 만든 프로젝트는 `rails server`만 실행하면 Tailwind CSS가 변경 사항을 감지해 다시 빌드해주지 않습니다. `bin/dev`는 `Procfile.dev`를 읽어 Rails 서버와 Tailwind 워처를 동시에 띄웁니다.
+
+### B. 기존 리포지토리 클론하기 (이미 만들어진 프로젝트에 합류하는 경우)
+
+팀에 합류했거나, 이미 생성된 chatdox 프로젝트를 이어서 개발한다면 새로 만들지 않고 클론합니다.
+
+```bash
+# 원하는 경로로 이동
+cd ~/projects
+
+# 리포지토리 클론
+git clone git@github.com:[username]/chatdox.git
+cd chatdox
+
+# 의존성 설치
+bundle install
+
+# 데이터베이스 준비
+rails db:prepare
+
+# 서버 실행 (Tailwind CSS 워처까지 함께 뜨는 bin/dev 사용)
+bin/dev
+```
+
+> 💡 `git clone`이 SSH로 안 되면 6️⃣에서 등록한 SSH 키를 먼저 확인하세요. 또는 `https://github.com/[username]/chatdox.git` 형태로 HTTPS 클론도 가능합니다.
+
+두 방법 모두 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속 → Rails 기본 화면(A) 또는 채독스 화면(B)이 보이면 성공!
 
 ---
 
 ## 8️⃣ GitHub 리포지토리 연결
+
+> 이 단계는 **7️⃣-A(새로 생성)**로 진행한 경우에만 필요합니다. **7️⃣-B(클론)**로 시작했다면 `origin`이 이미 연결되어 있으니 건너뛰세요.
 
 ```bash
 # Git 초기화 (이미 되어 있음)
@@ -277,7 +307,7 @@ xcode-select --install
 
 **포트 3000이 이미 사용 중입니다**
 ```bash
-rails server -p 3001  # 다른 포트 사용
+PORT=3001 bin/dev  # 다른 포트 사용
 ```
 
 **Windows에서 `rails new` 오류**
@@ -302,9 +332,9 @@ rbenv install 3.3.6
 - [ ] (선택) Node.js LTS 설치 완료
 - [ ] VS Code + 권장 확장 프로그램 설치
 - [ ] GitHub SSH 연결 완료
-- [ ] `rails new chatdox` 프로젝트 생성 완료
+- [ ] 프로젝트 준비 완료 (`rails new chatdox` 새로 생성, 또는 `git clone`으로 기존 리포 가져오기)
 - [ ] `http://localhost:3000` 접속 성공
-- [ ] GitHub 리포지토리 첫 커밋 완료
+- [ ] (새로 생성한 경우만) GitHub 리포지토리 첫 커밋 완료
 
 ---
 
