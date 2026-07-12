@@ -20,7 +20,7 @@ C:\Users\user\.claude\projects\d--RubyOnRails-chatdox-curriculum\memory\
 [답변]
 완전히 사라지는 것도, 그대로 다 남는 것도 아니다. 세 가지를 구분해서 봐야 한다.
 
-1. **실제 파일들** (`CLAUDE/*.md` 등) — 디스크에 저장된 진짜 문서라 세션과 무관하게 그대로 남는다. 오늘 만든 setup.md, 챕터 파일들, progress.md 모두 여기 해당.
+1. **실제 파일들** (`claudox/*.md` 등) — 디스크에 저장된 진짜 문서라 세션과 무관하게 그대로 남는다. 오늘 만든 setup.md, 챕터 파일들, progress.md 모두 여기 해당.
 2. **메모리 시스템** (`C:\Users\user\.claude\projects\...\memory\`) — 오늘 대화에서 배운 핵심 사실들(Tommy=LEEDOX, Claudox 호칭, 글쓰기/영어 교정 규칙, TOC 커버리지 규칙, 비선형 진행 등)은 이미 메모리 파일로 저장해뒀다. 창을 닫고 새 세션을 열어도 관련 있을 때 다시 불러온다.
 3. **세션 원문 대화 기록** — Claude Code가 로컬에 세션 로그를 남기긴 하지만(`~/.claude/sessions/`), 그건 IDE/CLI의 세션 재개 기능에 달린 문제고, 새 세션에서 내가 자동으로 오늘 나눈 말을 한 글자 한 글자 기억하는 것과는 다르다.
 
