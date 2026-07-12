@@ -12,9 +12,11 @@ try {
         $date    = ($content | Select-String "Date :"    | Select-Object -First 1) -replace "^\s*Date\s*:\s*", ""
         $subject = ($content | Select-String "Subject :" | Select-Object -First 1) -replace "^\s*Subject\s*:\s*", ""
         $status  = ($content | Select-String "Status :"  | Select-Object -First 1) -replace "^\s*Status\s*:\s*", ""
+        $visibility = ($content | Select-String "Visibility :" | Select-Object -First 1) -replace "^\s*Visibility\s*:\s*", ""
+        if ([string]::IsNullOrEmpty($visibility)) { $visibility = "Public" }
 
         if ($counts.ContainsKey($status)) { $counts[$status]++ }
-        $rows += "| $id | $date | $subject | $status |"
+        $rows += "| $id | $date | $subject | $status | $visibility |"
     }
 
     $total = $files.Count
@@ -24,8 +26,8 @@ try {
         "",
         "완료율: **$rate%** · 요청 $total · 신규 $($counts['New']) · 진행중 $($counts['In Progress']) · 완료 $($counts['Completed']) · 확인 $($counts['Confirmed'])",
         "",
-        "| ID | Date | Subject | Status |",
-        "|---|---|---|---|"
+        "| ID | Date | Subject | Status | Visibility |",
+        "|---|---|---|---|---|"
     ) + $rows + @("", "---", "", "*새 요청이 생기거나 상태가 바뀌면 이 표도 같이 갱신한다.*")
 
     $lines | Set-Content -Encoding utf8 dashboard.md
