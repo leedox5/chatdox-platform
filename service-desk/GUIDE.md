@@ -54,6 +54,7 @@ Job :
 - 처리를 시작하면 `02_in_progress/`로 옮기고 `Status`를 갱신한다.
 - 완료되면 `03_completed/`로 옮기고 `Status`를 `Completed`로, `Job`을 채운다.
 - 요청은 삭제하지 않고 항상 `03_completed/`에 기록으로 남긴다.
+- 새 요청이 생기거나 상태가 바뀌면 [dashboard.md](dashboard.md)의 종합현황과 표도 같이 갱신한다.
 
 ### Job 첫 줄: 처리 ID (요청 ID와는 다른 번호)
 
