@@ -39,3 +39,6 @@
 
 # Ignore local VS Code workspace settings
 .vscode/
+
+# Local scratch assets and screenshots
+/_dev/
