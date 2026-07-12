@@ -1,0 +1,14 @@
+leedox@DESKTOP-PK9LEFC:~/dev/chatdox-platform$ git commit -m "Update Gemfile.lock"
+Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <leedox@DESKTOP-PK9LEFC.localdomain>) not allowed

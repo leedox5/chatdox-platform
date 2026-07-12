@@ -1,0 +1,8 @@
+leedox@DESKTOP-PK9LEFC:~/dev/chatdox-platform$ code .
+Installing VS Code Server for Linux x64 (fc3def6774c76082adf699d366f31a557ce5573f)
+Downloading: 100%
+Unpacking: 100%
+Unpacked 3606 files and folders to /home/leedox/.vscode-server/bin/fc3def6774c76082adf699d366f31a557ce5573f.
+Looking for compatibility check script at /home/leedox/.vscode-server/bin/fc3def6774c76082adf699d366f31a557ce5573f/bin/helpers/check-requirements.sh
+Running compatibility check script
+Compatibility check successful (0)

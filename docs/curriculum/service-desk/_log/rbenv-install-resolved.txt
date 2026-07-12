@@ -1,0 +1,14 @@
+leedox@DESKTOP-PK9LEFC:~$ rbenv install 3.3.6
+==> Downloading ruby-3.3.6.tar.gz...
+-> curl -q -fL -o ruby-3.3.6.tar.gz https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.6.tar.gz
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100 21.12M 100 21.12M   0      0 11.18M      0   00:01   00:01         10.68M
+==> Installing ruby-3.3.6...
+-> ./configure "--prefix=$HOME/.rbenv/versions/3.3.6" --enable-shared --with-ext=openssl,psych,+
+-> make -j 12
+-> make install
+==> Installed ruby-3.3.6 to /home/leedox/.rbenv/versions/3.3.6
+
+NOTE: to activate this Ruby version as the new default, run: rbenv global 3.3.6
+leedox@DESKTOP-PK9LEFC:~$
