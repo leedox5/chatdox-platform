@@ -25,6 +25,7 @@ The request queue for this repo, evolved from the old `CLAUDE/99_service_desk.md
 - **`Confirmed` requires Tommy's involvement** — hands-on reproduction or an explicit review sign-off, not Claudox self-checking its own work. Unilateral self-verification stays at `Completed`.
 - When Tommy files a new request, process it by editing its `Status`/`Job` fields in place rather than moving the file anywhere.
 - **Scope is explicit-only**: unlike the `CLAUDE/` TOC coverage rule (which captures *every* conversation), service-desk only tracks requests Tommy actually files (via `new.sh`/`new.ps1` or by hand). Don't auto-create tickets for things discussed in chat.
+- **Ticket-everything, for now** (interim rule as of REQ 0012, until the process settles): file a ticket for any doc/code change regardless of size. If it's unclear whether something warrants a ticket, ask Tommy rather than deciding unilaterally.
 - `requests/_FORM.md` is a reusable blank template — copy it for a new request, don't edit or delete it. `new.sh` (Git Bash) / `new.ps1` (PowerShell) automate the copy + next-ID numbering + date fill.
 - `status.sh` / `status.ps1` regenerate `dashboard.md` (counts + table) by scanning `requests/*.md` — run after any `Status` change instead of hand-editing the dashboard.
 - **`Job` timestamps must come from `date`, not be guessed** (as of REQ 0011, not retroactive): I have no direct clock access, so run `date "+%Y.%m.%d %H:%M"` in the shell and use that value — don't invent a plausible-looking time.

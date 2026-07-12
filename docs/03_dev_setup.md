@@ -113,7 +113,7 @@ ruby --version
 # ruby 3.4.9
 ```
 
-> 💡 VS Code에서 WSL 안의 프로젝트를 열려면 [WSL 확장](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)을 설치하고, WSL 터미널에서 `code .`를 실행하세요.
+> 💡 VS Code에서 WSL 안의 프로젝트를 열려면 WSL 확장이 필요합니다 — 5️⃣ "WSL 환경이라면" 참고.
 
 ### 이미 이전 버전(3.3.x)을 설치했다면
 
@@ -195,6 +195,17 @@ VS Code에서 `Ctrl+Shift+X` (Extensions) 열고 설치:
 | Tailwind CSS IntelliSense | Tailwind 클래스 자동완성 |
 | GitLens | Git 이력 시각화 |
 | GitHub Copilot | AI 코드 어시스턴트 |
+
+### WSL 환경이라면
+
+[WSL 확장(Remote - WSL)](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)을 먼저 설치하세요. Windows 쪽 VS Code에 설치하면 됩니다.
+
+```bash
+# WSL 터미널에서 프로젝트 폴더로 이동한 뒤
+code .
+```
+
+`code .`를 처음 실행하면 VS Code가 "WSL: Ubuntu에서 실행 중"으로 전환되면서, 위 표의 확장들을 **WSL 쪽에도 따로 설치**하라는 안내가 뜹니다. Windows에 이미 설치되어 있어도 WSL 컨테이너 안에서는 별개로 인식되기 때문입니다 — Extensions 패널에 뜨는 **"Install in WSL: Ubuntu"** 버튼을 눌러 하나씩(또는 한꺼번에) 설치하면 됩니다.
 
 ---
 
