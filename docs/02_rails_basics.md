@@ -102,7 +102,7 @@ Rails 생태계에서는 외부 라이브러리를 **Gem**이라고 합니다.
 # Gemfile
 gem "devise"       # 사용자 인증
 gem "tailwindcss-rails"  # Tailwind CSS
-gem "stripe"       # 결제
+gem "net/http"      # 결제 API 직접 연동 시 사용 가능
 gem "redcarpet"    # 마크다운 렌더링
 ```
 

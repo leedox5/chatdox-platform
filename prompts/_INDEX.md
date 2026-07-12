@@ -16,8 +16,12 @@ dependency: []
 
 | # | 페이지명 | 설명 | 상태 | 기술 스택 |
 |---|---------|------|------|---------|
-| 01 | Landing Page | 메인 랜딩페이지 | ✅ 완료 | Rails/Tailwind |
-| 02 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
+| 01 | Landing Page | 메인 랜딩페이지 (Draft) | ✅ 완료 | Rails/Tailwind |
+| 01-R1 | Landing Page Revision 1 | Nav 링크 → Dummy 페이지 연결 | ✅ 완료 | Rails/Tailwind |
+| 02 | Docs Preview | 문서 열람 (사이드바 + Markdown) | ✅ 완료 | Rails/Redcarpet |
+| 02-R1 | Docs Preview R1 | 20챕터 전체 목록 + 파일 존재 여부 자동 체크 | ✅ 완료 | Rails/Redcarpet |
+| 09-R1 | Payment (Toss / PortOne) | 공급자 선택 + 승인/조회 + 자동결제 구현 | ✅ 완료 | Rails/Payments |
+| 03 | Auth (Signup/Login) | 회원가입/로그인 페이지 | ⏳ 예정 | Rails/Devise |
 | 03 | Pricing | 가격 플랜 페이지 | ⏳ 예정 | Rails/Tailwind |
 | 04 | Dashboard | 사용자 대시보드 | ⏳ 예정 | Rails/Tailwind |
 | 05 | Documentation | 문서 열람 페이지 | ⏳ 예정 | Rails/Markdown |
@@ -29,16 +33,19 @@ dependency: []
 
 ## 🏗️ 페이지별 설명
 
-### ✅ 01 Landing Page
+### ✅ 01 Landing Page (구현 진행중)
 **파일:** `01_landing_page.md`
-- 헤더/네비게이션
-- Hero 섹션
-- 커리큘럼 안내
-- 상품 비교표
-- 가격 요약
-- 기술 스택
-- FAQ
-- Footer
+- 실행 순서 명시 (절차적 가이드)
+- Tailwind CSS 클래스 스타일 가이드 표
+- 구현 체크리스트
+- 부분 템플릿(Partial) 활용법
+- 참고 자료 링크
+
+**프롬프트 특징:**
+- Rails 기본 홈페이지 삭제 및 재생성
+- `PagesController#home` 구현
+- Tailwind CSS 반응형 디자인
+- 8개 섹션 구현
 
 **상세:** [01_landing_page.md](01_landing_page.md)
 
@@ -120,6 +127,17 @@ dependency: []
 
 ---
 
+### ✅ 09 Payment R1 (구현 프롬프트)
+**파일:** `09_payment_r1.md`
+- 토스페이먼츠 직접 연동 또는 포트원 V2 기반 구독 결제 시작
+- 승인 API로 결제 결과 확정
+- 빌링키 기반 자동결제 상태 반영
+- 샌드박스 키 + 테스트 결제수단 검증
+
+**의존성:** 07_authentication_r1, 08_authorization_r1
+
+---
+
 ## 📅 권장 구현 순서
 
 1️⃣ **01_landing_page** ✅ (완료)
@@ -175,4 +193,5 @@ Pricing (03) ─────┘
 | 날짜 | 변경사항 |
 |------|---------|
 | 2026-07-09 | INDEX 생성, 01_landing_page 완료 |
+| 2026-07-10 | 09_payment_r1 토스페이먼츠/포트원 선택형 버전으로 확장 |
 

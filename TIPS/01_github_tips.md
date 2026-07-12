@@ -61,7 +61,7 @@ related: ["QA/01_github_strategy.md", "SETUP/01_github_repo_setup.md"]
 
 ## ✅ 2. Repository Description
 
-### 선택: `🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Stripe, PostgreSQL`
+### 선택: `🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Toss Payments, PostgreSQL`
 
 **왜 이 설명을 선택했나?**
 
@@ -69,13 +69,13 @@ related: ["QA/01_github_strategy.md", "SETUP/01_github_repo_setup.md"]
 |------|------|
 | **이모지 (🚀)** | GitHub 검색에서 눈에 띔 |
 | **"Learn by building"** | 프로젝트의 핵심 철학 |
-| **기술 스택 명시** | Rails, Stripe, PostgreSQL로 기술 검색에 최적화 |
+| **기술 스택 명시** | Rails, Toss Payments, PostgreSQL로 기술 검색에 최적화 |
 | **160자 이내** | GitHub 권장 길이 (모바일에서도 전체 보임) |
 
 **나쁜 예**
 ```
 ❌ Chatdox curriculum (너무 짧고 무엇인지 불명확)
-❌ This is a complete guide to building a SaaS platform with Rails, Stripe, PostgreSQL and many other technologies... (너무 길음)
+❌ This is a complete guide to building a SaaS platform with Rails, Toss Payments, PostgreSQL and many other technologies... (너무 길음)
 ```
 
 **팁:**
@@ -212,7 +212,7 @@ chatdox-curriculum/
 GitHub에서 새 리포 생성할 때:
 
 - [ ] Repository name: `chatdox-curriculum`
-- [ ] Description: `🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Stripe, PostgreSQL`
+- [ ] Description: `🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Toss Payments, PostgreSQL`
 - [ ] Visibility: `Private` 🔒
 - [ ] Add .gitignore: `Python` (또는 선택 안함)
 - [ ] Add a license: `None`
@@ -252,7 +252,7 @@ A: 나쁜 건 아닌데, 불필요한 파일이 추가돼요. 깔끔하게 유�
 
 ```
 Repository: chatdox-curriculum
-Description: 🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Stripe, PostgreSQL
+Description: 🚀 Learn by building: Full-stack SaaS curriculum with Ruby on Rails, Toss Payments, PostgreSQL
 Visibility: Private 🔒
 .gitignore: Python (또는 None)
 License: None (저작권 자동 보유)
