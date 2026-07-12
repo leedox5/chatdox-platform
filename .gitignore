@@ -50,3 +50,6 @@ temp/
 
 # 로그/스크린샷 폴더 (예: service-desk/_screen_shot/), 커밋 대상 아님
 _screen_shot/
+
+# Tommy 로컬 전용 커맨드/메모, 커밋 대상 아님
+.local/
