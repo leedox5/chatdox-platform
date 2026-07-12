@@ -49,6 +49,8 @@ git config --global user.name "이름"
 git config --global user.email "이메일@example.com"
 ```
 
+> 💡 **WSL을 쓴다면** Windows 쪽 Git에 이미 이름/이메일을 설정해뒀어도, WSL은 완전히 별개의 리눅스 환경이라 `~/.gitconfig`도 따로 있습니다. WSL 터미널에서도 위 명령을 한 번 더 실행해야 합니다 — 안 하면 `git commit` 시 "Author identity unknown" 에러가 납니다.
+
 ---
 
 ## 2️⃣ Ruby 설치 (rbenv 사용)
@@ -357,6 +359,14 @@ PORT=3001 bin/dev  # 다른 포트 사용
 # libffi-dev libyaml-dev가 빠졌다면 추가 설치 후 재시도
 sudo apt install -y libffi-dev libyaml-dev
 rbenv install 3.4.9
+```
+
+**WSL에서 `git commit` 시 "Author identity unknown" 에러**
+```bash
+# Windows Git에 이름/이메일을 설정해뒀어도 WSL은 별개 환경이라
+# ~/.gitconfig가 따로 없으면 나는 에러. WSL 터미널에서 다시 설정
+git config --global user.name "이름"
+git config --global user.email "이메일@example.com"
 ```
 
 ---
