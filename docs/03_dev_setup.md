@@ -115,6 +115,31 @@ ruby --version
 
 > 💡 VS Code에서 WSL 안의 프로젝트를 열려면 [WSL 확장](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)을 설치하고, WSL 터미널에서 `code .`를 실행하세요.
 
+### 이미 이전 버전(3.3.x)을 설치했다면
+
+rbenv는 여러 Ruby 버전을 나란히 설치해두고 전환할 수 있습니다. 기존 3.3.x를 지우지 않고 3.4.9를 추가로 설치하면 됩니다.
+
+```bash
+# 3.4.9 추가 설치 (기존 버전은 그대로 남음)
+rbenv install 3.4.9
+
+# 이 프로젝트에서만 3.4.9를 쓰도록 지정
+cd chatdox  # 프로젝트 폴더 안에서
+rbenv local 3.4.9
+
+# 또는 이 컴퓨터의 기본 버전 자체를 바꾸고 싶다면
+rbenv global 3.4.9
+
+# 버전 확인
+ruby --version
+# ruby 3.4.9
+
+# 버전을 바꿨다면 의존성도 다시 설치
+bundle install
+```
+
+> 💡 `rbenv local`은 프로젝트 폴더에 `.ruby-version` 파일을 만들어 그 폴더 안에서만 버전을 고정합니다. `chatdox-platform`처럼 이미 `.ruby-version`이 있는 프로젝트라면 이 명령을 따로 실행할 필요 없이, 그 폴더로 이동한 뒤 `rbenv install 3.4.9`만 해주면 rbenv가 알아서 `.ruby-version`에 적힌 버전을 사용합니다.
+
 ---
 
 ## 3️⃣ Rails 설치

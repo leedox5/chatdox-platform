@@ -25,6 +25,7 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 8. **"SYNC" 키워드** — Tommy가 `SYNC`라고 하면 "git 최종 push까지 바로 진행"하라는 뜻이다. 다시 물어보지 말고 add → commit → push까지 실행한다.
 9. **service-desk/ 범위는 명시적 요청만** — `service-desk/`(repo root)는 TOC 커버리지 규칙과 다르다. Tommy가 실제로 접수한 요청만 트래킹하고, 채팅에서 나온 모든 얘기를 자동으로 티켓화하지 않는다.
 10. **Requester = 아이디어를 낸 사람** (2026-07-12부터, 이전 요청은 소급 정정 안 함) — 실제로 폼을 작성한 사람이 아니라 최초로 아이디어를 낸 사람을 적는다. Claudox가 낸 아이디어를 Claudox가 대신 폼으로 작성해도 Requester는 Claudox, Tommy가 낸 아이디어를 Claudox가 폼으로 작성했다면 Requester는 Leedox다.
+11. **Job 타임스탬프는 실제 시각** (REQ 0011부터, 이전 요청은 소급 정정 안 함) — Claudox는 실시간 시계가 없으므로, `Job` 완료 일시를 적을 때 셸에서 `date` 명령을 실행해 나온 값을 쓴다. 대화 흐름상 그럴듯한 시간을 지어내지 않는다.
 
 ## 프로젝트 비전
 
