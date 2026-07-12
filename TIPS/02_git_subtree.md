@@ -302,10 +302,6 @@ git subtree pull --prefix docs/curriculum \
 이런 의심이 들 때는 원인을 파고들기보다 **폴더를 통째로 지우고 새로 add**하는 게 가장 확실하다:
 
 ```bash
-# 0. platform 쪽에서 그 폴더에 직접 커밋한 이력이 없는지 먼저 확인
-#    (subtree는 원칙적으로 읽기 전용이므로 결과가 없어야 정상)
-git log --oneline -- docs/curriculum
-
 # 1. 폴더를 통째로 삭제하고 커밋
 rm -rf docs/curriculum
 git add -A docs/curriculum
