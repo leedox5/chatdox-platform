@@ -1,6 +1,6 @@
 ﻿# 종합현황
 
-완료율: **89%** · 요청 19 · 신규 1 · 진행중 1 · 완료 0 · 확인 17
+완료율: **100%** · 요청 19 · 신규 0 · 진행중 0 · 완료 0 · 확인 19
 
 | ID | Date | Subject | Status | Visibility |
 |---|---|---|---|---|
@@ -17,11 +17,11 @@
 | 0011 | 2026.07.12 | 커리큘럼의 Ruby 버전을 3.3.x에서 3.4.9로 갱신 | Confirmed | Public |
 | 0012 | 2026.07.12 | WSL 환경을 위한 VS Code 확장 안내를 문서에 반영 | Confirmed | Public |
 | 0013 | 2026.07.12 | subtree pull 대량 충돌 사례를 TIPS/02에 반영 | Confirmed | Public |
-| 0014 | 2026.07.12 | claudox, 서비스데스크 md 파일들 웹에 퍼블리싱 | In Progress | Private |
+| 0014 | 2026.07.12 | claudox, 서비스데스크 md 파일들 웹에 퍼블리싱 | Confirmed | Private |
 | 0015 | 2026.07.12 | [SUB-B/0014] CLAUDE+서비스데스크 상품화 방향 결정 | Confirmed | Private |
 | 0016 | 2026.07.12 | [SUB-A/0014] claudox+서비스데스크 컨텐츠 공개 범위 정의 | Confirmed | Public |
 | 0017 | 2026.07.12 | auto-compact/컨텍스트 압축 설명을 claudox/08_qna.md에 반영 | Confirmed | Public |
-| 0018 | 2026.07.12 | [SUB-C/0014] claudox+서비스데스크 웹 뷰어 구현 | New | Public |
+| 0018 | 2026.07.12 | [SUB-C/0014] claudox+서비스데스크 웹 뷰어 구현 | Confirmed | Public |
 | 0019 | 2026.07.12 | platform repo 의 서비스데스크 처리 결과 가져오기 | Confirmed | Public |
 
 ---
