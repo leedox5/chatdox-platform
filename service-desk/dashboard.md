@@ -1,6 +1,6 @@
 # 종합현황
 
-완료율: **83%** · 요청 6건 · 진행중 0건 · 완료 5건
+완료율: **71%** · 요청 7건 · 진행중 0건 · 완료 5건 (Confirmed 5)
 
 | ID | Date | Subject | Status |
 |---|---|---|---|
@@ -10,6 +10,7 @@
 | 0004 | 2026.07.12 | 20개 챕터를 입문/중급/고급 3단계로 그룹화 | Confirmed |
 | 0005 | 2026.07.12 | docs/01_overview.md 기술 스택 표가 chatdox-platform에서 안 깨진 채로 렌더링되도록 수정 | New |
 | 0006 | 2026.07.12 | WSL rbenv install 시 fiddle/psych 빌드 실패 (libffi/libyaml 누락) | Confirmed |
+| 0007 | 2026.07.12 | 폴더 이동 방식 대신 상태값만으로 요청을 관리하도록 구조 변경 | New |
 
 ---
 
