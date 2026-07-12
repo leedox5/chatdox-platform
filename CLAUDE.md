@@ -27,7 +27,7 @@ The request queue for this repo, evolved from the old `CLAUDE/99_service_desk.md
 - **Scope is explicit-only**: unlike the `CLAUDE/` TOC coverage rule (which captures *every* conversation), service-desk only tracks requests Tommy actually files (via `new.sh`/`new.ps1` or by hand). Don't auto-create tickets for things discussed in chat.
 - `requests/_FORM.md` is a reusable blank template — copy it for a new request, don't edit or delete it. `new.sh` (Git Bash) / `new.ps1` (PowerShell) automate the copy + next-ID numbering + date fill.
 - `status.sh` / `status.ps1` regenerate `dashboard.md` (counts + table) by scanning `requests/*.md` — run after any `Status` change instead of hand-editing the dashboard.
-- **Requester = who filed the form, not who had the idea**: if an idea comes up in chat and Tommy asks me to turn it into a ticket, `Requester` is `Claudox` (I filed it), even though the idea may have originated from either of us in conversation.
+- **Requester = who had the idea, not who filed the form** (rule changed 2026-07-12, not retroactive): if an idea comes up in chat and Tommy asks me to turn it into a ticket, `Requester` is whoever originated the idea (often `Claudox`), not whoever typed the form.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
 
