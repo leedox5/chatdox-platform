@@ -71,7 +71,14 @@
         </div>
 
         <div class="doc-content max-w-none">
-          <%= sanitize @content_html %>
+          <%= sanitize(
+            @content_html,
+            tags: %w[
+              h1 h2 h3 h4 h5 h6 p br hr ul ol li pre code blockquote strong em a
+              table thead tbody tr th td
+            ],
+            attributes: %w[href target rel]
+          ) %>
         </div>
 
         <% if user_signed_in? %>
