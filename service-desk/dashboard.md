@@ -1,6 +1,6 @@
 # 종합현황
 
-완료율: **91%** · 요청 12 · 신규 0 · 진행중 1 · 완료 4 · 확인 7
+완료율: **91%** · 요청 12 · 신규 0 · 진행중 1 · 완료 0 · 확인 11
 
 | ID | Date | Subject | Status |
 |---|---|---|---|
@@ -12,10 +12,10 @@
 | 0006 | 2026.07.12 | WSL rbenv install 시 fiddle/psych 빌드 실패 (libffi/libyaml 누락) | Confirmed |
 | 0007 | 2026.07.12 | 폴더 이동 방식 대신 상태값만으로 요청을 관리하도록 구조 변경 | Confirmed |
 | 0008 | 2026.07.12 | dashboard.md 자동 생성 스크립트 추가 | Confirmed |
-| 0009 | 2026.07.12 | docs/03_dev_setup.md의 Node.js 필수 표기를 실제 스택과 맞게 정정 | Completed |
-| 0010 | 2026.07.12 | GitHub 에서 프로젝트 가져오는 방법 추가 | Completed |
-| 0011 | 2026.07.12 | 커리큘럼의 Ruby 버전을 3.3.x에서 3.4.9로 갱신 | Completed |
-| 0012 | 2026.07.12 | WSL 환경을 위한 VS Code 확장 안내를 문서에 반영 | Completed |
+| 0009 | 2026.07.12 | docs/03_dev_setup.md의 Node.js 필수 표기를 실제 스택과 맞게 정정 | Confirmed |
+| 0010 | 2026.07.12 | GitHub 에서 프로젝트 가져오는 방법 추가 | Confirmed |
+| 0011 | 2026.07.12 | 커리큘럼의 Ruby 버전을 3.3.x에서 3.4.9로 갱신 | Confirmed |
+| 0012 | 2026.07.12 | WSL 환경을 위한 VS Code 확장 안내를 문서에 반영 | Confirmed |
 
 ---
 
