@@ -47,3 +47,6 @@ tmp/
 temp/
 *.tmp
 *.log
+
+# 로그/스크린샷 폴더 (예: service-desk/_screen_shot/), 커밋 대상 아님
+_screen_shot/

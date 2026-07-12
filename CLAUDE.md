@@ -14,9 +14,18 @@ Chatdox (Chat-GPT + Leedox): a fully-documented educational SaaS build. See [REA
 - **88_progress.md** — checklist tracking each chapter's `완성도` (completeness %, a qualitative call on whether the chapter's arc feels complete) and derived ✅/⬜ status (✅ at ≥80%), synced with `setup.md`. Update it whenever a chapter file gains content or `setup.md`'s chapter list changes.
 - **memory_seed.md** — portable snapshot of my (Claudox's) cross-session memory (user identity, standing rules, project vision, root motivation). This travels with `git clone`; the real memory system under `~/.claude/projects/.../memory/` does not (it's local to this PC/user profile — see [08_qna.md](CLAUDE/08_qna.md)).
 - **97_commands.md** — quick-reference table of Tommy's shorthand keywords (`SYNC`, bare chapter numbers, `GO`) and what they resolve to. The canonical, detailed rule text still lives in this file's Standing rules and in `memory_seed.md`; this is just the lookup table.
-- **99_service_desk.md** — Tommy's request queue for this repo. Format: `REQ_NNNN> 요청내용`. When a request is fulfilled, append a `[처리완료] → 무엇을 했는지` line directly under it rather than deleting the request.
 
-`88_progress.md`, `97_commands.md`, and `99_service_desk.md` are deliberately numbered outside the 1-20 chapter range — an 80s/90s "appendix" block for meta/infrastructure files, distinct from the story chapters.
+`88_progress.md` and `97_commands.md` are deliberately numbered outside the 1-20 chapter range — an 80s/90s "appendix" block for meta/infrastructure files, distinct from the story chapters.
+
+## service-desk/ folder (repo root, not inside CLAUDE/)
+
+The request queue for this repo, evolved from the old `CLAUDE/99_service_desk.md` flat file (removed — its one record migrated to `03_completed/0001.md`) into a folder-based workflow. See [service-desk/GUIDE.md](service-desk/GUIDE.md) for the full request-file format.
+
+- `01_new/` → `02_in_progress/` → `03_completed/`: a request file (`NNNN.md`, 4-digit ID) moves between these as its `Status` changes. Never delete a request — completed ones stay in `03_completed/` as a record, with a `Job` section describing what was done.
+- Empty stage folders keep a `.gitkeep` so the pipeline structure exists even with nothing in a stage.
+- When Tommy files a new request here, process it and move the file through the stages yourself (per this project's git-conscious workflow) rather than just editing status text in place.
+- **Scope is explicit-only**: unlike the `CLAUDE/` TOC coverage rule (which captures *every* conversation), service-desk only tracks requests Tommy actually files (via `new.sh`/`new.ps1` or by hand). Don't auto-create tickets for things discussed in chat.
+- `01_new/_FORM.md` is a reusable blank template — copy it for a new request, don't edit or delete it. `new.sh` (Git Bash) / `new.ps1` (PowerShell) automate the copy + next-ID numbering + date fill.
 
 When Tommy asks to add something to one of these files, match its existing format rather than introducing a new structure.
 
