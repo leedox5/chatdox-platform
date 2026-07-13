@@ -3,6 +3,10 @@ class PagesController < ApplicationController
     # Static landing page: no database query required.
   end
 
+  def chatdox
+    # Preserve the original Chatdox landing content as a dedicated product page.
+  end
+
   def getting_started; end
 
   def pricing; end

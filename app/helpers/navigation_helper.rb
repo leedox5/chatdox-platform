@@ -4,8 +4,9 @@ module NavigationHelper
     return signed_in_navigation_items if user_signed_in?
 
     [
+      [ "Chatdox", chatdox_path ],
+      [ "Claudox", claudox_path ],
       [ "문서", docs_path ],
-      [ "클로드", claudox_path ],
       [ "서비스데스크", service_desk_path ]
     ]
   end
@@ -21,9 +22,10 @@ module NavigationHelper
 
   def admin_navigation_items
     [
+      [ "Chatdox", chatdox_path ],
+      [ "Claudox", claudox_path ],
       [ "대시보드", admin_dashboard_path ],
       [ "문서", docs_path ],
-      [ "클로드", claudox_path ],
       [ "서비스데스크", service_desk_path ],
       [ "참조", refs_path ],
       [ "사용자관리", admin_users_path ],
@@ -33,8 +35,9 @@ module NavigationHelper
 
   def signed_in_navigation_items
     [
+      [ "Chatdox", chatdox_path ],
+      [ "Claudox", claudox_path ],
       [ "문서", docs_path ],
-      [ "클로드", claudox_path ],
       [ "서비스데스크", service_desk_path ],
       [ "마이페이지", mypage_path ]
     ]

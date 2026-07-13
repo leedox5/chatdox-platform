@@ -2,6 +2,7 @@
   <div class="mx-auto w-full max-w-6xl px-4 text-sm text-slate-500 sm:px-6">
     <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
       <div class="space-y-2">
+        <p class="mb-4 text-base font-black tracking-tight text-slate-900">LEEDOX</p>
         <p>리독스 | 대표 이명호</p>
         <p>사업자등록번호 473-23-01337</p>
         <p>통신판매업신고 제 2025-경기의왕-0084 호</p>
@@ -11,10 +12,12 @@
 
       <div class="space-y-2 md:text-right">
         <div class="flex flex-wrap gap-4 md:justify-end">
+          <%= link_to "Chatdox", chatdox_path, class: "transition hover:text-slate-900" %>
+          <%= link_to "Claudox", claudox_path, class: "transition hover:text-slate-900" %>
           <%= link_to "이용 약관", terms_path, class: "transition hover:text-slate-900" %>
           <%= link_to "개인정보 처리 방침", privacy_path, class: "transition hover:text-slate-900" %>
         </div>
-        <p>© 2026 채독스. All rights reserved.</p>
+        <p>© 2026 LEEDOX. All rights reserved.</p>
       </div>
     </div>
   </div>

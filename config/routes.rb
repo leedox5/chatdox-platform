@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "pages#home"
 
+  get "/chatdox", to: "pages#chatdox", as: :chatdox
+
   get "/docs", to: "docs#index"
   get "/docs/:id", to: "docs#show", as: :doc
   get "/claudox", to: "claudox#index", as: :claudox
