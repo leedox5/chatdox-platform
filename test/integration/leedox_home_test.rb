@@ -45,13 +45,46 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: /웹서비스 구축 패키지/
     assert_select "h2", text: /완전한 커리큘럼/
     assert_select "h2", text: /상품 구성/
-    assert_select "h2", text: /월 구독형 가격/
+    assert_select "h2", text: /단품 구매 안내/
     assert_select "h2", text: /기술 스택/
     assert_select "h2", text: /자주 묻는 질문/
+    assert_match(/평생 접근|1년 무료 업데이트|개인 학습·활용 라이선스|7일 이내 100% 환불/, response.body)
+    assert_match(/검증 중인 가설 가격/, response.body)
+    assert_no_match(/무료 체험|프리미엄형|오픈 알림/, response.body)
+    assert_no_match(/선택형 운영 지원|커뮤니티 이용|라이브 오피스아워|코드리뷰 크레딧|아키텍처 클리닉/, response.body)
+  end
+
+  test "Claudox product page includes required structure and links into viewer" do
+    get claudox_path
+
+    assert_response :success
+    assert_select "h1", text: /클로드가 들어온 날, 팀이 달라졌다/
+    assert_match(/실제 구성과 목차/, response.body)
+    assert_match(/포함 항목 \/ 미포함 항목/, response.body)
+    assert_match(/FAQ/, response.body)
+    assert_match(/9,900원/, response.body)
+    assert_match(/검증 중인 가설/, response.body)
+    assert_select "a[href=?]", claudox_read_path, text: /읽기 시작하기/
+    assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
+  end
+
+  test "Claudox product page marks chapter completion accurately against 88_progress.md" do
+    get claudox_path
+
+    assert_response :success
+    assert_match(/완성\s*11\s*\/\s*20/, response.body)
+    assert_match(/CH\s*01.*?>완성</m, response.body)
+    assert_match(/CH\s*06.*?>준비 중</m, response.body)
   end
 
   test "Claudox and existing core entry points remain reachable" do
     get claudox_path
+    assert_response :success
+
+    get claudox_read_path
+    assert_response :success
+
+    get claudox_chapter_path("01")
     assert_response :success
 
     get docs_path
