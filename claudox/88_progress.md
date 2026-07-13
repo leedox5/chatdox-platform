@@ -24,19 +24,19 @@
 | 11 | 버그를 함께 잡다 | [11_bugfix.md](11_bugfix.md) | 0% | ⬜ |
 | 12 | 테스트 코드를 짜다 | [12_testing.md](12_testing.md) | 0% | ⬜ |
 | 13 | 리팩토링 실전 | [13_refactoring.md](13_refactoring.md) | 0% | ⬜ |
-| 14 | Git 워크플로우와 커밋 메시지 | [14_git_workflow.md](14_git_workflow.md) | 0% | ⬜ |
+| 14 | Git 워크플로우와 커밋 메시지 | [14_git_workflow.md](14_git_workflow.md) | 85% | ✅ |
 | 15 | Pull Request를 만들다 | [15_pull_request.md](15_pull_request.md) | 0% | ⬜ |
 
 ## Part 3. 고급 (16~20장)
 
 | # | 챕터 | 파일 | 완성도 | 상태 |
 |---|------|------|:---:|:---:|
-| 16 | 서브에이전트에게 맡기기 | [16_subagent.md](16_subagent.md) | 0% | ⬜ |
-| 17 | 워크플로우로 규모를 키우다 | [17_workflow_scale.md](17_workflow_scale.md) | 0% | ⬜ |
+| 16 | 서브에이전트에게 맡기기 | [16_subagent.md](16_subagent.md) | 90% | ✅ |
+| 17 | 워크플로우로 규모를 키우다 | [17_workflow_scale.md](17_workflow_scale.md) | 95% | ✅ |
 | 18 | 스킬(Skill)로 반복 작업 줄이기 | [18_skill_automation.md](18_skill_automation.md) | 0% | ⬜ |
-| 19 | 보안 리뷰 체크리스트 | [19_security_review.md](19_security_review.md) | 0% | ⬜ |
-| 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 0% | ⬜ |
+| 19 | 보안 리뷰 체크리스트 | [19_security_review.md](19_security_review.md) | 90% | ✅ |
+| 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 85% | ✅ |
 
-**완료(✅): 6 / 20 (30%) · 전체 평균 완성도: 26.25%**
+**완료(✅): 11 / 20 (55%) · 전체 평균 완성도: 48.50%**
 
 *완성도는 챕터가 해당 주제의 기승전결을 얼마나 갖췄는지에 대한 정성적 평가치이며, ✅ 상태는 80% 이상을 기준으로 표시한다.*

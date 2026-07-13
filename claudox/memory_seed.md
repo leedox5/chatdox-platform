@@ -12,6 +12,7 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 
 - 이름은 Tommy, 활동명은 **LEEDOX**.
 - 나(Claude)를 **Claudox(클로독스)** — Claude + Leedox 합성어 — 라고 부른다.
+- **"Chatdox"는 내가 아니다.** 2026-07-13부터 Tommy는 이 저장소에서 별도의 AI 파트너(OpenAI Codex)도 쓰고 있고, 그쪽 이름이 Chatdox다 (`CONTEXT.local.md`, gitignored, 루트에 위치). "Claudox"는 이제 동시에 LEEDOX 브랜드의 상품 2 이름이기도 하다(의도된 중복, 오류 아님). 자세한 내용은 `chatdox/ai_team_model.md` 참고.
 
 ## 협업 규칙
 
@@ -26,7 +27,15 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 9. **service-desk/ 범위는 명시적 요청만** — `service-desk/`(repo root)는 TOC 커버리지 규칙과 다르다. Tommy가 실제로 접수한 요청만 트래킹하고, 채팅에서 나온 모든 얘기를 자동으로 티켓화하지 않는다.
 10. **Requester = 아이디어를 낸 사람** (2026-07-12부터, 이전 요청은 소급 정정 안 함) — 실제로 폼을 작성한 사람이 아니라 최초로 아이디어를 낸 사람을 적는다. Claudox가 낸 아이디어를 Claudox가 대신 폼으로 작성해도 Requester는 Claudox, Tommy가 낸 아이디어를 Claudox가 폼으로 작성했다면 Requester는 Leedox다.
 11. **Job 타임스탬프는 실제 시각** (REQ 0011부터, 이전 요청은 소급 정정 안 함) — Claudox는 실시간 시계가 없으므로, `Job` 완료 일시를 적을 때 셸에서 `date` 명령을 실행해 나온 값을 쓴다. 대화 흐름상 그럴듯한 시간을 지어내지 않는다.
-12. **티켓 발행 기준 = 일단 전부** (임시, 프로세스 정착 전까지, REQ 0012부터) — 문서/코드 변경은 크기 상관없이 일단 티켓으로 남긴다. 애매하면 Claudox가 먼저 Tommy에게 묻고 Tommy가 결정한다.
+12. **티켓 발행 기준 = No Ticket 기본값** (2026-07-13, REQ 0021로 확정, REQ 0012의 "일단 전부" 규칙을 대체) — 이제 명시적으로 트래킹할 가치가 있는 요청만 티켓으로 남긴다. 기준은 `chatdox/git_document_guidelines.md` 5절의 "Remote에 남길 가치가 높은 경우" 체크리스트(여러 명이 진행 상태 공유 필요, 코드 변경과 요청 연결 필요, 결정의 책임·배경 보존 필요, 교육 콘텐츠·공개 프로세스의 일부 등). 애매하면 Claudox가 먼저 Tommy에게 묻고 Tommy가 결정한다.
+
+## 관련 프로젝트: chatdox-platform
+
+`chatdox-platform`(이 리포를 `docs/curriculum/`에 subtree로 받는 Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬로 clone돼 있다(chatdox-curriculum의 형제 폴더). 그쪽 전용 Claude Code 페르소나는 **Codidox**(Claudox와 대구를 이루는 이름)라고 부른다. `docs/curriculum/`은 읽기 전용이라 platform 쪽 작업은 별도의 `chatdox-platform/request/` 폴더에 티켓 사본 + handoff 메모로 남긴다. Tommy가 "platform 쪽 처리 결과 확인해줘"라고 하면 `service-desk/sync-platform.ps1`을 먼저 돌려서(`chatdox-platform/request/`를 gitignore된 `service-desk/_platform_sync/`로 미러) 그 내용을 읽고, 원본 `service-desk/requests/NNNN.md`에 Job/Status로 반영하는 순서로 처리한다.
+
+## 진행 중: LEEDOX 리브랜드
+
+단일 상품 Chatdox 사이트를 LEEDOX 상위 브랜드(상품 1: Chatdox, 상품 2: Claudox)로 전환하는 작업이 진행 중이다. R1 통합 홈은 2026-07-13 chatdox-platform에 구현 완료, Tommy가 17/17 기준 전부 승인(Accepted)했다. 관련 문서는 `.local/handoff/completed/leedox_home_r1/`(로컬 전용, gitignore)에 있고, 교육 콘텐츠는 이미 `docs/case_leedox_integrated_home.md`로 정리됐다. 가격, 제공 형식, 접근 기간, 업데이트/지원 범위, 라이선스/환불 정책, Claudox 상품 소개 페이지 구조는 아직 Tommy의 사업적 판단이 필요한 미결정 사항이다.
 
 ## 프로젝트 비전
 
