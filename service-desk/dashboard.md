@@ -1,6 +1,6 @@
-# 종합현황
+﻿# 종합현황
 
-완료율: **100%** · 요청 20 · 신규 0 · 진행중 0 · 완료 0 · 확인 20
+완료율: **100%** · 요청 21 · 신규 0 · 진행중 0 · 완료 0 · 확인 21
 
 | ID | Date | Subject | Status | Visibility |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@
 | 0018 | 2026.07.12 | [SUB-C/0014] claudox+서비스데스크 웹 뷰어 구현 | Confirmed | Public |
 | 0019 | 2026.07.12 | platform repo 의 서비스데스크 처리 결과 가져오기 | Confirmed | Public |
 | 0020 | 2026.07.13 | Chatdox CONTEXT.md 기억 문서 만들기 | Confirmed | Public |
+| 0021 | 2026.07.13 | service-desk 티켓 발행 기준을 "일단 전부"에서 "No Ticket 기본값"으로 전환 | Confirmed | Public |
 
 ---
 
