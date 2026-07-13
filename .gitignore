@@ -42,3 +42,7 @@
 
 # Local scratch assets and screenshots
 /_dev/
+
+# 로컬 전용 컨텍스트·커맨드·메모, 커밋 대상 아님
+CONTEXT.local.md
+.local/
