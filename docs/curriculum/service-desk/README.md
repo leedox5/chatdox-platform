@@ -4,11 +4,7 @@
 
 ## 워크플로우
 
-```
-01_new/         새로 접수된 요청
-02_in_progress/ 처리 중인 요청
-03_completed/   처리 완료된 요청
-```
+모든 요청은 `requests/` 폴더 하나에 머물고, `Status` 필드(New → In Progress → Completed → Confirmed)로 진행 상태를 표현한다.
 
 요청 작성 형식과 상세 사용법은 [GUIDE.md](GUIDE.md) 참고.
 

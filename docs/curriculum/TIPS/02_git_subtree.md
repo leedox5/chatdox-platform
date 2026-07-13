@@ -267,6 +267,57 @@ git subtree pull --prefix docs/curriculum \
 
 ---
 
+### Tip 4️⃣: 대량 `add/add` 충돌이 났을 때 (실전 사례)
+
+한동안 pull을 안 하다가 오랜만에 `git subtree pull`을 하면, 바뀐 파일 대부분에서 `CONFLICT (add/add)`가 한꺼번에 날 수 있다. 이건 히스토리가 망가진 게 아니라 `--squash`의 특성 때문에 생기는 정상적인 현상이다 — squash는 세밀한 커밋 이력을 안 가져오기 때문에, 양쪽이 많이 벌어져 있으면 git이 3-way 병합할 공통 조상을 못 찾고 "양쪽이 독립적으로 같은 파일을 추가한 것"처럼 처리해버린다.
+
+`docs/curriculum/`이 읽기 전용 약속대로 지켜졌다면(Platform에서 직접 수정한 적이 없다면), 로컬에 "지켜야 할 진짜 변경사항"은 없다는 뜻이라 해결이 간단하다 — 충돌난 쪽을 전부 pull해온(curriculum) 버전으로 채택하면 된다.
+
+```bash
+# 이미 git subtree pull을 실행해서 충돌난 상태라면
+git status                        # 충돌 파일 목록 확인
+git checkout --theirs -- docs/curriculum
+git add docs/curriculum
+git commit -m "Sync with curriculum subtree"
+git push
+```
+
+또는 애초에 충돌 시 자동으로 pull 쪽을 채택하도록 pull 명령 자체에 옵션을 줄 수도 있다:
+
+```bash
+git subtree pull --prefix docs/curriculum \
+  https://github.com/[USERNAME]/chatdox-curriculum.git main --squash -X theirs
+```
+
+> ⚠️ `--theirs`/`checkout --theirs`는 로컬(Platform) 쪽 변경을 전부 버리고 pull해온 쪽을 채택하는 것이다. `docs/curriculum/`이 정말 읽기 전용으로 지켜졌을 때만 안전하다 — 확신이 안 서면 `git log -- docs/curriculum`으로 그 폴더에 로컬 커밋 이력이 있는지 먼저 확인하자.
+
+---
+
+### Tip 5️⃣: "이미 최신"이라는데 지운 파일이 남아있을 때 — Reset (실전 사례)
+
+`git subtree pull`이 `Subtree is already at commit XXXX`라고 답해도, 그게 **폴더 안 내용이 upstream과 파일 단위로 100% 일치한다는 보장은 아니다.** subtree 추적 마커만 최신이고, 예전 pull/충돌 해결 과정에서 생긴 잔여 파일이 그대로 커밋된 채 남아있을 수 있다.
+
+**실전 사례 (2026-07-12):** chatdox-curriculum에서 `service-desk/01_new`, `02_in_progress`, `03_completed`를 `requests/` + `Status` 필드 구조로 정리한 지(REQ 0007) 한참 지났는데, chatdox-platform의 `docs/curriculum/service-desk/`에는 이 세 폴더가 계속 남아있었다. `git subtree pull`은 "이미 최신"이라고 답했지만, `git ls-tree`로 실제 upstream 커밋 트리를 까보면 그 폴더들이 없었다 — pull 마커와 실제 폴더 내용이 어긋나 있었던 것.
+
+이런 의심이 들 때는 원인을 파고들기보다 **폴더를 통째로 지우고 새로 add**하는 게 가장 확실하다:
+
+```bash
+# 1. 폴더를 통째로 삭제하고 커밋
+rm -rf docs/curriculum
+git add -A docs/curriculum
+git commit -m "Remove curriculum subtree for clean re-add"
+
+# 2. pull이 아니라 처음 add하듯 다시 추가
+git subtree add --prefix docs/curriculum \
+  https://github.com/leedox5/chatdox-curriculum.git main --squash
+
+git push
+```
+
+`rm -rf`는 git 추적 여부(`.gitignore`에 걸려있는지)와 무관하게 디스크에서 물리적으로 지운다. 그 뒤 `subtree add`는 "처음 추가"이므로 그 시점 upstream의 `main`을 있는 그대로 통째로 복사해 넣는다 — 예전 pull 이력의 잔여물이 낄 여지가 없다. 실제로 위 사례에서 삭제 커밋 로그에 `docs/curriculum/service-desk/01_new/_FORM.md`, `02_in_progress/.gitkeep`, `03_completed/000N.md` 등이 찍히며 잔여 파일 존재가 확인됐고, reset 후 깨끗하게 정리됐다.
+
+---
+
 ## 🤔 자주 묻는 질문
 
 **Q: Platform에 curriculum이 이미 있으니 Git 용량이 크지 않나요?**  
@@ -276,7 +327,10 @@ A: 네, 조금 커집니다. 하지만 --squash 옵션으로 히스토리를 압
 A: "git subtree pull" 명령어를 정기적으로 실행하면 됩니다. 일일 자동화도 가능 (GitHub Actions).
 
 **Q: Subtree Pull 중 충돌이 나면 어떻게 하나요?**  
-A: Platform에서 curriculum 파일을 수정했을 가능성 높음. 변경사항 버리고 pull하세요.
+A: Platform에서 curriculum 파일을 수정했을 가능성이 있지만, 오래 pull을 안 했다가 한 번에 많은 변경을 받아올 때도 `--squash` 특성상 대량 충돌이 날 수 있다 (정상). 위 "Tip 4️⃣: 대량 add/add 충돌이 났을 때" 참고 — `git checkout --theirs -- docs/curriculum`으로 해결한다.
+
+**Q: `git subtree pull`이 "이미 최신"이라는데 upstream에서 지운 파일이 폴더에 남아있어요.**  
+A: pull의 "already at commit" 메시지는 추적 마커 기준이지, 폴더 내용이 파일 단위로 upstream과 100% 일치한다는 보장은 아니다. 원인을 파고들기보다 위 "Tip 5️⃣: Reset" 참고 — 폴더를 통째로 지우고 `git subtree add`로 새로 추가하는 게 가장 확실하다.
 
 **Q: Submodule이 더 나은가요?**  
 A: Submodule은 더 독립적이지만 복잡합니다. Subtree가 우리 목적(Platform 개발자가 편하게 사용)에 맞습니다.
@@ -364,4 +418,4 @@ Git Subtree의 핵심:
 
 ---
 
-**마지막 업데이트:** 2026-07-09
+**마지막 업데이트:** 2026-07-12

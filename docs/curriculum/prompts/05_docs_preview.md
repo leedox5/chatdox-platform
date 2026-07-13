@@ -287,23 +287,15 @@ end
 
 ## 5️⃣ Tailwind Prose 스타일 (Markdown 본문)
 
-Markdown 렌더링 결과에 Typography 스타일 적용:
+Markdown 렌더링 결과에 Typography 스타일 적용. (2026-07-12 갱신: 이 프로젝트는 tailwindcss-rails 4.x/Tailwind CSS v4를 쓰므로, v3 시절의 `npm install` + `tailwind.config.js` 방식이 아니라 **CSS 기반 플러그인 등록**을 쓴다. `tailwindcss-rails`가 내장한 standalone CLI가 `@tailwindcss/typography` 같은 공식 1st-party 플러그인을 이름만으로 인식하므로 Node.js/npm이 전혀 필요 없다.)
 
-```bash
-# Tailwind Typography 플러그인 설치
-npm install -D @tailwindcss/typography
+```css
+/* app/assets/tailwind/application.css */
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 ```
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
-}
-```
-
-> **없어도 동작하지만**, `prose` 클래스로 h1~h6, p, code, table 등이 자동 스타일링됩니다.
+> **없어도 동작하지만**, `prose` 클래스로 h1~h6, p, code, **table** 등이 자동 스타일링됩니다. 이 플러그인이 빠져있으면 `<table>`이 파싱은 되어도 테두리/간격 없이 텍스트처럼 뭉쳐 보일 수 있다 (service-desk REQ 0005 증상과 일치).
 
 ---
 
@@ -320,16 +312,15 @@ module.exports = {
 ## ✅ 구현 체크리스트
 
 ### 준비
-- [ ] `gem "redcarpet"` Gemfile 추가
+- [ ] `gem "redcarpet"` Gemfile 추가, `Redcarpet::Markdown.new(renderer, tables: true, ...)`로 표 파싱 활성화
 - [ ] `bundle install`
-- [ ] `npm install -D @tailwindcss/typography` (선택)
+- [ ] `app/assets/tailwind/application.css`에 `@plugin "@tailwindcss/typography";` 추가 (선택, npm 불필요)
 
 ### 파일 생성
 - [ ] `app/controllers/docs_controller.rb`
 - [ ] `app/views/docs/index.html.erb`
 - [ ] `app/views/docs/show.html.erb`
 - [ ] `config/routes.rb` 업데이트
-- [ ] `tailwind.config.js` 업데이트 (선택)
 - [ ] Header의 "문서" 링크를 `docs_path`로 업데이트
 
 ### 검증

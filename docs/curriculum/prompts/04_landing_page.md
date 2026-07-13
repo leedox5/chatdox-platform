@@ -155,7 +155,7 @@ end
 SaaS 입문에 최적화된 스택으로, 서비스 운영 초기에 비용 부담이 적습니다.
 
 - **Ruby on Rails 8.1** — 웹 프레임워크
-- **Ruby 3.3** — 프로그래밍 언어
+- **Ruby 3.4** — 프로그래밍 언어
 - **SQLite3 / PostgreSQL** — 데이터베이스
 - **Devise** — 사용자 인증
 - **Tailwind CSS** — 스타일링 & UI

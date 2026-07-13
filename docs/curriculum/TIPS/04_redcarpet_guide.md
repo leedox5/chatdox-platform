@@ -398,6 +398,24 @@ def public_render(text)
 end
 ```
 
+### Tip 4: 뷰에서 `sanitize()`로 한 번 더 걸러낼 때 표가 사라지는 경우 (실전 사례)
+
+`tables: true`도 켰고 `@tailwindcss/typography` 플러그인도 붙였는데 `<table>`이 여전히 텍스트 뭉치로 보인다면, 원인이 Redcarpet이 아니라 **뷰에서 한 번 더 걸어둔 `sanitize()`**일 수 있다.
+
+```erb
+<!-- 문제: Redcarpet이 만든 안전한 HTML을 뷰에서 다시 sanitize -->
+<%= sanitize(@content_html) %>
+```
+
+Rails의 `sanitize` 헬퍼는 기본 허용 태그 목록(`Rails::Html::SafeListSanitizer`)에 `table`/`thead`/`tbody`/`tr`/`th`/`td`가 **포함되어 있지 않다.** Redcarpet이 표를 정상적으로 `<table>`로 렌더링해도, 이 기본 허용 목록으로 다시 걸러지는 순간 표 태그만 통째로 제거되고 텍스트만 남는다 — 그런데 `**볼드**` 같은 인라인 태그(`<strong>`)는 기본 허용 목록에 있어서 살아있으니, "일부만 스타일이 깨진 것"처럼 보여 원인 파악이 더 헷갈린다.
+
+```ruby
+# 해결: 허용 태그에 표 관련 태그를 명시적으로 추가
+<%= sanitize(@content_html, tags: Rails::Html::SafeListSanitizer.allowed_tags + %w(table thead tbody tr th td)) %>
+```
+
+**체크 순서:** `<table>` 자체가 안 보이면 ①`tables: true` 확인 → ②뷰에 `sanitize()` 호출이 있는지 확인하고 있다면 허용 태그에 표 관련 태그 추가 → ③그래도 스타일(테두리/간격)만 없다면 Typography 플러그인 확인, 순서로 좁혀나가면 된다.
+
 ---
 
 ## 🔍 자주 묻는 질문
@@ -410,6 +428,9 @@ A: 캐싱 추가. Rails.cache.fetch로 1일 단위 캐싱하면 대부분 해결
 
 **Q: 테이블 지원 안 하나?**  
 A: `tables: true` 옵션 추가하고, Markdown에 `|---|` 형식 사용.
+
+**Q: `tables: true`도, Typography 플러그인도 붙였는데 표가 여전히 안 나온다?**  
+A: 뷰에서 `sanitize()`를 한 번 더 걸고 있는지 확인. 기본 허용 태그 목록엔 `table`류가 없어서 그대로 통과시키면 표만 제거된다. 위 "Tip 4: sanitize()로 한 번 더 걸러낼 때 표가 사라지는 경우" 참고 (service-desk REQ 0005 실제 사례).
 
 **Q: 하이라이트된 코드 블록?**  
 A: Redcarpet은 `<code class="language-ruby">` 까지만. 스타일링은 CSS (Tailwind) 또는 highlight.js 같은 라이브러리 사용.
@@ -454,4 +475,4 @@ Key Points:
 
 ---
 
-**마지막 업데이트:** 2026-07-09
+**마지막 업데이트:** 2026-07-12

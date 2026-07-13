@@ -1,0 +1,9 @@
+leedox@DESKTOP-PK9LEFC:~/dev$ gem install rails -v "~> 8.1"
+...
+Done installing documentation for zeitwerk, thor, rack, rackup, concurrent-ruby, tzinfo, i18n, connection_pool, activesupport, useragent, nokogiri, crass, loofah, rails-html-sanitizer, rails-dom-testing, rack-test, rack-session, erubi, builder, actionview, actionpack, railties, marcel, activemodel, activerecord, globalid, activejob, activestorage, action_text-trix, actiontext, mini_mime, mail, actionmailer, actionmailbox, websocket-extensions, websocket-driver, nio4r, actioncable, rails after 22 seconds
+39 gems installed
+
+A new release of RubyGems is available: 3.5.22 → 4.0.16!
+Run `gem update --system 4.0.16` to update your installation.
+
+leedox@DESKTOP-PK9LEFC:~/dev$

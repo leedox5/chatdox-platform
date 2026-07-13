@@ -15,6 +15,10 @@ Rails.application.routes.draw do
 
   get "/docs", to: "docs#index"
   get "/docs/:id", to: "docs#show", as: :doc
+  get "/claudox", to: "claudox#index", as: :claudox
+  get "/claudox/:id", to: "claudox#show", as: :claudox_chapter
+  get "/service-desk", to: "service_desk#index", as: :service_desk
+  get "/service-desk/requests/:id", to: "service_desk#show", as: :service_desk_request
   get "/dashboard", to: "dashboard#show"
   get "/mypage", to: "mypage#show", as: :mypage
   resources :chapter_progresses, only: :create

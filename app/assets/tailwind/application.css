@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 .doc-content h1 {
 	@apply mt-10 mb-4 text-3xl font-bold text-slate-900;
