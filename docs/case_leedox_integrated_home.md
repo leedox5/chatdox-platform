@@ -174,6 +174,8 @@ bin/rails test
 
 ## 현재 구현의 한계
 
+> 아래 내용은 통합 홈 R1 완료 당시의 상태입니다. 이후 상품 페이지 작업에서 /claudox는 상품 상세페이지로 바뀌었고, 문서 뷰어는 /claudox/read로 이동했습니다.
+
 - `/claudox`는 별도 마케팅 상세 페이지가 아니라 기존 문서 뷰어입니다.
 - `/chatdox`의 기존 가격·무료 체험 문구는 통합 상품 정책의 확정을 뜻하지 않습니다.
 - 관리자 Header의 긴 이메일과 중간 데스크톱 폭 혼잡은 별도 검증되지 않았습니다.
@@ -197,3 +199,4 @@ bin/rails test
 - [4. 랜딩페이지 구축](04_landing_page.md)
 - [7. 사용자 인증](07_authentication.md)
 - [8. 권한 관리](08_authorization.md)
+- [다음 사례: 상품 페이지와 문서 뷰어를 안전하게 분리하기](case_leedox_product_pages.md)

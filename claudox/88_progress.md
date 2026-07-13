@@ -20,9 +20,9 @@
 | # | 챕터 | 파일 | 완성도 | 상태 |
 |---|------|------|:---:|:---:|
 | 9 | 폴더 구조를 다시 짜다 | [09_folder_structure.md](09_folder_structure.md) | 0% | ⬜ |
-| 10 | 코드 리뷰를 부탁하다 | [10_code_review.md](10_code_review.md) | 0% | ⬜ |
-| 11 | 버그를 함께 잡다 | [11_bugfix.md](11_bugfix.md) | 0% | ⬜ |
-| 12 | 테스트 코드를 짜다 | [12_testing.md](12_testing.md) | 0% | ⬜ |
+| 10 | 코드 리뷰를 부탁하다 | [10_code_review.md](10_code_review.md) | 90% | ✅ |
+| 11 | 버그를 함께 잡다 | [11_bugfix.md](11_bugfix.md) | 90% | ✅ |
+| 12 | 테스트 코드를 짜다 | [12_testing.md](12_testing.md) | 85% | ✅ |
 | 13 | 리팩토링 실전 | [13_refactoring.md](13_refactoring.md) | 0% | ⬜ |
 | 14 | Git 워크플로우와 커밋 메시지 | [14_git_workflow.md](14_git_workflow.md) | 85% | ✅ |
 | 15 | Pull Request를 만들다 | [15_pull_request.md](15_pull_request.md) | 0% | ⬜ |
@@ -37,6 +37,6 @@
 | 19 | 보안 리뷰 체크리스트 | [19_security_review.md](19_security_review.md) | 90% | ✅ |
 | 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 85% | ✅ |
 
-**완료(✅): 11 / 20 (55%) · 전체 평균 완성도: 48.50%**
+**완료(✅): 14 / 20 (70%) · 전체 평균 완성도: 61.75%**
 
 *완성도는 챕터가 해당 주제의 기승전결을 얼마나 갖췄는지에 대한 정성적 평가치이며, ✅ 상태는 80% 이상을 기준으로 표시한다.*
