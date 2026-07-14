@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_10_153000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -43,6 +43,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_153000) do
     t.string "source", default: "landing_pricing", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_premium_waitlists_on_email", unique: true
+  end
+
+  create_table "service_desk_jobs", force: :cascade do |t|
+    t.string "author", null: false
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.integer "job_number", null: false
+    t.datetime "performed_at", null: false
+    t.integer "service_desk_request_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["service_desk_request_id", "job_number"], name: "idx_on_service_desk_request_id_job_number_b8b84ea463", unique: true
+    t.index ["service_desk_request_id"], name: "index_service_desk_jobs_on_service_desk_request_id"
+  end
+
+  create_table "service_desk_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.text "description"
+    t.integer "request_number", null: false
+    t.string "requester", null: false
+    t.integer "status", default: 0, null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["request_number"], name: "index_service_desk_requests_on_request_number", unique: true
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -83,5 +108,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_10_153000) do
 
   add_foreign_key "chapter_progresses", "users"
   add_foreign_key "payment_transactions", "subscriptions"
+  add_foreign_key "service_desk_jobs", "service_desk_requests"
   add_foreign_key "subscriptions", "users"
 end

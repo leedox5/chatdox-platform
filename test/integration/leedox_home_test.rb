@@ -60,11 +60,13 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "service desk blocks guests and non-admin users but allows admins" do
+    request = ServiceDeskRequest.create!(request_number: 5001, requester: "Tester", subject: "Guard check", description: "body", visibility: :visible)
+
     get service_desk_path
     assert_response :redirect
     assert_redirected_to new_user_session_path
 
-    get service_desk_request_path("0001")
+    get service_desk_request_path(request)
     assert_response :redirect
     assert_redirected_to new_user_session_path
 
@@ -83,37 +85,149 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     get service_desk_path
     assert_response :success
 
-    get service_desk_request_path("0001")
+    get service_desk_request_path(request)
     assert_response :success
   end
 
   test "service desk hides Private-visibility requests from index and direct show access" do
+    visible_request = ServiceDeskRequest.create!(request_number: 5002, requester: "Tester", subject: "Public ticket should show", visibility: :visible)
+    private_request = ServiceDeskRequest.create!(request_number: 5003, requester: "Tester", subject: "Private ticket should stay hidden", visibility: :restricted)
+
     admin = User.create!(email: "sd-admin-vis@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_path
     assert_response :success
-    assert_no_match(/claudox, 서비스데스크 md 파일들 웹에 퍼블리싱/, response.body)
+    assert_match(/Public ticket should show/, response.body)
+    assert_no_match(/Private ticket should stay hidden/, response.body)
 
-    get service_desk_request_path("0014")
+    get service_desk_request_path(private_request)
     assert_response :not_found
 
-    get service_desk_request_path("0001")
+    get service_desk_request_path(visible_request)
     assert_response :success
   end
 
-  test "service desk request page renders fenced sections cleanly and links to neighboring requests" do
+  test "service desk request page renders description/job sections and links to neighboring requests" do
+    first = ServiceDeskRequest.create!(request_number: 5004, requester: "Tester", subject: "First ticket", description: "First body", status: :confirmed, visibility: :visible)
+    second = ServiceDeskRequest.create!(request_number: 5005, requester: "Tester", subject: "Second ticket", description: "Second body", visibility: :visible)
+    first.service_desk_jobs.create!(author: "Claudox", content: "Did the work")
+
     admin = User.create!(email: "sd-admin-render@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
-    get service_desk_request_path("0001")
+    get service_desk_request_path(first)
 
     assert_response :success
     assert_no_match(/```/, response.body)
-    assert_select "p", text: "Description :"
-    assert_select "p", text: "Job :"
+    assert_select "h2", text: "Description"
+    assert_select "h2", text: "Job"
     assert_select "article", text: /Confirmed/
-    assert_select "a[href=?]", service_desk_request_path("0002"), minimum: 1
+    assert_match(/Did the work/, response.body)
+    assert_select "a[href=?]", service_desk_request_path(second), minimum: 1
+  end
+
+  test "service desk list stays visible without a desktop-only breakpoint (mobile regression)" do
+    ServiceDeskRequest.create!(request_number: 5006, requester: "Tester", subject: "Mobile visible ticket", visibility: :visible)
+
+    admin = User.create!(email: "sd-admin-mobile@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_path
+
+    assert_response :success
+    assert_no_match(/hidden lg:block/, response.body)
+    assert_select "a", text: /Mobile visible ticket/
+  end
+
+  test "admin can publish a new ticket via the web form and it gets an auto-numbered request_number" do
+    admin = User.create!(email: "sd-admin-create@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get new_service_desk_request_path
+    assert_response :success
+
+    assert_difference "ServiceDeskRequest.count", 1 do
+      post service_desk_path, params: { service_desk_request: { subject: "New web ticket", requester: "Tommy", visibility: "visible", description: "Filed from the web form" } }
+    end
+
+    created = ServiceDeskRequest.order(:request_number).last
+    assert_equal "New web ticket", created.subject
+    assert_redirected_to service_desk_request_path(created)
+
+    follow_redirect!
+    assert_match(/New web ticket/, response.body)
+  end
+
+  test "admin can add a job entry via the web form with auto-numbered job_number" do
+    request = ServiceDeskRequest.create!(request_number: 5007, requester: "Tester", subject: "Job target", visibility: :visible)
+
+    admin = User.create!(email: "sd-admin-job@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    assert_difference "request.service_desk_jobs.count", 1 do
+      post service_desk_request_jobs_path(request), params: { service_desk_job: { author: "Tommy", content: "Investigated and fixed" } }
+    end
+
+    job = request.service_desk_jobs.order(:job_number).last
+    assert_equal 1, job.job_number
+    assert_redirected_to service_desk_request_path(request)
+
+    follow_redirect!
+    assert_match(/Investigated and fixed/, response.body)
+  end
+
+  test "service desk export downloads a zip of all requests" do
+    ServiceDeskRequest.create!(request_number: 5008, requester: "Tester", subject: "Export me", visibility: :visible)
+
+    admin = User.create!(email: "sd-admin-export@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    post service_desk_export_path
+
+    assert_response :success
+    assert_equal "application/zip", response.media_type
+    assert response.body.start_with?("PK"), "expected a zip file signature"
+  end
+
+  test "service desk API rejects requests without a valid bearer token" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+
+    post service_desk_api_requests_path, params: { subject: "No auth", requester: "Agent" }
+    assert_response :unauthorized
+
+    post service_desk_api_requests_path, params: { subject: "Wrong token", requester: "Agent" },
+                                          headers: { "Authorization" => "Bearer wrong-token" }
+    assert_response :unauthorized
+  ensure
+    ENV["SERVICE_DESK_API_TOKEN"] = original_token
+  end
+
+  test "service desk API creates requests and jobs for AI agents with a valid bearer token" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+    auth_headers = { "Authorization" => "Bearer test-token-123" }
+
+    assert_difference "ServiceDeskRequest.count", 1 do
+      post service_desk_api_requests_path, params: { subject: "Agent-filed ticket", requester: "Claudox", visibility: "visible", description: "Filed via API" },
+                                            headers: auth_headers
+    end
+    assert_response :created
+    body = JSON.parse(response.body)
+    request = ServiceDeskRequest.find_by(request_number: body["request_number"])
+    assert_equal "Agent-filed ticket", request.subject
+
+    assert_difference "request.service_desk_jobs.count", 1 do
+      post service_desk_api_request_jobs_path(request_id: request.request_number), params: { author: "Claudox", content: "Handled via API" },
+                                                                                    headers: auth_headers
+    end
+    assert_response :created
+    job_body = JSON.parse(response.body)
+    assert_equal "Handled via API", job_body["content"]
+    assert_equal 1, job_body["job_number"]
+  ensure
+    ENV["SERVICE_DESK_API_TOKEN"] = original_token
   end
 
   test "signed in header keeps account identity and sign out actions" do
