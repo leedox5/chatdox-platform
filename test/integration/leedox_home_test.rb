@@ -102,6 +102,20 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "service desk request page renders fenced sections cleanly and links to neighboring requests" do
+    admin = User.create!(email: "sd-admin-render@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_request_path("0001")
+
+    assert_response :success
+    assert_no_match(/```/, response.body)
+    assert_select "p", text: "Description :"
+    assert_select "p", text: "Job :"
+    assert_select "article", text: /Confirmed/
+    assert_select "a[href=?]", service_desk_request_path("0002"), minimum: 1
+  end
+
   test "signed in header keeps account identity and sign out actions" do
     user = User.create!(email: "home-test@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
