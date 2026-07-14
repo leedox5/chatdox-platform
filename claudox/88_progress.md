@@ -11,7 +11,7 @@
 | 3 | 팀에 Claudox를 합류시키다 | [03_join_team.md](03_join_team.md) | 80% | ✅ |
 | 4 | 본격적인 작업 — 생산성이 달라지다 | [04_real_work.md](04_real_work.md) | 95% | ✅ |
 | 5 | 기억을 심다 — 메모리와 CLAUDE.md | [05_memory_claude_md.md](05_memory_claude_md.md) | 90% | ✅ |
-| 6 | 글쓰기를 맡기다 — 문서 다듬기 협업 | [06_writing_polish.md](06_writing_polish.md) | 0% | ⬜ |
+| 6 | 글쓰기를 맡기다 — 문서 다듬기 협업 | [06_writing_polish.md](06_writing_polish.md) | 90% | ✅ |
 | 7 | 영어로 대화하기 — 교정받으며 배우기 | [07_english_practice.md](07_english_practice.md) | 0% | ⬜ |
 | 8 | 질문과 답변 — QNA로 지식 쌓기 | [08_qna.md](08_qna.md) | 85% | ✅ |
 
@@ -37,6 +37,6 @@
 | 19 | 보안 리뷰 체크리스트 | [19_security_review.md](19_security_review.md) | 90% | ✅ |
 | 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 85% | ✅ |
 
-**완료(✅): 14 / 20 (70%) · 전체 평균 완성도: 61.75%**
+**완료(✅): 15 / 20 (75%) · 전체 평균 완성도: 66.25%**
 
 *완성도는 챕터가 해당 주제의 기승전결을 얼마나 갖췄는지에 대한 정성적 평가치이며, ✅ 상태는 80% 이상을 기준으로 표시한다.*
