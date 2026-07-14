@@ -25,6 +25,83 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "nav[aria-label='모바일 내비게이션']"
   end
 
+  test "guest and signed-in top navigation has no standalone docs entry and hides service desk" do
+    get root_path
+    assert_response :success
+    assert_select "header nav[aria-label='주요 내비게이션'] a[href=?]", docs_path, count: 0
+    assert_select "nav[aria-label='모바일 내비게이션'] a[href=?]", docs_path, count: 0
+    assert_select "a[href=?]", service_desk_path, count: 0
+
+    user = User.create!(email: "nav-user@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get root_path
+    assert_response :success
+    assert_select "header nav[aria-label='주요 내비게이션'] a[href=?]", docs_path, count: 0
+    assert_select "nav[aria-label='모바일 내비게이션'] a[href=?]", docs_path, count: 0
+    assert_select "a[href=?]", service_desk_path, count: 0
+  end
+
+  test "admin navigation keeps a working service desk link" do
+    admin = User.create!(email: "nav-admin@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get root_path
+
+    assert_response :success
+    assert_select "a[href=?]", service_desk_path, minimum: 1
+  end
+
+  test "mobile menu details element is wired to close on outside tap via Stimulus" do
+    get root_path
+
+    assert_response :success
+    assert_select "details[data-controller='mobile-menu']"
+  end
+
+  test "service desk blocks guests and non-admin users but allows admins" do
+    get service_desk_path
+    assert_response :redirect
+    assert_redirected_to new_user_session_path
+
+    get service_desk_request_path("0001")
+    assert_response :redirect
+    assert_redirected_to new_user_session_path
+
+    user = User.create!(email: "sd-user@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get service_desk_path
+    assert_response :redirect
+    assert_redirected_to root_path
+
+    delete destroy_user_session_path
+
+    admin = User.create!(email: "sd-admin@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_path
+    assert_response :success
+
+    get service_desk_request_path("0001")
+    assert_response :success
+  end
+
+  test "service desk hides Private-visibility requests from index and direct show access" do
+    admin = User.create!(email: "sd-admin-vis@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_path
+    assert_response :success
+    assert_no_match(/claudox, 서비스데스크 md 파일들 웹에 퍼블리싱/, response.body)
+
+    get service_desk_request_path("0014")
+    assert_response :not_found
+
+    get service_desk_request_path("0001")
+    assert_response :success
+  end
+
   test "signed in header keeps account identity and sign out actions" do
     user = User.create!(email: "home-test@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
@@ -52,6 +129,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/검증 중인 가설 가격/, response.body)
     assert_no_match(/무료 체험|프리미엄형|오픈 알림/, response.body)
     assert_no_match(/선택형 운영 지원|커뮤니티 이용|라이브 오피스아워|코드리뷰 크레딧|아키텍처 클리닉/, response.body)
+    assert_select "a[href=?]", docs_path, text: /커리큘럼 문서 보기/
   end
 
   test "Claudox product page includes required structure and links into viewer" do
@@ -68,13 +146,18 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
   end
 
-  test "Claudox product page marks chapter completion accurately against 88_progress.md" do
+  test "Claudox product page marks chapter completion accurately against source chapter files" do
+    placeholder = ClaudoxProductsController::UNWRITTEN_PLACEHOLDER
+    chapter_file = ->(id) { Dir.glob(ClaudoxProductsController::CLAUDOX_PATH.join("#{id}_*.md")).sort.first }
+    written_count = (1..20).count { |n| (file = chapter_file.call(n.to_s.rjust(2, "0"))) && !File.read(file).include?(placeholder) }
+    incomplete_id = (1..20).find { |n| (file = chapter_file.call(n.to_s.rjust(2, "0"))) && File.read(file).include?(placeholder) }
+
     get claudox_path
 
     assert_response :success
-    assert_match(/완성\s*11\s*\/\s*20/, response.body)
+    assert_match(/완성\s*#{written_count}\s*\/\s*20/, response.body)
     assert_match(/CH\s*01.*?>완성</m, response.body)
-    assert_match(/CH\s*06.*?>준비 중</m, response.body)
+    assert_match(/CH\s*#{incomplete_id.to_s.rjust(2, "0")}.*?>준비 중</m, response.body) if incomplete_id
   end
 
   test "Claudox and existing core entry points remain reachable" do
