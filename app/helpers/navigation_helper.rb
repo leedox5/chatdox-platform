@@ -5,9 +5,7 @@ module NavigationHelper
 
     [
       [ "Chatdox", chatdox_path ],
-      [ "Claudox", claudox_path ],
-      [ "문서", docs_path ],
-      [ "서비스데스크", service_desk_path ]
+      [ "Claudox", claudox_path ]
     ]
   end
 
@@ -25,7 +23,6 @@ module NavigationHelper
       [ "Chatdox", chatdox_path ],
       [ "Claudox", claudox_path ],
       [ "대시보드", admin_dashboard_path ],
-      [ "문서", docs_path ],
       [ "서비스데스크", service_desk_path ],
       [ "참조", refs_path ],
       [ "사용자관리", admin_users_path ],
@@ -37,8 +34,6 @@ module NavigationHelper
     [
       [ "Chatdox", chatdox_path ],
       [ "Claudox", claudox_path ],
-      [ "문서", docs_path ],
-      [ "서비스데스크", service_desk_path ],
       [ "마이페이지", mypage_path ]
     ]
   end

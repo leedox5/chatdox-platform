@@ -2,6 +2,9 @@ class ServiceDeskController < ApplicationController
   SERVICE_DESK_PATH = Rails.root.join("docs/curriculum/service-desk")
   REQUESTS_PATH = SERVICE_DESK_PATH.join("requests")
 
+  before_action :authenticate_user!
+  before_action :authorize_service_desk!
+
   def index
     @requests = requests_for_index
     @current_request = selected_request(@requests)
@@ -24,10 +27,14 @@ class ServiceDeskController < ApplicationController
 
   private
 
+  def authorize_service_desk!
+    authorize :admin, :access?
+  end
+
   def requests_for_index
     Dir.glob(REQUESTS_PATH.join("[0-9][0-9][0-9][0-9].md")).sort.map do |file_path|
       extract_request_metadata(file_path).merge(file_path: file_path)
-    end
+    end.reject { |request| request[:visibility].casecmp("Private").zero? }
   end
 
   def selected_request(requests)
