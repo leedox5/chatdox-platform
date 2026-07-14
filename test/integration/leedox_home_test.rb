@@ -146,13 +146,18 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
   end
 
-  test "Claudox product page marks chapter completion accurately against 88_progress.md" do
+  test "Claudox product page marks chapter completion accurately against source chapter files" do
+    placeholder = ClaudoxProductsController::UNWRITTEN_PLACEHOLDER
+    chapter_file = ->(id) { Dir.glob(ClaudoxProductsController::CLAUDOX_PATH.join("#{id}_*.md")).sort.first }
+    written_count = (1..20).count { |n| (file = chapter_file.call(n.to_s.rjust(2, "0"))) && !File.read(file).include?(placeholder) }
+    incomplete_id = (1..20).find { |n| (file = chapter_file.call(n.to_s.rjust(2, "0"))) && File.read(file).include?(placeholder) }
+
     get claudox_path
 
     assert_response :success
-    assert_match(/완성\s*11\s*\/\s*20/, response.body)
+    assert_match(/완성\s*#{written_count}\s*\/\s*20/, response.body)
     assert_match(/CH\s*01.*?>완성</m, response.body)
-    assert_match(/CH\s*06.*?>준비 중</m, response.body)
+    assert_match(/CH\s*#{incomplete_id.to_s.rjust(2, "0")}.*?>준비 중</m, response.body) if incomplete_id
   end
 
   test "Claudox and existing core entry points remain reachable" do
