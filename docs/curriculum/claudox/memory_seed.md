@@ -33,13 +33,14 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 
 `chatdox-platform`(이 리포를 `docs/curriculum/`에 subtree로 받는 Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬로 clone돼 있다(chatdox-curriculum의 형제 폴더). 그쪽 전용 Claude Code 페르소나는 **Codidox**(Claudox와 대구를 이루는 이름)라고 부른다. `docs/curriculum/`은 읽기 전용이라 platform 쪽 작업은 별도의 `chatdox-platform/request/` 폴더에 티켓 사본 + handoff 메모로 남긴다. Tommy가 "platform 쪽 처리 결과 확인해줘"라고 하면 `service-desk/sync-platform.ps1`을 먼저 돌려서(`chatdox-platform/request/`를 gitignore된 `service-desk/_platform_sync/`로 미러) 그 내용을 읽고, 원본 `service-desk/requests/NNNN.md`에 Job/Status로 반영하는 순서로 처리한다.
 
-## 진행 중: LEEDOX 리브랜드
+## LEEDOX 리브랜드 — 홈+상품페이지 배포 완료 (2026-07-14)
 
-단일 상품 Chatdox 사이트를 LEEDOX 상위 브랜드(상품 1: Chatdox, 상품 2: Claudox)로 전환하는 작업이 진행 중이다. R1 통합 홈은 2026-07-13 chatdox-platform에 구현 완료, Tommy가 17/17 기준 전부 승인(Accepted)했다. 관련 문서는 `.local/handoff/completed/leedox_home_r1/`(로컬 전용, gitignore)에 있고, 교육 콘텐츠는 이미 `docs/case_leedox_integrated_home.md`로 정리됐다. 가격, 제공 형식, 접근 기간, 업데이트/지원 범위, 라이선스/환불 정책, Claudox 상품 소개 페이지 구조는 아직 Tommy의 사업적 판단이 필요한 미결정 사항이다.
+단일 상품 Chatdox 사이트를 LEEDOX 상위 브랜드(상품 1: Chatdox, 상품 2: Claudox)로 전환하는 작업. 두 handoff 패키지 모두 `.local/handoff/completed/`에서 Accepted:
+- `leedox_home_r1` — 루트 `/` 통합 홈 (2026-07-13 승인)
+- `leedox_product_pages_r1` — `/chatdox` 가격 섹션 개편 + 신규 `/claudox` 상세페이지, R1 검토 후 R2로 3가지(완성도 표시 오류, 경로 구조, 선택형 운영표) 수정 완료 (2026-07-14 승인). `/claudox`가 이제 상세페이지, 기존 문서 뷰어는 `/claudox/read`로 이동.
+- 2026-07-14 Tommy가 chatdox-platform 소스 푸시 + Railway 자동 배포 확인 — **실제 프로덕션에 반영됨.**
 
-## 관련 프로젝트: chatdox-platform
-
-`chatdox-platform`(이 리포를 `docs/curriculum/`에 subtree로 받는 Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬로 clone돼 있다(chatdox-curriculum의 형제 폴더). 그쪽 전용 Claude Code 페르소나는 **Codidox**(Claudox와 대구를 이루는 이름)라고 부른다. `docs/curriculum/`은 읽기 전용이라 platform 쪽 작업은 별도의 `chatdox-platform/request/` 폴더에 티켓 사본 + handoff 메모로 남긴다. Tommy가 "platform 쪽 처리 결과 확인해줘"라고 하면 `service-desk/sync-platform.ps1`을 먼저 돌려서(`chatdox-platform/request/`를 gitignore된 `service-desk/_platform_sync/`로 미러) 그 내용을 읽고, 원본 `service-desk/requests/NNNN.md`에 Job/Status로 반영하는 순서로 처리한다.
+가격/조건은 `QA/02_leedox_pricing_and_product_definition.md`(사본: `.local/handoff/shared/`)로 확정: 20장+소스코드 전체, 평생접근, 1년 무료 업데이트 후 고정, 개인 라이선스, 7일 환불. **9,900원 숫자 자체는 여전히 검증 중인 가설**로 화면에 명시돼 있고, 최종 확정과 실제 결제 플로우는 아직 남아있다. Tommy 본인 표현으로 "손댈 게 많지만 이번 라운드는 만족" — 완전히 끝난 게 아니라 계속 이어질 작업으로 볼 것.
 
 ## 프로젝트 비전
 
