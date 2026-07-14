@@ -231,6 +231,56 @@ https://web-production-50f0e.up.railway.app
 https://web-production-50f0e.up.railway.app/docs
 ```
 
+### ⚠️ 최초 관리자(Admin) 계정 설정 (필수)
+
+**왜 당황하게 되는가?**
+
+```
+배포 직후 DB는 완전히 비어있다 (유저 0명)
+  ↓
+서비스를 만든 사람이 제일 먼저 회원가입한다
+  ↓
+회원가입은 기본적으로 일반 유저(role: user)로 생성된다
+  ↓
+관리자 대시보드나 서비스데스크 같은 admin 전용 기능이 필요해지는 순간
+  → 방금 가입한 "1번 유저"인데도 접근이 막힌다
+```
+
+즉 배포 흐름 어디에도 "관리자를 자동으로 만들어주는" 단계가 없다 — 회원가입 폼만으로는 admin이 될 수 없고, 최초 1명은 반드시 수동으로 승격시켜야 한다.
+
+**어드민 판정 방식**
+
+`User` 모델은 `role`이라는 enum 컬럼으로 admin 여부를 구분한다.
+
+```ruby
+# app/models/user.rb
+enum :role, { user: 0, admin: 1 }
+```
+
+**Railway 프로덕션에서 승격시키는 방법**
+
+Railway 대시보드 → web Service → Console 탭에서 `rails console`을 실행하거나, 로컬에서 Railway CLI로 접속한다.
+
+```bash
+# 로컬 터미널에서 (Railway CLI 설치 + railway login + railway link 선행 필요)
+railway run bin/rails console
+```
+
+콘솔 진입 후:
+
+```ruby
+# 이메일로 찾는 방법 (권장 — "몇 번째로 가입했는지" 착각할 위험이 없다)
+User.find_by(email: "본인이 가입한 이메일").update!(role: :admin)
+
+# 정말로 배포 후 첫 가입자라고 확신할 때만 (ID 기준)
+User.find(1).update!(role: :admin)
+```
+
+**주의**
+
+- 이 작업은 배포마다, 그리고 관리자를 새로 추가할 때마다 반복해야 하는 수동 절차다 — 시딩 스크립트나 초대 코드로 자동화하는 것은 이 프로젝트의 범위 밖(운영 정책이 확정되면 별도 검토).
+- `railway run`은 로컬에서 실행되지만 프로덕션 `DATABASE_URL` 등 환경 변수를 그대로 물려받으므로, **실제 프로덕션 DB가 바뀐다** — 테스트 계정이 아니라 정확한 이메일인지 반드시 확인 후 실행한다.
+
 ---
 
 ## 5️⃣ 배포 체크리스트
@@ -257,6 +307,7 @@ https://web-production-50f0e.up.railway.app/docs
 - [ ] `/docs` 페이지 접속 확인
 - [ ] 01-06 챕터 파란색 링크, 07-20 회색 링크 확인
 - [ ] 에러 로그 확인 (Deployments → Logs 탭)
+- [ ] **회원가입 후 `rails console`에서 첫 관리자 계정 승격** (`role: :admin`)
 
 ---
 

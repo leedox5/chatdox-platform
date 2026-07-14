@@ -29,6 +29,7 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 11. **Job 타임스탬프는 실제 시각** (REQ 0011부터, 이전 요청은 소급 정정 안 함) — Claudox는 실시간 시계가 없으므로, `Job` 완료 일시를 적을 때 셸에서 `date` 명령을 실행해 나온 값을 쓴다. 대화 흐름상 그럴듯한 시간을 지어내지 않는다.
 12. **티켓 발행 기준 = No Ticket 기본값** (2026-07-13, REQ 0021로 확정, REQ 0012의 "일단 전부" 규칙을 대체) — 이제 명시적으로 트래킹할 가치가 있는 요청만 티켓으로 남긴다. 기준은 `chatdox/git_document_guidelines.md` 5절의 "Remote에 남길 가치가 높은 경우" 체크리스트(여러 명이 진행 상태 공유 필요, 코드 변경과 요청 연결 필요, 결정의 책임·배경 보존 필요, 교육 콘텐츠·공개 프로세스의 일부 등). 애매하면 Claudox가 먼저 Tommy에게 묻고 Tommy가 결정한다.
 13. **HQ/DEV 단축어** (2026-07-14부터) — "여기"/"거기" 대신 `HQ`=chatdox-curriculum(이 저장소), `DEV`=chatdox-platform(실제 코드 구현 쪽)로 부른다. `claudox/97_commands.md` 표에도 등록됨.
+15. **DEV는 이 PC에 두 벌** (2026-07-14부터) — Windows 마운트 클론(`D:\RubyOnRails\chatdox-platform`, 파일 편집용)과 WSL 네이티브 클론(`~/dev/chatdox-platform`, 테스트/서버 구동용 — Windows 마운트 쪽은 CRLF 때문에 `bin/rails` 셔뱅이 깨짐). 편집은 Windows 쪽에서, 커밋·푸시 후 WSL 네이티브 쪽에서 pull 받아 테스트 실행.
 14. **Platform 작업 라우팅 3분기 기준** (2026-07-14부터) — DEV 쪽 작업이 생기면: (a) 사업적 판단·Acceptance Criteria가 필요하거나 여러 파일/라우팅/권한/결제처럼 위험하면 **Handoff**(기본값), (b) 아주 작고 위험 낮은데 Claudox가 이미 정확한 수정 내용을 조사·파악했으면 **Claudox가 DEV를 직접 수정**, (c) Tommy가 이미 정확히 원하는 바를 알고 있어 기획 개입이 불필요하면 **Tommy가 Platform Agent에 직접 요청**. 애매하면 Handoff로 기운다.
 
 ## 관련 프로젝트: chatdox-platform
