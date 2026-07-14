@@ -11,7 +11,9 @@
 
       <div class="flex flex-wrap gap-2">
         <%= link_to "새 티켓 발행", new_service_desk_request_path, class: "inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700" %>
-        <%= button_to "전체 export", service_desk_export_path, class: "inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50" %>
+        <%= button_to "전체 export", service_desk_export_path,
+              form: { data: { turbo: false } },
+              class: "inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50" %>
       </div>
     </div>
 
