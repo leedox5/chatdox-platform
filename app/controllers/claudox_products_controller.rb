@@ -1,5 +1,5 @@
 class ClaudoxProductsController < ApplicationController
-  CLAUDOX_PATH = Rails.root.join("docs/claudox")
+  CLAUDOX_PATH = Rails.root.join("hq/claudox")
   CLAUDOX_SETUP_PATH = CLAUDOX_PATH.join("setup.md")
   UNWRITTEN_PLACEHOLDER = "*(아직 작성되지 않음)*"
 

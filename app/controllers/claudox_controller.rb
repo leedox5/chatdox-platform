@@ -1,5 +1,5 @@
 class ClaudoxController < ApplicationController
-  CLAUDOX_PATH = Rails.root.join("docs/claudox")
+  CLAUDOX_PATH = Rails.root.join("hq/claudox")
 
   def index
     @chapters = available_chapters

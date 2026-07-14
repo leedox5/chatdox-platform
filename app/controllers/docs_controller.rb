@@ -1,5 +1,5 @@
 class DocsController < ApplicationController
-  DOCS_PATH = Rails.root.join("docs/chatdox")
+  DOCS_PATH = Rails.root.join("hq/chatdox")
 
   def index
     @chapters = chapters_with_availability

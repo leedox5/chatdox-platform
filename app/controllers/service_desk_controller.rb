@@ -1,5 +1,5 @@
 class ServiceDeskController < ApplicationController
-  SERVICE_DESK_PATH = Rails.root.join("service-desk")
+  SERVICE_DESK_PATH = Rails.root.join("hq/service-desk")
   REQUESTS_PATH = SERVICE_DESK_PATH
 
   before_action :authenticate_user!

@@ -6,11 +6,12 @@ set -euo pipefail
 # (QA/, SETUP/, TIPS/, prompts/, internal/, service-desk tooling, etc.) even though
 # this app only ever reads three specific folders. This instead exports the exact
 # git-tracked snapshot of chatdox-curriculum at a given ref and mirrors ONLY the
-# folders actually used at runtime into their own top-level locations:
+# folders actually used at runtime, under hq/ so it's clear this content is
+# provided by HQ (chatdox-curriculum) and not owned/authored by DEV:
 #
-#   HQ docs/                 -> DEV docs/chatdox/
-#   HQ claudox/               -> DEV docs/claudox/
-#   HQ service-desk/requests/ -> DEV service-desk/
+#   HQ docs/                 -> DEV hq/chatdox/
+#   HQ claudox/               -> DEV hq/claudox/
+#   HQ service-desk/requests/ -> DEV hq/service-desk/
 #
 # No shared git history, no subtree merge machinery, no unused content. Commit the
 # result in this repo like any other change.
@@ -59,8 +60,8 @@ sync_one() {
 }
 
 echo "Syncing chatdox-curriculum ($REF), runtime folders only:"
-sync_one "docs" "$PROJECT_ROOT/docs/chatdox"
-sync_one "claudox" "$PROJECT_ROOT/docs/claudox"
-sync_one "service-desk/requests" "$PROJECT_ROOT/service-desk"
+sync_one "docs" "$PROJECT_ROOT/hq/chatdox"
+sync_one "claudox" "$PROJECT_ROOT/hq/claudox"
+sync_one "service-desk/requests" "$PROJECT_ROOT/hq/service-desk"
 
 echo "Dry run: $DRY_RUN_MODE"
