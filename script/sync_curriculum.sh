@@ -47,7 +47,14 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 git -C "$SOURCE_REPO" archive "$REF" | tar -x -C "$TMP_DIR"
 
-RSYNC_OPTS=("-a" "--delete")
+# chatdox-curriculum's .gitattributes forces `eol=crlf` on every text file, so
+# `git archive` always emits CRLF regardless of ref/content. Without normalizing
+# that away, every file compares as changed against DEV's LF copies on every
+# single run (size + content both differ by a \r per line), even when HQ hasn't
+# actually touched the content. Strip it here so the sync is a real diff.
+find "$TMP_DIR" -type f -exec sed -i 's/\r$//' {} +
+
+RSYNC_OPTS=("-a" "--delete" "--checksum")
 if [[ "$DRY_RUN_MODE" == "true" ]]; then
   RSYNC_OPTS+=("--dry-run" "--itemize-changes")
 fi
@@ -55,7 +62,14 @@ fi
 sync_one() {
   local src="$1" dest="$2"
   mkdir -p "$dest"
-  rsync "${RSYNC_OPTS[@]}" "$TMP_DIR/$src/" "$dest/"
+  if [[ "$DRY_RUN_MODE" == "true" ]]; then
+    # --itemize-changes lists every file rsync considered, including the ones
+    # left untouched (leading `.`). Only the leading-non-`.` lines are files
+    # that will actually be created/updated/deleted, so drop the rest.
+    rsync "${RSYNC_OPTS[@]}" "$TMP_DIR/$src/" "$dest/" | grep -v '^\.' || true
+  else
+    rsync "${RSYNC_OPTS[@]}" "$TMP_DIR/$src/" "$dest/"
+  fi
   echo "  $src -> ${dest#$PROJECT_ROOT/}"
 }
 
