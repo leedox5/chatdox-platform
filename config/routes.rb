@@ -28,6 +28,8 @@ Rails.application.routes.draw do
   post "/service-desk/requests/:id/jobs", to: "service_desk_jobs#create", as: :service_desk_request_jobs
 
   post "/service-desk/api/requests", to: "service_desk/api/requests#create", as: :service_desk_api_requests
+  get "/service-desk/api/requests", to: "service_desk/api/requests#index"
+  get "/service-desk/api/requests/:id", to: "service_desk/api/requests#show", as: :service_desk_api_request
   post "/service-desk/api/requests/:request_id/jobs", to: "service_desk/api/jobs#create", as: :service_desk_api_request_jobs
   get "/dashboard", to: "dashboard#show"
   get "/mypage", to: "mypage#show", as: :mypage

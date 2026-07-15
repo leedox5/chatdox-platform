@@ -234,6 +234,80 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     ENV["SERVICE_DESK_API_TOKEN"] = original_token
   end
 
+  test "service desk API rejects reads without a valid bearer token" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+    request = ServiceDeskRequest.create!(request_number: 6001, requester: "Tester", subject: "Guarded ticket", visibility: :visible)
+
+    get service_desk_api_request_path(request.request_number)
+    assert_response :unauthorized
+
+    get service_desk_api_requests_path
+    assert_response :unauthorized
+  ensure
+    ENV["SERVICE_DESK_API_TOKEN"] = original_token
+  end
+
+  test "service desk API shows a single request with its full job list" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+    auth_headers = { "Authorization" => "Bearer test-token-123" }
+    request = ServiceDeskRequest.create!(request_number: 6002, requester: "Tommy", subject: "Readable ticket", description: "body text", visibility: :visible)
+    request.service_desk_jobs.create!(author: "Claudox", content: "First job")
+    request.service_desk_jobs.create!(author: "Claudox", content: "Second job")
+
+    get service_desk_api_request_path(request.request_number), headers: auth_headers
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal request.request_number, body["request_number"]
+    assert_equal "Readable ticket", body["subject"]
+    assert_equal "Tommy", body["requester"]
+    assert_equal "New", body["status"]
+    assert_equal "Public", body["visibility"]
+    assert_equal "body text", body["description"]
+    assert_equal 2, body["jobs"].length
+    assert_equal "First job", body["jobs"][0]["content"]
+    assert_equal 1, body["jobs"][0]["job_number"]
+  ensure
+    ENV["SERVICE_DESK_API_TOKEN"] = original_token
+  end
+
+  test "service desk API returns 404 for a missing request" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+    auth_headers = { "Authorization" => "Bearer test-token-123" }
+
+    get service_desk_api_request_path(999_999), headers: auth_headers
+
+    assert_response :not_found
+    body = JSON.parse(response.body)
+    assert_equal "not found", body["error"]
+  ensure
+    ENV["SERVICE_DESK_API_TOKEN"] = original_token
+  end
+
+  test "service desk API lists requests newest-first with job counts and no descriptions" do
+    original_token = ENV["SERVICE_DESK_API_TOKEN"]
+    ENV["SERVICE_DESK_API_TOKEN"] = "test-token-123"
+    auth_headers = { "Authorization" => "Bearer test-token-123" }
+    older = ServiceDeskRequest.create!(request_number: 6003, requester: "Tester", subject: "Older ticket", visibility: :visible)
+    newer = ServiceDeskRequest.create!(request_number: 6004, requester: "Tester", subject: "Newer ticket", visibility: :restricted)
+    newer.service_desk_jobs.create!(author: "Claudox", content: "Some work")
+
+    get service_desk_api_requests_path, headers: auth_headers
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    newer_entry = body.find { |entry| entry["request_number"] == newer.request_number }
+    older_entry = body.find { |entry| entry["request_number"] == older.request_number }
+    assert body.index(newer_entry) < body.index(older_entry)
+    assert_equal 1, newer_entry["job_count"]
+    assert_equal 0, older_entry["job_count"]
+    assert_equal "Private", newer_entry["visibility"]
+    assert_not newer_entry.key?("description")
+  end
+
   test "signed in header keeps account identity and sign out actions" do
     user = User.create!(email: "home-test@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
