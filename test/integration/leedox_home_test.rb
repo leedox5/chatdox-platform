@@ -621,11 +621,47 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: "전체 목차"
-    assert_match(/Phase 1/, response.body)
-    assert_match(/Phase 2/, response.body)
-    assert_match(/Phase 3/, response.body)
+    assert_match(/Part 1/, response.body)
+    assert_match(/Part 2/, response.body)
+    assert_match(/Part 3/, response.body)
     assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
     assert_no_match(/Claude를 우리 팀에 합류시키려면/, response.body)
+  end
+
+  test "Claudox chapter grouping uses its own Part 1/2/3 structure, not Chatdox's Phase 1/2/3" do
+    get claudox_read_path
+    assert_response :success
+
+    doc = Nokogiri::HTML(response.body)
+    phase_list = doc.at_css("div.space-y-4")
+    labels = phase_list.css("summary div.min-w-0 p.text-xs").map(&:text)
+    assert_equal [ "Part 1", "Part 2", "Part 3" ], labels
+
+    titles = phase_list.css("summary h2").map(&:text)
+    assert_equal [ "입문", "중급", "고급" ], titles
+
+    assert_match(/관계 맺기와 기본 협업 규칙 — Claudox와 처음 만나 이름을 정하고, 작업 규칙과 기억 체계를 세우는 단계\./, response.body)
+    assert_match(/실제 개발 워크플로우 — 폴더 구조부터 코드 리뷰, 테스트, Git\/PR까지 엔지니어링 작업을 함께 처리하는 단계\./, response.body)
+    assert_match(/규모 확장과 메타적 자동화 — 서브에이전트와 워크플로우로 범위를 넓히고, 보안까지 챙기는 단계\./, response.body)
+
+    part_1 = phase_list.css("details")[0]
+    assert_match(/8\/8/, part_1.at_css(".text-right").text)
+    chapter_titles_in_part_1 = part_1.css("span.font-medium").map(&:text)
+    assert_equal 8, chapter_titles_in_part_1.size
+    assert_equal "1. 클로독스와의 첫만남", chapter_titles_in_part_1.first
+    assert_equal "8. 질문과 답변 — QNA로 지식 쌓기", chapter_titles_in_part_1.last
+  end
+
+  test "Chatdox docs index keeps its own Phase 1/2/3 grouping, unaffected by the Claudox model" do
+    get docs_path
+
+    assert_response :success
+    assert_match(/Phase 1/, response.body)
+    assert_match(/기초 &amp; 환경/, response.body)
+    assert_match(/Phase 2/, response.body)
+    assert_match(/핵심 기능 구현/, response.body)
+    assert_match(/Phase 3/, response.body)
+    assert_match(/프로덕션 운영/, response.body)
   end
 
   test "Claudox and existing core entry points remain reachable" do

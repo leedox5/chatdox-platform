@@ -46,7 +46,7 @@ class ClaudoxController < ApplicationController
   end
 
   def chapters_by_phase(chapters)
-    Curriculum.phases.map do |phase|
+    Claudox.phases.map do |phase|
       phase_chapters = chapters.select { |chapter| phase[:range].cover?(chapter[:id].to_i) }
       available_count = phase_chapters.count { |chapter| chapter[:available] }
 
