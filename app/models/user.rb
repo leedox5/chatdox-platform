@@ -12,6 +12,11 @@ class User < ApplicationRecord
   has_many :processed_refund_requests, class_name: "RefundRequest",
     foreign_key: :processed_by_id, dependent: :restrict_with_error
   has_many :commerce_audit_events, foreign_key: :actor_id, dependent: :restrict_with_error
+  has_many :external_account_links, dependent: :restrict_with_error
+  has_many :external_access_grants, dependent: :restrict_with_error
+  has_many :processed_external_access_tasks, class_name: "ExternalAccessTask",
+    foreign_key: :processed_by_id, dependent: :restrict_with_error
+  has_many :external_access_events, foreign_key: :actor_id, dependent: :restrict_with_error
 
   enum :role, { user: 0, admin: 1 }
 

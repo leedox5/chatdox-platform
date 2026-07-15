@@ -19,4 +19,11 @@ namespace :commerce do
       puts "issue=#{issue.code} provider=#{issue.provider} order_id=#{issue.order_public_id} status=#{issue.status}"
     end
   end
+
+
+  desc "Idempotently create due GitHub Lab grant and revoke tasks without calling GitHub"
+  task github_access_due: :environment do
+    result = ExternalAccess::DueProcessor.call!
+    puts "github_access_due grants_created=#{result.grants_created} revokes_marked=#{result.revokes_marked} tasks_created=#{result.tasks_created}"
+  end
 end

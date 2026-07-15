@@ -3,13 +3,15 @@ class Admin::Commerce::OrdersController < Admin::BaseController
 
   def index
     @orders = filtered_orders.limit(100)
-    @reconciliation_issues = Commerce::Reconciliation.call(log: false).issues.group_by(&:order_public_id)
+    @reconciliation_issues = Commerce::Reconciliation.call(log: false, include_external_access: false)
+      .issues.group_by(&:order_public_id)
   end
 
   def show
     @order = order_scope.find_by!(public_id: params[:id])
     @assessment = pending_assessment(@order)
-    @issues = Commerce::Reconciliation.call(log: false).issues.select { |issue| issue.order_public_id == @order.public_id }
+    @issues = Commerce::Reconciliation.call(log: false, include_external_access: false)
+      .issues.select { |issue| issue.order_public_id == @order.public_id }
     @audits = @order.commerce_audit_events.includes(:actor).order(occurred_at: :desc)
     record_stale_classification if @assessment.stale
   end

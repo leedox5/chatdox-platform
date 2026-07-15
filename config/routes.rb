@@ -55,7 +55,14 @@ Rails.application.routes.draw do
         post :abandon, on: :member
       end
       resources :refund_requests, only: %i[show update], param: :id
+      resources :external_account_links, only: %i[index show], param: :id
+      resources :external_access_tasks, only: %i[index show update], param: :id
     end
+  end
+
+  resource :github_access, only: %i[show create], controller: :github_access do
+    post :change, on: :member
+    post :disconnect, on: :member
   end
 
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout

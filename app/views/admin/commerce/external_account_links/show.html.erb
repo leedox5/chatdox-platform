@@ -1,0 +1,11 @@
+<% content_for :title, "GitHub 계정 연결 상세" %>
+<div class="min-h-screen bg-slate-50"><%= render "shared/header" %><main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+  <%= link_to "← 계정 목록", admin_commerce_external_account_links_path, class: "font-semibold text-indigo-700" %>
+  <h1 class="mt-5 break-all text-3xl font-black">@<%= @link.username %></h1>
+  <div class="mt-6 grid gap-5 md:grid-cols-3">
+    <section class="rounded-2xl border bg-white p-5"><h2 class="font-bold">Link</h2><dl class="mt-3 space-y-2 text-sm"><div><dt class="text-slate-500">사용자</dt><dd><%= masked_external_access_user(@link.user) %></dd></div><div><dt class="text-slate-500">상태</dt><dd><%= @link.status %></dd></div><div><dt class="text-slate-500">numeric ID</dt><dd><%= @link.external_uid.presence || "미기록" %></dd></div></dl></section>
+    <section class="rounded-2xl border bg-white p-5 md:col-span-2"><h2 class="font-bold">Grant</h2><ul class="mt-3 space-y-2 text-sm"><% @grants.each do |grant| %><li><%= grant.product.name %> · <%= grant.status %> · <%= grant.license.starts_on %>~<%= grant.license.last_usable_on %></li><% end %><% if @grants.empty? %><li class="text-slate-500">없음</li><% end %></ul></section>
+  </div>
+  <section class="mt-5 rounded-2xl border bg-white p-5"><h2 class="font-bold">Task</h2><ul class="mt-3 divide-y"><% @tasks.each do |task| %><li class="py-3"><%= link_to external_task_label(task.task_type), admin_commerce_external_access_task_path(task.public_id), class: "font-semibold text-indigo-700" %> · <%= task.status %> · due <%= task.due_at %></li><% end %></ul></section>
+  <section class="mt-5 rounded-2xl border bg-white p-5"><h2 class="font-bold">감사 이력</h2><ul class="mt-3 divide-y text-sm"><% @events.each do |event| %><li class="py-3"><%= event.occurred_at %> · <%= event.action %> · <%= event.from_state %> → <%= event.to_state %> · <%= event.reason_code %></li><% end %></ul></section>
+</main></div>
