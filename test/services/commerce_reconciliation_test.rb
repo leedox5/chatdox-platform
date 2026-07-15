@@ -80,6 +80,55 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
     assert report.issues.all? { |issue| issue.order_public_id.present? }
   end
 
+  test "reconciliation reports pending summary and refund operation anomalies read only" do
+    create_order(at: @at - 2.hours)
+    create_order(at: @at)
+
+    paid_with_open_refund = finalized_order
+    Commerce::RefundRequestSubmission.call!(
+      user: paid_with_open_refund.user,
+      order: paid_with_open_refund,
+      reason_code: "other",
+      customer_note: nil,
+      at: @at
+    )
+
+    refunded_without_confirmation = finalized_order
+    first_refund = create_refunded_request(refunded_without_confirmation, confirmed: false)
+    assert_not first_refund.external_refund_confirmed?
+
+    refunded_with_license = finalized_order
+    create_refunded_request(refunded_with_license, confirmed: true)
+
+    abandoned_conflict = create_order(at: @at - 2.hours)
+    abandoned_conflict.update_columns(status: "abandoned", abandoned_at: @at, finalized_at: @at)
+    abandoned_conflict.payment_transaction.update!(provider_status: "PAID", provider_observed_at: @at)
+
+    before = database_snapshot
+    report = Commerce::Reconciliation.call(stale_after: 30.minutes, at: @at, log: false)
+    codes = report.issues.map(&:code)
+
+    assert_equal({ fresh: 1, stale: 1 }, report.pending_summary)
+    assert_includes codes, "paid_order_open_refund"
+    assert_includes codes, "refund_without_provider_confirmation"
+    assert_includes codes, "refunded_license_policy_unresolved"
+    assert_includes codes, "abandoned_provider_success_conflict"
+    assert_equal before, database_snapshot
+  end
+
+  test "reconciliation reports duplicate open refund rows if database integrity is bypassed" do
+    order = finalized_order
+    duplicate_relation = Object.new
+    duplicate_relation.define_singleton_method(:group) { |_column| self }
+    duplicate_relation.define_singleton_method(:having) { |_condition| self }
+    duplicate_relation.define_singleton_method(:count) { { order.id => 2 } }
+
+    with_singleton_method(RefundRequest, :open, -> { duplicate_relation }) do
+      report = Commerce::Reconciliation.call(at: @at, log: false)
+      assert_includes report.issues.map(&:code), "duplicate_open_refund_requests"
+    end
+  end
+
   private
 
   def create_order(at: @at)
@@ -132,9 +181,34 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
     end
   end
 
+  def create_refunded_request(order, confirmed:)
+    request = Commerce::RefundRequestSubmission.call!(
+      user: order.user,
+      order: order,
+      reason_code: "other",
+      customer_note: nil,
+      at: @at
+    )
+    request.update_columns(
+      status: "refunded",
+      provider_refund_status: confirmed ? "confirmed" : "pending",
+      external_refund_confirmed: confirmed,
+      external_processed_at: @at
+    )
+    request.reload
+  end
+
   def database_snapshot
-    [ Order, OrderItem, PaymentTransaction, License, Subscription ].to_h do |model|
+    [ Order, OrderItem, PaymentTransaction, License, Subscription, RefundRequest, CommerceAuditEvent ].to_h do |model|
       [ model.name, [ model.count, model.order(:id).pluck(:id, :updated_at) ] ]
     end
+  end
+
+  def with_singleton_method(object, method_name, replacement)
+    original = object.method(method_name)
+    object.define_singleton_method(method_name, replacement)
+    yield
+  ensure
+    object.define_singleton_method(method_name, original)
   end
 end

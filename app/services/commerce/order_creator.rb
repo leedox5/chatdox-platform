@@ -4,23 +4,25 @@ module Commerce
   class OrderCreator
     class Unavailable < StandardError; end
 
-    def self.call!(user:, product_code:, offer_code:, requested_start_on:, provider:, at: Time.current)
+    def self.call!(user:, product_code:, offer_code:, requested_start_on:, provider:, retry_of_order: nil, at: Time.current)
       new(
         user: user,
         product_code: product_code,
         offer_code: offer_code,
         requested_start_on: requested_start_on,
         provider: provider,
+        retry_of_order: retry_of_order,
         at: at
       ).call!
     end
 
-    def initialize(user:, product_code:, offer_code:, requested_start_on:, provider:, at:)
+    def initialize(user:, product_code:, offer_code:, requested_start_on:, provider:, retry_of_order:, at:)
       @user = user
       @product_code = product_code
       @offer_code = offer_code
       @requested_start_on = requested_start_on.presence
       @provider = provider
+      @retry_of_order = retry_of_order
       @at = at
     end
 
@@ -51,7 +53,8 @@ module Commerce
           vat_amount: offer.vat_amount,
           total_amount: offer.total_amount,
           currency: offer.currency,
-          payment_requested_at: @at
+          payment_requested_at: @at,
+          retry_of_order: @retry_of_order
         )
         order.order_items.create!(snapshot_attributes(product, offer))
         order.create_payment_transaction!(

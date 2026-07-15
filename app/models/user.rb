@@ -8,6 +8,10 @@ class User < ApplicationRecord
   has_many :chapter_progresses, dependent: :destroy
   has_many :orders, dependent: :restrict_with_error
   has_many :licenses, dependent: :restrict_with_error
+  has_many :refund_requests, dependent: :restrict_with_error
+  has_many :processed_refund_requests, class_name: "RefundRequest",
+    foreign_key: :processed_by_id, dependent: :restrict_with_error
+  has_many :commerce_audit_events, foreign_key: :actor_id, dependent: :restrict_with_error
 
   enum :role, { user: 0, admin: 1 }
 

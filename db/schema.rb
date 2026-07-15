@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_130000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -19,6 +19,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
     t.integer "user_id", null: false
     t.index ["user_id", "chapter_id"], name: "index_chapter_progresses_on_user_id_and_chapter_id", unique: true
     t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
+  end
+
+  create_table "commerce_audit_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.integer "actor_id"
+    t.integer "auditable_id", null: false
+    t.string "auditable_type", null: false
+    t.datetime "created_at", null: false
+    t.string "from_state"
+    t.datetime "occurred_at", null: false
+    t.string "reason_code"
+    t.string "to_state"
+    t.datetime "updated_at", null: false
+    t.index ["action", "occurred_at"], name: "index_commerce_audit_events_on_action_and_occurred_at"
+    t.index ["actor_id"], name: "index_commerce_audit_events_on_actor_id"
+    t.index ["auditable_type", "auditable_id", "occurred_at"], name: "index_commerce_audits_on_target_and_time"
   end
 
   create_table "licenses", force: :cascade do |t|
@@ -62,14 +78,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.datetime "abandoned_at"
     t.datetime "created_at", null: false
     t.string "currency", default: "KRW", null: false
     t.datetime "finalized_at"
+    t.datetime "last_provider_event_at"
     t.datetime "paid_at"
     t.datetime "payment_requested_at", null: false
     t.string "provider", null: false
     t.string "public_id", null: false
     t.date "requested_start_on", null: false
+    t.integer "retry_of_order_id"
     t.string "status", default: "pending", null: false
     t.integer "supply_amount", null: false
     t.integer "total_amount", null: false
@@ -77,6 +96,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
     t.integer "user_id", null: false
     t.integer "vat_amount", null: false
     t.index ["public_id"], name: "index_orders_on_public_id", unique: true
+    t.index ["retry_of_order_id"], name: "index_orders_on_retry_of_order_id", unique: true
+    t.index ["status", "payment_requested_at"], name: "index_orders_on_status_and_payment_requested_at"
     t.index ["user_id", "status"], name: "index_orders_on_user_id_and_status"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
@@ -87,8 +108,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
     t.string "currency", default: "KRW", null: false
     t.string "order_id", null: false
     t.string "provider", null: false
+    t.datetime "provider_observed_at"
     t.json "provider_payload"
     t.string "provider_payment_id", null: false
+    t.string "provider_status"
     t.integer "purchase_order_id"
     t.string "status", default: "pending", null: false
     t.integer "subscription_id"
@@ -135,6 +158,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
     t.boolean "sale_enabled", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_products_on_code", unique: true
+  end
+
+  create_table "refund_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "customer_note"
+    t.datetime "decided_at"
+    t.datetime "external_processed_at"
+    t.boolean "external_refund_confirmed", default: false, null: false
+    t.boolean "full_request", default: true, null: false
+    t.text "internal_note"
+    t.integer "order_id", null: false
+    t.integer "processed_by_id"
+    t.datetime "processing_started_at"
+    t.string "provider_refund_status", default: "not_requested", null: false
+    t.string "public_id", null: false
+    t.text "public_response"
+    t.string "reason_code", null: false
+    t.integer "requested_amount", null: false
+    t.datetime "reviewed_at"
+    t.string "status", default: "requested", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["order_id", "status"], name: "index_refund_requests_on_order_id_and_status"
+    t.index ["order_id"], name: "index_refund_requests_on_one_open_per_order", unique: true, where: "status IN ('requested','reviewing','approved','processing')"
+    t.index ["order_id"], name: "index_refund_requests_on_order_id"
+    t.index ["processed_by_id"], name: "index_refund_requests_on_processed_by_id"
+    t.index ["public_id"], name: "index_refund_requests_on_public_id", unique: true
+    t.index ["user_id"], name: "index_refund_requests_on_user_id"
   end
 
   create_table "service_desk_jobs", force: :cascade do |t|
@@ -199,16 +250,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
   end
 
   add_foreign_key "chapter_progresses", "users"
+  add_foreign_key "commerce_audit_events", "users", column: "actor_id"
   add_foreign_key "licenses", "order_items"
   add_foreign_key "licenses", "products"
   add_foreign_key "licenses", "users"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "product_offers"
   add_foreign_key "order_items", "products"
+  add_foreign_key "orders", "orders", column: "retry_of_order_id"
   add_foreign_key "orders", "users"
   add_foreign_key "payment_transactions", "orders", column: "purchase_order_id"
   add_foreign_key "payment_transactions", "subscriptions"
   add_foreign_key "product_offers", "products"
+  add_foreign_key "refund_requests", "orders"
+  add_foreign_key "refund_requests", "users"
+  add_foreign_key "refund_requests", "users", column: "processed_by_id"
   add_foreign_key "service_desk_jobs", "service_desk_requests"
   add_foreign_key "subscriptions", "users"
 end

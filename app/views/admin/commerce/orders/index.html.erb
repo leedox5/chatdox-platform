@@ -1,0 +1,52 @@
+<% content_for :title, "Commerce 주문 운영" %>
+
+<div class="min-h-screen bg-slate-50">
+  <%= render "shared/header" %>
+  <main class="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-black uppercase tracking-[0.18em] text-blue-700">Admin Commerce</p>
+        <h1 class="mt-2 break-keep text-3xl font-black text-slate-950">주문·결제·라이선스 운영</h1>
+        <p class="mt-2 text-sm text-slate-600">민감한 PG payload와 결제수단 정보는 표시하지 않습니다.</p>
+      </div>
+      <%= link_to "관리자 대시보드", admin_dashboard_path, class: "text-sm font-bold text-blue-700 hover:underline" %>
+    </header>
+
+    <%= form_with url: admin_commerce_orders_path, method: :get, class: "mt-7 grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-6" do |form| %>
+      <%= form.select :status, [["전체 상태", ""]] + Order::STATUSES.map { |status| [order_status_label(status), status] }, { selected: params[:status] }, class: "rounded-lg border border-slate-300 px-3 py-2" %>
+      <%= form.select :product, [["전체 상품", ""], ["Chatdox", "chatdox"], ["Claudox", "claudox"]], { selected: params[:product] }, class: "rounded-lg border border-slate-300 px-3 py-2" %>
+      <%= form.select :provider, [["전체 PG", ""]] + Payments::Gateway::PROVIDERS.map { |provider| [provider, provider] }, { selected: params[:provider] }, class: "rounded-lg border border-slate-300 px-3 py-2" %>
+      <%= form.select :pending_age, [["전체 기간", ""], ["fresh ≤ 30분", "fresh"], ["stale > 30분", "stale"]], { selected: params[:pending_age] }, class: "rounded-lg border border-slate-300 px-3 py-2" %>
+      <%= form.date_field :from, value: params[:from], aria: { label: "조회 시작일" }, class: "rounded-lg border border-slate-300 px-3 py-2" %>
+      <div class="flex gap-2"><%= form.date_field :to, value: params[:to], aria: { label: "조회 종료일" }, class: "min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2" %><%= form.submit "조회", class: "rounded-lg bg-slate-900 px-4 py-2 font-bold text-white" %></div>
+    <% end %>
+
+    <section class="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="min-w-[1100px] w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+            <tr><th class="px-4 py-3">Order</th><th class="px-4 py-3">사용자</th><th class="px-4 py-3">상품</th><th class="px-4 py-3">PG·상태</th><th class="px-4 py-3">금액</th><th class="px-4 py-3">Transaction</th><th class="px-4 py-3">License</th><th class="px-4 py-3">Refund·정합성</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% @orders.each do |order| %>
+              <% item = order.order_items.first %>
+              <% transaction = order.payment_transaction %>
+              <% assessment = pending_assessment(order) %>
+              <tr class="align-top">
+                <td class="px-4 py-4"><%= link_to order.public_id.first(8), admin_commerce_order_path(order.public_id), class: "font-bold text-blue-700 hover:underline" %><p class="mt-1 text-xs text-slate-500"><%= I18n.l(order.created_at.to_date, locale: :ko, format: :long) %></p></td>
+                <td class="px-4 py-4"><%= masked_email(order.user) %></td>
+                <td class="px-4 py-4"><strong><%= item&.product_name %></strong><p class="text-xs text-slate-500"><%= item&.duration_months %>개월 · <%= item&.offer_code %></p></td>
+                <td class="px-4 py-4"><%= order.provider %> · <%= order_status_label(order.status) %><% if order.status == "pending" %><p class="mt-1 font-bold <%= assessment.stale ? 'text-amber-700' : 'text-emerald-700' %>"><%= assessment.classification %></p><% end %></td>
+                <td class="px-4 py-4"><%= number_with_delimiter(order.total_amount) %>원<p class="text-xs text-slate-500"><%= number_with_delimiter(order.supply_amount) %> + VAT <%= number_with_delimiter(order.vat_amount) %></p></td>
+                <td class="px-4 py-4"><%= transaction&.status || "없음" %><p class="text-xs text-slate-500">Subscription <%= transaction&.subscription_id? ? "연결" : "없음" %></p></td>
+                <td class="px-4 py-4"><%= order.licenses.map { |license| license.effective_status }.join(", ").presence || "없음" %></td>
+                <td class="px-4 py-4"><%= order.refund_requests.map { |request| refund_status_label(request.status) }.join(", ").presence || "없음" %><% if @reconciliation_issues[order.public_id].present? %><p class="mt-1 font-bold text-red-700"><%= @reconciliation_issues[order.public_id].map(&:code).join(", ") %></p><% end %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if @orders.empty? %><p class="p-8 text-center text-slate-500">조건에 맞는 주문이 없습니다.</p><% end %>
+    </section>
+  </main>
+</div>

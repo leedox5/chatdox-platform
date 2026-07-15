@@ -4,6 +4,7 @@ class PaymentTransaction < ApplicationRecord
   belongs_to :subscription, optional: true
   belongs_to :purchase_order, class_name: "Order", optional: true,
     inverse_of: :payment_transaction
+  has_many :commerce_audit_events, as: :auditable, dependent: :restrict_with_error
 
   validates :provider, inclusion: { in: Payments::Gateway::PROVIDERS }
   validates :provider_payment_id, :order_id, :amount, :currency, presence: true

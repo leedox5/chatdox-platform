@@ -37,6 +37,39 @@ class BillingOrdersController < ApplicationController
     @payment_provider = @order.provider
   end
 
+  def retry_preview
+    @source_order = current_user.orders.includes(order_items: [ :product, :product_offer ]).find_by!(public_id: params[:id])
+    @assessment = Commerce::PendingOrderAssessment.call(order: @source_order)
+    unless retryable?(@source_order, @assessment)
+      redirect_to dashboard_path, alert: "이 주문은 안전하게 재시도할 수 없습니다."
+      return
+    end
+
+    @source_item = @source_order.order_items.first!
+    @current_offer = Commerce::RetryOrder.current_offer(@source_order)
+    raise ActiveRecord::RecordNotFound unless @current_offer
+
+    @period = Commerce::LicenseScheduler.preview(
+      user: current_user,
+      product: @source_item.product,
+      duration_months: @current_offer.duration_months,
+      requested_start_on: Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date
+    )
+  end
+
+  def retry
+    source_order = current_user.orders.find_by!(public_id: params[:id])
+    order = Commerce::RetryOrder.call!(
+      source_order: source_order,
+      user: current_user,
+      provider: Payments::Configuration.current.provider
+    )
+    redirect_to billing_order_path(order.public_id), notice: "현재 상품 조건으로 새 주문을 만들었습니다."
+  rescue Commerce::RetryOrder::Unavailable => e
+    Rails.logger.warn("Commerce retry rejected: #{e.class.name}")
+    redirect_to dashboard_path, alert: "결제 재시도 조건을 확인해 주세요."
+  end
+
   private
 
   def order_params
@@ -59,5 +92,9 @@ class BillingOrdersController < ApplicationController
       status: "missing_configuration"
     )
     redirect_to billing_checkout_path, alert: "결제 설정을 준비 중입니다."
+  end
+
+  def retryable?(order, assessment)
+    order.status == "abandoned" || (order.status == "pending" && assessment.safe_to_abandon)
   end
 end

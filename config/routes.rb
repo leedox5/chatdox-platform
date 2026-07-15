@@ -50,6 +50,12 @@ Rails.application.routes.draw do
   namespace :admin do
     get "/dashboard", to: "dashboard#show", as: :dashboard
     resources :users, only: %i[index update]
+    namespace :commerce do
+      resources :orders, only: %i[index show], param: :id do
+        post :abandon, on: :member
+      end
+      resources :refund_requests, only: %i[show update], param: :id
+    end
   end
 
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
@@ -58,6 +64,11 @@ Rails.application.routes.draw do
   get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
   post "/billing/orders", to: "billing_orders#create", as: :billing_orders
   get "/billing/orders/:id", to: "billing_orders#show", as: :billing_order
+  get "/billing/orders/:id/retry", to: "billing_orders#retry_preview", as: :retry_billing_order
+  post "/billing/orders/:id/retry", to: "billing_orders#retry", as: :create_retry_billing_order
+  get "/billing/orders/:id/refund_request/new", to: "refund_requests#new", as: :new_billing_order_refund_request
+  post "/billing/orders/:id/refund_requests", to: "refund_requests#create", as: :billing_order_refund_requests
+  get "/refund_requests/:id", to: "refund_requests#show", as: :refund_request
 
   post "/billing/auths", to: "billing_auths#create", as: :billing_auths
   resources :premium_waitlists, only: :create

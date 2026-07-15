@@ -18,8 +18,11 @@ module Commerce
         @order.lock!
         verify_payment!
 
-        if @order.status == "paid"
+        if @order.status == "abandoned"
+          record_late_success!
+        elsif @order.status == "paid"
           verify_finalized_payment_id!
+          observe_provider_event!
         else
           raise VerificationError, "order is not pending" unless @order.status == "pending"
 
@@ -31,7 +34,9 @@ module Commerce
             status: "active",
             amount: @payment.fetch(:amount),
             currency: @payment.fetch(:currency),
-            provider_payload: @payment.fetch(:provider_payload, {})
+            provider_payload: @payment.fetch(:provider_payload, {}),
+            provider_status: provider_status,
+            provider_observed_at: @at
           )
 
           @order.order_items.includes(:product).each do |item|
@@ -43,7 +48,7 @@ module Commerce
             )
           end
 
-          @order.transition_to!("paid", paid_at: @at, finalized_at: @at)
+          @order.transition_to!("paid", paid_at: @at, finalized_at: @at, last_provider_event_at: @at)
           finalized = true
         end
         @order
@@ -88,6 +93,40 @@ module Commerce
       return if @order.payment_transaction.provider_payment_id == @payment.fetch(:provider_payment_id)
 
       raise VerificationError, "order was finalized with a different payment"
+    end
+
+    def observe_provider_event!
+      @order.payment_transaction.update!(provider_status: provider_status, provider_observed_at: @at)
+      @order.update!(last_provider_event_at: @at)
+    end
+
+    def record_late_success!
+      @order.payment_transaction.update!(
+        provider_status: provider_status,
+        provider_observed_at: @at,
+        provider_payload: @payment.fetch(:provider_payload, {})
+      )
+      @order.update!(last_provider_event_at: @at)
+      Commerce::AuditRecorder.record!(
+        actor: nil,
+        action: "late_provider_success_observed",
+        auditable: @order,
+        from_state: @order.status,
+        to_state: @order.status,
+        reason_code: "provider_success_after_abandoned",
+        at: @at
+      )
+      Commerce::EventLogger.log(
+        event: "commerce.abandoned_provider_success_conflict",
+        provider: @order.provider,
+        order: @order,
+        status: @order.status,
+        at: @at
+      )
+    end
+
+    def provider_status
+      @payment.fetch(:provider_payload, {}).to_h["status"]
     end
 
     def log_failure(event)

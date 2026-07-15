@@ -4,7 +4,7 @@ module Commerce
       changed = false
       result = ApplicationRecord.transaction do
         order.lock!
-        next order if order.status == "paid"
+        next order unless order.status == "pending"
 
         mapped_order_status = case status.to_s
         when "canceled" then "canceled"
@@ -22,9 +22,11 @@ module Commerce
           status: mapped_transaction_status,
           amount: attributes.fetch(:amount, order.total_amount),
           currency: attributes.fetch(:currency, order.currency),
-          provider_payload: attributes.fetch(:provider_payload, {})
+          provider_payload: attributes.fetch(:provider_payload, {}),
+          provider_status: attributes.fetch(:provider_payload, {}).to_h["status"],
+          provider_observed_at: at
         )
-        order.transition_to!(mapped_order_status, finalized_at: at)
+        order.transition_to!(mapped_order_status, finalized_at: at, last_provider_event_at: at)
         changed = true
         order
       end

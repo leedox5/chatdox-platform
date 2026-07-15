@@ -6,7 +6,8 @@ class DashboardController < ApplicationController
 
     @subscription = current_user.subscription
     @licenses = current_user.licenses.includes(:product).order(starts_on: :asc)
-    @orders = current_user.orders.includes(:order_items).order(created_at: :desc).limit(10)
+    @orders = current_user.orders.includes(:refund_requests, :payment_transaction, order_items: :license)
+      .order(created_at: :desc).limit(10)
     @completed_ids = current_user.chapter_progresses
       .completed
       .order(completed_at: :desc)

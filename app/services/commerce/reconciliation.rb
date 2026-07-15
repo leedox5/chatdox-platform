@@ -2,7 +2,7 @@ module Commerce
   class Reconciliation
     DEFAULT_STALE_AFTER = 30.minutes
     Issue = Data.define(:code, :order_public_id, :provider, :status)
-    Report = Data.define(:issues, :checked_at) do
+    Report = Data.define(:issues, :checked_at, :pending_summary) do
       def ok?
         issues.empty?
       end
@@ -20,11 +20,12 @@ module Commerce
     end
 
     def call
-      orders = Order.includes(order_items: :license, payment_transaction: :subscription).find_each
+      orders = Order.includes(:refund_requests, order_items: :license, payment_transaction: :subscription).find_each
       orders.each { |order| inspect_order(order) }
       inspect_license_overlaps
+      inspect_duplicate_open_refunds
       log_issues if @log
-      Report.new(issues: @issues.freeze, checked_at: @at)
+      Report.new(issues: @issues.freeze, checked_at: @at, pending_summary: pending_summary)
     end
 
     private
@@ -34,11 +35,13 @@ module Commerce
       add_issue(:paid_without_transaction, order) if order.status == "paid" && transaction.blank?
       add_issue(:paid_without_license, order) if order.status == "paid" && order.licenses.empty?
       add_issue(:stale_pending, order) if stale_pending?(order)
-      add_issue(:terminal_order_with_license, order) if %w[failed canceled].include?(order.status) && order.licenses.any?
+      add_issue(:terminal_order_with_license, order) if %w[failed canceled abandoned].include?(order.status) && order.licenses.any?
       add_issue(:payment_amount_mismatch, order) if transaction && transaction.amount != order.total_amount
       add_issue(:order_item_total_mismatch, order) unless order_item_totals_match?(order)
       add_issue(:purchase_transaction_with_subscription, order) if transaction&.subscription_id.present?
       add_issue(:processed_payment_unfinalized, order) if processed_but_unfinalized?(order, transaction)
+      add_issue(:abandoned_provider_success_conflict, order) if abandoned_success_conflict?(order, transaction)
+      inspect_refunds(order)
     end
 
     def stale_pending?(order)
@@ -53,13 +56,42 @@ module Commerce
     end
 
     def processed_but_unfinalized?(order, transaction)
-      return false if order.status == "paid" || transaction.blank?
+      return false if %w[paid abandoned].include?(order.status) || transaction.blank?
 
       transaction.status == "active" || successful_provider_status?(transaction.provider_payload)
     end
 
     def successful_provider_status?(payload)
       %w[DONE PAID].include?(payload.to_h["status"])
+    end
+
+    def abandoned_success_conflict?(order, transaction)
+      order.status == "abandoned" && transaction.present? && (
+        %w[DONE PAID].include?(transaction.provider_status) ||
+        successful_provider_status?(transaction.provider_payload) ||
+        transaction.status == "active"
+      )
+    end
+
+    def inspect_refunds(order)
+      requests = order.refund_requests.to_a
+      add_issue(:paid_order_open_refund, order) if order.status == "paid" && requests.any?(&:open?)
+      requests.select { |request| request.status == "refunded" }.each do |request|
+        add_issue(:refund_without_provider_confirmation, order) unless request.external_refund_confirmed?
+        add_issue(:refunded_license_policy_unresolved, order) if request.external_refund_confirmed? && order.licenses.any?
+      end
+    end
+
+    def inspect_duplicate_open_refunds
+      RefundRequest.open.group(:order_id).having("COUNT(*) > 1").count.each_key do |order_id|
+        add_issue(:duplicate_open_refund_requests, Order.find_by(id: order_id))
+      end
+    end
+
+    def pending_summary
+      pending = Order.where(status: "pending")
+      stale = pending.where("payment_requested_at < ?", @at - @stale_after).count
+      { fresh: pending.count - stale, stale: stale }.freeze
     end
 
     def inspect_license_overlaps

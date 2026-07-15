@@ -14,6 +14,7 @@ namespace :commerce do
     stale_minutes = Integer(ENV.fetch("STALE_AFTER_MINUTES", "30"), 10)
     report = Commerce::Reconciliation.call(stale_after: stale_minutes.minutes)
     puts "commerce_reconciliation checked_at=#{report.checked_at.utc.iso8601} status=#{report.ok? ? 'ok' : 'anomaly'} issues=#{report.issues.size}"
+    puts "pending_fresh=#{report.pending_summary.fetch(:fresh)} pending_stale=#{report.pending_summary.fetch(:stale)}"
     report.issues.each do |issue|
       puts "issue=#{issue.code} provider=#{issue.provider} order_id=#{issue.order_public_id} status=#{issue.status}"
     end
