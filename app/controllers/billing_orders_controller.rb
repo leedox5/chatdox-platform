@@ -84,7 +84,7 @@ class BillingOrdersController < ApplicationController
 
   def ensure_payment_configuration
     configuration = Payments::Configuration.current
-    return if configuration.ready?
+    return if configuration.checkout_ready?
 
     Commerce::EventLogger.log(
       event: "commerce.gate_configuration_mismatch",

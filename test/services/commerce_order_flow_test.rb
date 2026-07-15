@@ -102,6 +102,7 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
 
     assert_equal "paid", order.reload.status
     assert_equal "provider-payment-#{order.public_id}", order.payment_transaction.reload.provider_payment_id
+    assert_equal({ "status" => "DONE" }, order.payment_transaction.provider_payload)
     assert_raises(Commerce::OrderFinalizer::VerificationError) do
       Commerce::OrderFinalizer.call!(
         order: order,
@@ -136,6 +137,30 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
     end
 
     assert_equal "failed", order.reload.status
+    assert_equal({ "status" => "DONE" }, order.payment_transaction.reload.provider_payload)
+  end
+
+  test "failed and canceled status sync rejects forged provider order amount and currency" do
+    %i[provider order_id amount currency].each do |field|
+      order = create_order(provider: "portone")
+      bad_value = {
+        provider: "toss",
+        order_id: "another-order",
+        amount: 1,
+        currency: "USD"
+      }.fetch(field)
+
+      assert_raises(Commerce::OrderFinalizer::VerificationError) do
+        Commerce::OrderStatusSync.call!(
+          order: order,
+          status: "failed",
+          payment: payment_for(order, provider: "portone").merge(field => bad_value),
+          at: @at
+        )
+      end
+      assert_equal "pending", order.reload.status
+      assert_empty order.licenses
+    end
   end
 
   test "database failure rolls finalization back and the same payment safely recovers" do
@@ -186,7 +211,19 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
       order_id: order.public_id,
       amount: order.total_amount,
       currency: order.currency,
-      provider_payload: { "status" => "DONE" }
+      provider_payload: {
+        "status" => "DONE",
+        "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+        "customer" => {
+          "email" => "sensitive@example.com",
+          "phoneNumber" => "010-0000-0000",
+          "address" => "sensitive-address"
+        },
+        "token" => "sensitive-token",
+        "receiptUrl" => "https://sensitive.example/receipt",
+        "metadata" => { "future" => "sensitive-metadata" },
+        "unknownFutureKey" => "sensitive-unknown"
+      }
     }
   end
 

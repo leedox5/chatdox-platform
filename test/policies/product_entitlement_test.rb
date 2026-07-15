@@ -5,11 +5,20 @@ class ProductEntitlementTest < ActiveSupport::TestCase
 
   setup do
     Commerce::CatalogBootstrap.call!
+    @previous_legacy_access = ENV.delete("LEEDOX_LEGACY_CHATDOX_ACCESS")
     @at = Time.current
     @user = User.create!(email: "entitled@example.com", password: "password123", created_at: 30.days.ago)
     @other_user = User.create!(email: "other@example.com", password: "password123", created_at: 30.days.ago)
     @chatdox = Product.find_by!(code: "chatdox")
     @claudox = Product.find_by!(code: "claudox")
+  end
+
+  teardown do
+    if @previous_legacy_access.nil?
+      ENV.delete("LEEDOX_LEGACY_CHATDOX_ACCESS")
+    else
+      ENV["LEEDOX_LEGACY_CHATDOX_ACCESS"] = @previous_legacy_access
+    end
   end
 
   test "Chatdox and Claudox paid access are isolated by product" do
@@ -49,7 +58,7 @@ class ProductEntitlementTest < ActiveSupport::TestCase
     assert_not DocPolicy.new(trial_user, chapter("chatdox", 6)).view?
   end
 
-  test "legacy subscription fallback unlocks Chatdox only" do
+  test "legacy subscription access requires an explicit true gate and never unlocks Claudox" do
     @user.create_subscription!(
       provider: "toss",
       provider_customer_id: "legacy-user",
@@ -59,6 +68,12 @@ class ProductEntitlementTest < ActiveSupport::TestCase
       current_period_end: 1.month.from_now
     )
 
+    assert_not Entitlements::ProductAccess.allowed?(user: @user, product_code: "chatdox")
+
+    ENV["LEEDOX_LEGACY_CHATDOX_ACCESS"] = "false"
+    assert_not Entitlements::ProductAccess.allowed?(user: @user, product_code: "chatdox")
+
+    ENV["LEEDOX_LEGACY_CHATDOX_ACCESS"] = "true"
     assert Entitlements::ProductAccess.allowed?(user: @user, product_code: "chatdox")
     assert_not Entitlements::ProductAccess.allowed?(user: @user, product_code: "claudox")
   end

@@ -4,7 +4,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
   PAYMENT_ENV_KEYS = %w[
     LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY
     TOSS_WEBHOOK_SECRET PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY
-    PORTONE_WEBHOOK_SECRET
+    PORTONE_WEBHOOK_SECRET PAYMENT_PRICE_AMOUNT TOSS_PRICE_AMOUNT
   ].freeze
 
   setup do
@@ -101,6 +101,32 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "explicit Toss runtime preserves the adapter but cannot open initial checkout" do
+    ENV.update(
+      "LEEDOX_COMMERCE_ENABLED" => "true",
+      "PAYMENT_PROVIDER" => "toss",
+      "TOSS_CLIENT_KEY" => "test-client-key",
+      "TOSS_SECRET_KEY" => "test-secret-key",
+      "TOSS_WEBHOOK_SECRET" => "test-webhook-secret"
+    )
+    @product.update!(sale_enabled: true)
+    sign_in
+
+    assert Payments::Configuration.current.ready?
+    assert_not Payments::Configuration.current.checkout_ready?
+    assert_instance_of Payments::TossGateway, Payments::Gateway.for("toss")
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
+      get billing_checkout_path
+      assert_response :success
+      assert_match(/신규 결제를 준비하고 있습니다/, response.body)
+
+      post billing_orders_path, params: {
+        order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
+      }
+      assert_redirected_to billing_checkout_path
+    end
+  end
+
   test "existing Chatdox period is displayed as a fixed extension date" do
     enable_chatdox_sales
     sign_in
@@ -157,7 +183,49 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal "paid", order.reload.status
     assert_equal 1, order.licenses.count
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
+    assert_equal({ "status" => "DONE" }, order.payment_transaction.reload.provider_payload)
     assert_nil @user.reload.subscription
+  end
+
+  test "success callback without matching order fails closed without legacy writes" do
+    ENV["PAYMENT_PRICE_AMOUNT"] = "9900"
+    ENV["TOSS_PRICE_AMOUNT"] = "9900"
+    sign_in
+
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+      get billing_success_path, params: {
+        orderId: "unmatched-order",
+        paymentId: "unmatched-payment",
+        paymentKey: "unmatched-key",
+        amount: 9_900,
+        currency: "KRW"
+      }
+    end
+
+    assert_redirected_to billing_checkout_path
+    assert_equal "주문을 확인할 수 없습니다. 상품 페이지에서 다시 시작해 주세요.", flash[:alert]
+    assert_no_match(/unmatched-order|unmatched-payment|unmatched-key/, response.body)
+  end
+
+  test "success callback cannot finalize another users matching order" do
+    enable_chatdox_sales
+    other_user = User.create!(email: "other-checkout-user@example.com", password: "password123", created_at: 30.days.ago)
+    other_order = Commerce::OrderCreator.call!(
+      user: other_user,
+      product_code: "chatdox",
+      offer_code: "chatdox-1m-v1",
+      requested_start_on: Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date,
+      provider: "portone"
+    )
+    sign_in
+
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+      get billing_success_path, params: { paymentId: other_order.public_id }
+    end
+
+    assert_redirected_to billing_cancel_path
+    assert_equal "pending", other_order.reload.status
+    assert_empty other_order.licenses
   end
 
   test "Toss webhook resend finalizes the existing pending order only once" do
@@ -198,7 +266,12 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
       "id" => order.public_id,
       "amount" => { "total" => order.total_amount },
       "currency" => order.currency,
-      "status" => "PAID"
+      "status" => "PAID",
+      "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+      "customer" => { "email" => "sensitive@example.com", "phoneNumber" => "010-0000-0000" },
+      "token" => "sensitive-token",
+      "receiptUrl" => "https://sensitive.example/receipt",
+      "unknownFutureKey" => "sensitive-unknown"
     }
 
     verifier = ->(**_arguments) { true }
@@ -221,6 +294,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal 1, Order.where(id: order.id).count
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
     assert_equal 1, order.reload.licenses.count
+    assert_equal({ "status" => "PAID" }, order.payment_transaction.reload.provider_payload)
     assert_nil @user.reload.subscription
   end
 
@@ -254,14 +328,19 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
         "orderId" => order_id,
         "totalAmount" => amount,
         "currency" => order.currency,
-        "status" => "DONE"
+        "status" => "DONE",
+        "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+        "customerEmail" => "sensitive@example.com",
+        "token" => "sensitive-token",
+        "receiptUrl" => "https://sensitive.example/receipt",
+        "unknownFutureKey" => "sensitive-unknown"
       }
     end
   end
 
   def enable_chatdox_sales
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
-    ENV["PAYMENT_PROVIDER"] = "toss"
+    ENV["PAYMENT_PROVIDER"] = "portone"
     ENV["TOSS_CLIENT_KEY"] = "test-client-key"
     ENV["TOSS_SECRET_KEY"] = "test-secret-key"
     ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"

@@ -12,7 +12,7 @@ module Payments
     attr_reader :provider
 
     def self.current
-      new(provider: ENV.fetch("PAYMENT_PROVIDER", "toss"))
+      new(provider: ENV["PAYMENT_PROVIDER"])
     end
 
     def initialize(provider:)
@@ -21,6 +21,10 @@ module Payments
 
     def ready?
       valid_provider? && missing_keys.empty?
+    end
+
+    def checkout_ready?
+      provider == "portone" && ready?
     end
 
     def webhook_ready?

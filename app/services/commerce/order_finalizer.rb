@@ -34,7 +34,7 @@ module Commerce
             status: "active",
             amount: @payment.fetch(:amount),
             currency: @payment.fetch(:currency),
-            provider_payload: @payment.fetch(:provider_payload, {}),
+            provider_payload: provider_snapshot,
             provider_status: provider_status,
             provider_observed_at: @at
           )
@@ -104,7 +104,7 @@ module Commerce
       @order.payment_transaction.update!(
         provider_status: provider_status,
         provider_observed_at: @at,
-        provider_payload: @payment.fetch(:provider_payload, {})
+        provider_payload: provider_snapshot
       )
       @order.update!(last_provider_event_at: @at)
       Commerce::AuditRecorder.record!(
@@ -126,7 +126,14 @@ module Commerce
     end
 
     def provider_status
-      @payment.fetch(:provider_payload, {}).to_h["status"]
+      provider_snapshot["status"]
+    end
+
+    def provider_snapshot
+      @provider_snapshot ||= Payments::ProviderSnapshot.build(
+        provider: @payment.fetch(:provider),
+        payload: @payment.fetch(:provider_payload, {})
+      )
     end
 
     def log_failure(event)

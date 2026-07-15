@@ -1,12 +1,13 @@
 namespace :commerce do
-  desc "Read-only release preflight (set PROVIDER=toss or PROVIDER=portone)"
+  desc "Read-only release preflight (initial release requires explicit PortOne runtime and target)"
   task preflight: :environment do
-    provider = ENV.fetch("PROVIDER", ENV.fetch("PAYMENT_PROVIDER", "toss"))
+    provider = ENV["PROVIDER"] || ENV["PAYMENT_PROVIDER"]
     report = Commerce::ReleasePreflight.call(provider: provider)
     puts "commerce_preflight provider=#{provider} checked_at=#{report.checked_at.utc.iso8601} ready=#{report.ready_for_sandbox?}"
     report.checks.each do |check|
       puts "check=#{check.name} status=#{check.status} detail=#{check.detail}"
     end
+    abort "commerce preflight failed" unless report.ready_for_sandbox?
   end
 
   desc "Read-only Order, PaymentTransaction, and License reconciliation"

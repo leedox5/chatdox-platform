@@ -28,24 +28,11 @@ class Webhooks::TossPaymentsController < ApplicationController
       return head :ok
     end
 
-    subscription = Subscription.find_by(toss_payment_key: payment["paymentKey"])
-    return head :ok unless subscription
-
-    status = subscription_status(payment["status"])
-
-    ApplicationRecord.transaction do
-      subscription.update!(status: status, active: status == "active")
-      subscription.payment_transactions.find_or_initialize_by(
-        provider: "toss",
-        provider_payment_id: payment["paymentKey"]
-      ).update!(
-        order_id: payment["orderId"] || subscription.order_id,
-        status: status,
-        amount: payment["totalAmount"] || 0,
-        currency: payment["currency"] || "KRW",
-        provider_payload: payment
-      )
-    end
+    Commerce::EventLogger.log(
+      event: "commerce.webhook_processing_failed",
+      provider: "toss",
+      status: "order_not_found"
+    )
     head :ok
   rescue JSON::ParserError
     log_webhook_failure("invalid_json")
@@ -64,7 +51,7 @@ class Webhooks::TossPaymentsController < ApplicationController
       order_id: payment.fetch("orderId"),
       amount: payment.fetch("totalAmount"),
       currency: payment.fetch("currency", "KRW"),
-      provider_payload: payment
+      provider_payload: Payments::ProviderSnapshot.build(provider: "toss", payload: payment)
     }
 
     if payment["status"] == "DONE"

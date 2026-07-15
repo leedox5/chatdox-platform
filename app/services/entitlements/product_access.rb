@@ -13,7 +13,7 @@ module Entitlements
 
     def self.legacy_chatdox_enabled?
       ActiveModel::Type::Boolean.new.cast(
-        ENV.fetch("LEEDOX_LEGACY_CHATDOX_ACCESS", "true")
+        ENV.fetch("LEEDOX_LEGACY_CHATDOX_ACCESS", "false")
       )
     end
   end

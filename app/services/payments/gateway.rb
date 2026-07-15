@@ -3,7 +3,10 @@ module Payments
     PROVIDERS = %w[toss portone].freeze
 
     def self.current
-      self.for(ENV.fetch("PAYMENT_PROVIDER", "toss"))
+      provider = ENV.fetch("PAYMENT_PROVIDER")
+      raise KeyError, "runtime payment provider must be portone" unless provider == "portone"
+
+      self.for(provider)
     end
 
     def self.for(provider)

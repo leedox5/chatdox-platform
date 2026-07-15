@@ -106,6 +106,95 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "PortOne webhook rejects a provider payment id that differs from the signed event" do
+    order = create_order(provider: "portone")
+    payment = {
+      "id" => "different-provider-payment",
+      "amount" => { "total" => order.total_amount },
+      "currency" => order.currency,
+      "status" => "PAID"
+    }
+
+    with_singleton_method(Portone::WebhookVerifier, :verify!, ->(**_arguments) { true }) do
+      with_singleton_method(Portone::Client, :get_payment, ->(_payment_id) { payment }) do
+        assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+          post webhooks_portone_path,
+            params: { data: { paymentId: order.public_id } }.to_json,
+            headers: { "CONTENT_TYPE" => "application/json" }
+          assert_response :bad_request
+        end
+      end
+    end
+
+    assert_equal "pending", order.reload.status
+    assert_empty order.licenses
+  end
+
+  test "unmatched webhooks do not update legacy subscriptions or create new records" do
+    legacy = @user.create_subscription!(
+      provider: "toss",
+      provider_customer_id: "legacy-customer",
+      toss_payment_key: "legacy-payment",
+      order_id: "legacy-order",
+      status: "active",
+      active: true,
+      current_period_start: 1.day.ago,
+      current_period_end: 1.month.from_now
+    )
+    legacy_transaction = legacy.payment_transactions.create!(
+      provider: "toss",
+      provider_payment_id: "legacy-payment",
+      order_id: "legacy-order",
+      status: "active",
+      amount: 9_900,
+      currency: "KRW",
+      provider_payload: { "legacy" => "preserve-existing-record" }
+    )
+    legacy_attributes = legacy.attributes
+    transaction_attributes = legacy_transaction.attributes
+
+    toss_payment = {
+      "paymentKey" => "legacy-payment",
+      "orderId" => "unmatched-toss-order",
+      "totalAmount" => 9_900,
+      "currency" => "KRW",
+      "status" => "DONE",
+      "token" => "sensitive-token"
+    }
+    portone_payment = {
+      "id" => "unmatched-portone-order",
+      "amount" => { "total" => 9_900 },
+      "currency" => "KRW",
+      "status" => "PAID",
+      "customer" => { "email" => "sensitive@example.com" }
+    }
+
+    with_singleton_method(TossPayments::Client, :get_json, ->(_path) { toss_payment }) do
+      assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+        post webhooks_toss_payments_path,
+          params: { secret: "test-toss-webhook", paymentKey: "legacy-payment" }.to_json,
+          headers: { "CONTENT_TYPE" => "application/json" }
+        assert_response :success
+      end
+    end
+
+    with_singleton_method(Portone::WebhookVerifier, :verify!, ->(**_arguments) { true }) do
+      provider_lookup_called = false
+      with_singleton_method(Portone::Client, :get_payment, ->(_payment_id) { provider_lookup_called = true; portone_payment }) do
+        assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+          post webhooks_portone_path,
+            params: { data: { paymentId: "unmatched-portone-order" } }.to_json,
+            headers: { "CONTENT_TYPE" => "application/json" }
+          assert_response :success
+        end
+      end
+      assert_not provider_lookup_called
+    end
+
+    assert_equal legacy_attributes, legacy.reload.attributes
+    assert_equal transaction_attributes, legacy_transaction.reload.attributes
+  end
+
   private
 
   FakeTossGateway = Struct.new(:order) do
@@ -118,7 +207,12 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
         "orderId" => order_id,
         "totalAmount" => amount,
         "currency" => order.currency,
-        "status" => "DONE"
+        "status" => "DONE",
+        "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+        "customerEmail" => "sensitive@example.com",
+        "token" => "sensitive-token",
+        "receiptUrl" => "https://sensitive.example/receipt",
+        "unknownFutureKey" => "sensitive-unknown"
       }
     end
   end
@@ -133,7 +227,12 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
         "id" => payment_id,
         "amount" => { "total" => expected_amount },
         "currency" => expected_currency,
-        "status" => "PAID"
+        "status" => "PAID",
+        "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+        "customer" => { "email" => "sensitive@example.com", "phoneNumber" => "010-0000-0000" },
+        "token" => "sensitive-token",
+        "receiptUrl" => "https://sensitive.example/receipt",
+        "unknownFutureKey" => "sensitive-unknown"
       }
     end
   end
@@ -165,7 +264,12 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
       "orderId" => order.public_id,
       "totalAmount" => order.total_amount,
       "currency" => order.currency,
-      "status" => status
+      "status" => status,
+      "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+      "customerEmail" => "sensitive@example.com",
+      "token" => "sensitive-token",
+      "receiptUrl" => "https://sensitive.example/receipt",
+      "unknownFutureKey" => "sensitive-unknown"
     }
     with_singleton_method(TossPayments::Client, :get_json, ->(_path) { payment }) do
       post webhooks_toss_payments_path,
@@ -189,7 +293,12 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
       "id" => order.public_id,
       "amount" => { "total" => order.total_amount },
       "currency" => order.currency,
-      "status" => status
+      "status" => status,
+      "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
+      "customer" => { "email" => "sensitive@example.com", "phoneNumber" => "010-0000-0000" },
+      "token" => "sensitive-token",
+      "receiptUrl" => "https://sensitive.example/receipt",
+      "unknownFutureKey" => "sensitive-unknown"
     }
     with_singleton_method(Portone::WebhookVerifier, :verify!, ->(**_arguments) { true }) do
       with_singleton_method(Portone::Client, :get_payment, ->(_payment_id) { payment }) do
@@ -205,6 +314,7 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
     assert_equal "paid", order.reload.status
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
     assert_equal 1, order.licenses.count
+    assert_equal [ "status" ], order.payment_transaction.reload.provider_payload.keys
   end
 
   def with_singleton_method(object, method_name, replacement)

@@ -27,16 +27,16 @@ module Payments
       paid_amount = payment.dig("amount", "total").to_i
 
       unless provider_payment_id == payment_id
-        raise PaymentIdMismatchError, "PortOne payment id mismatch: expected=#{payment_id} actual=#{provider_payment_id}"
+        raise PaymentIdMismatchError, "PortOne payment id mismatch"
       end
       unless paid_amount == expected_amount
-        raise AmountMismatchError, "PortOne payment amount mismatch: expected=#{expected_amount} actual=#{paid_amount}"
+        raise AmountMismatchError, "PortOne payment amount mismatch"
       end
       unless payment["currency"] == expected_currency
-        raise CurrencyMismatchError, "PortOne payment currency mismatch: expected=#{expected_currency} actual=#{payment['currency']}"
+        raise CurrencyMismatchError, "PortOne payment currency mismatch"
       end
       unless payment["status"] == PAID_STATUS
-        raise UnpaidStatusError, "PortOne payment is not paid: status=#{payment['status']}"
+        raise UnpaidStatusError, "PortOne payment is not paid"
       end
 
       payment

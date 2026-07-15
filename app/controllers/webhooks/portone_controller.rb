@@ -23,12 +23,24 @@ class Webhooks::PortoneController < ApplicationController
     payment_id = payload.dig("data", "paymentId")
     return head :ok if payment_id.blank?
 
+    order = Order.find_by(public_id: payment_id)
+    unless order
+      log_webhook_failure("order_not_found")
+      return head :ok
+    end
+
     payment = Payments::PortoneGateway.new.fetch_payment!(payment_id)
-    sync_payment!(payment)
+    provider_payment_id = payment["id"] || payment["paymentId"]
+    raise Payments::PortoneGateway::PaymentIdMismatchError unless provider_payment_id == payment_id
+
+    sync_purchase_order!(order, payment, provider_payment_id)
 
     head :ok
   rescue Portone::WebhookVerifier::VerificationError
     log_webhook_failure("verification_failed")
+    head :bad_request
+  rescue Payments::PortoneGateway::PaymentVerificationError
+    log_webhook_failure("payment_mismatch")
     head :bad_request
   rescue JSON::ParserError
     log_webhook_failure("invalid_json")
@@ -40,43 +52,6 @@ class Webhooks::PortoneController < ApplicationController
 
   private
 
-  def sync_payment!(payment)
-    provider_payment_id = payment["id"] || payment["paymentId"]
-    if (order = Order.find_by(public_id: provider_payment_id))
-      sync_purchase_order!(order, payment, provider_payment_id)
-      return
-    end
-
-    transaction = PaymentTransaction.find_or_initialize_by(
-      provider: "portone",
-      provider_payment_id: provider_payment_id
-    )
-    subscription = transaction.subscription
-    unless subscription
-      Commerce::EventLogger.log(
-        event: "commerce.webhook_processing_failed",
-        provider: "portone",
-        status: "pending_transaction_missing"
-      )
-      return
-    end
-
-    status = subscription_status(payment["status"])
-    order_id = transaction.order_id.presence || provider_payment_id
-
-    ApplicationRecord.transaction do
-      transaction.update!(
-        subscription: subscription,
-        order_id: order_id,
-        status: status,
-        amount: payment.dig("amount", "total") || transaction.amount || 0,
-        currency: payment["currency"] || transaction.currency || "KRW",
-        provider_payload: payment
-      )
-      subscription.update!(subscription_attributes(subscription, status, order_id))
-    end
-  end
-
   def sync_purchase_order!(order, payment, provider_payment_id)
     attributes = {
       provider: "portone",
@@ -84,7 +59,7 @@ class Webhooks::PortoneController < ApplicationController
       order_id: order.public_id,
       amount: payment.dig("amount", "total") || 0,
       currency: payment["currency"] || "KRW",
-      provider_payload: payment
+      provider_payload: Payments::ProviderSnapshot.build(provider: "portone", payload: payment)
     }
 
     if payment["status"] == "PAID"
@@ -96,17 +71,6 @@ class Webhooks::PortoneController < ApplicationController
         payment: attributes
       )
     end
-  end
-
-  def subscription_attributes(subscription, status, order_id)
-    attributes = { status: status, active: status == "active" }
-    return attributes unless status == "active"
-
-    attributes.merge(
-      provider: "portone",
-      provider_customer_id: subscription.provider_customer_id.presence || "user-#{subscription.user_id}",
-      order_id: order_id
-    )
   end
 
   def subscription_status(provider_status)

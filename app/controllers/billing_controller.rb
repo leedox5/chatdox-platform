@@ -9,7 +9,7 @@ class BillingController < ApplicationController
     end
 
     configuration = Payments::Configuration.current
-    unless configuration.ready?
+    unless configuration.checkout_ready?
       Commerce::EventLogger.log(
         event: "commerce.gate_configuration_mismatch",
         provider: configuration.provider,
@@ -38,28 +38,18 @@ class BillingController < ApplicationController
 
   def success
     order = find_purchase_order
-    if order
-      process_purchase_order_success(order)
+    unless order
+      log_callback_failure(order: nil, provider: nil, status: "order_not_found")
+      respond_to_order_not_found
       return
     end
 
-    gateway = Payments::Gateway.current
-    provider = gateway.provider
-    payment_attributes =
-      if provider == "portone"
-        complete_portone_payment(gateway)
-      else
-        complete_toss_payment(gateway)
-      end
-    subscription = current_user.subscription || current_user.build_subscription
-    update_subscription_for_payment!(subscription, payment_attributes)
-
-    respond_to_payment_success
+    process_purchase_order_success(order)
   rescue ActiveRecord::ActiveRecordError
-    log_callback_failure(order: order, provider: provider, status: "persistence_failed")
+    log_callback_failure(order: order, provider: order&.provider, status: "persistence_failed")
     respond_to_payment_reconciliation_failure
   rescue StandardError
-    log_callback_failure(order: order, provider: provider, status: "verification_failed")
+    log_callback_failure(order: order, provider: order&.provider, status: "verification_failed")
     respond_to_payment_failure
   end
 
@@ -80,7 +70,11 @@ class BillingController < ApplicationController
         expected_currency: order.currency
       )
     else
-      complete_toss_payment(gateway, expected_amount: order.total_amount)
+      complete_toss_payment(
+        gateway,
+        expected_amount: order.total_amount,
+        expected_currency: order.currency
+      )
     end
 
     Commerce::OrderFinalizer.call!(order: order, payment: payment_attributes)
@@ -92,7 +86,7 @@ class BillingController < ApplicationController
     Order.find_by(public_id: public_id) if public_id
   end
 
-  def complete_toss_payment(gateway, expected_amount: payment_amount)
+  def complete_toss_payment(gateway, expected_amount:, expected_currency:)
     payment = gateway.confirm_payment!(
       payment_key: params[:paymentKey],
       order_id: params[:orderId],
@@ -101,23 +95,18 @@ class BillingController < ApplicationController
 
     {
       provider: "toss",
-      provider_customer_id: "user-#{current_user.id}",
       provider_payment_id: payment.fetch("paymentKey"),
       order_id: payment.fetch("orderId"),
       amount: payment.fetch("totalAmount"),
-      currency: payment.fetch("currency", payment_currency),
-      provider_payload: payment,
-      toss_attributes: {
-        toss_customer_key: "user-#{current_user.id}",
-        toss_payment_key: payment.fetch("paymentKey")
-      }
+      currency: payment.fetch("currency", expected_currency),
+      provider_payload: Payments::ProviderSnapshot.build(provider: "toss", payload: payment)
     }
   end
 
   def complete_portone_payment(
     gateway,
-    expected_amount: payment_amount,
-    expected_currency: payment_currency
+    expected_amount:,
+    expected_currency:
   )
     payment_id = params[:paymentId].presence || params[:orderId]
     payment = gateway.verify_payment!(
@@ -128,78 +117,12 @@ class BillingController < ApplicationController
 
     {
       provider: "portone",
-      provider_customer_id: "user-#{current_user.id}",
       provider_payment_id: payment["id"] || payment["paymentId"] || payment_id,
       order_id: payment_id,
       amount: payment.dig("amount", "total"),
-      currency: payment.fetch("currency", payment_currency),
-      provider_payload: payment
+      currency: payment.fetch("currency", expected_currency),
+      provider_payload: Payments::ProviderSnapshot.build(provider: "portone", payload: payment)
     }
-  end
-
-  def update_subscription_for_payment!(subscription, attributes)
-    ApplicationRecord.transaction do
-      subscription.update!(
-        {
-          provider: attributes.fetch(:provider),
-          provider_customer_id: attributes.fetch(:provider_customer_id),
-          billing_key: subscription.billing_key,
-          order_id: attributes.fetch(:order_id),
-          status: "active",
-          active: true,
-          current_period_start: Time.current,
-          current_period_end: 1.month.from_now
-        }.merge(attributes.fetch(:toss_attributes, {}))
-      )
-
-      transaction = subscription.payment_transactions.find_or_initialize_by(
-        provider: attributes.fetch(:provider),
-        provider_payment_id: attributes.fetch(:provider_payment_id)
-      )
-      transaction.update!(
-        order_id: attributes.fetch(:order_id),
-        status: "active",
-        amount: attributes.fetch(:amount),
-        currency: attributes.fetch(:currency),
-        provider_payload: attributes.fetch(:provider_payload)
-      )
-    end
-  end
-
-  def payment_provider
-    Payments::Gateway.current.provider
-  end
-
-  def payment_amount
-    ENV.fetch("PAYMENT_PRICE_AMOUNT", ENV.fetch("TOSS_PRICE_AMOUNT", "9900")).to_i
-  end
-
-  def payment_currency
-    ENV.fetch("PAYMENT_CURRENCY", "KRW")
-  end
-
-  def prepare_pending_portone_payment!
-    subscription = current_user.subscription || current_user.build_subscription(
-      provider: "portone",
-      provider_customer_id: "user-#{current_user.id}",
-      status: "pending",
-      active: false
-    )
-    subscription.provider ||= "portone"
-    subscription.provider_customer_id ||= "user-#{current_user.id}"
-    subscription.status ||= "pending"
-    subscription.save! if subscription.new_record? || subscription.changed?
-
-    subscription.payment_transactions.find_or_create_by!(
-      provider: "portone",
-      provider_payment_id: @order_id
-    ) do |transaction|
-      transaction.order_id = @order_id
-      transaction.status = "pending"
-      transaction.amount = @amount
-      transaction.currency = @currency
-      transaction.provider_payload = {}
-    end
   end
 
   def respond_to_payment_success
@@ -215,6 +138,16 @@ class BillingController < ApplicationController
       render json: { ok: false, message: "결제 승인에 실패했습니다." }, status: :unprocessable_entity
     else
       redirect_to billing_cancel_path, alert: "결제 승인에 실패했습니다."
+    end
+  end
+
+  def respond_to_order_not_found
+    message = "주문을 확인할 수 없습니다. 상품 페이지에서 다시 시작해 주세요."
+
+    if json_payment_request?
+      render json: { ok: false, message: message }, status: :unprocessable_entity
+    else
+      redirect_to billing_checkout_path, alert: message
     end
   end
 

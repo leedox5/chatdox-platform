@@ -24,6 +24,7 @@ class PaymentsConfigurationTest < ActiveSupport::TestCase
     ENV["TOSS_SECRET_KEY"] = "test-secret"
     ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook"
     assert toss.ready?
+    assert_not toss.checkout_ready?
     assert toss.webhook_ready?
 
     portone = Payments::Configuration.new(provider: "portone")
@@ -33,6 +34,7 @@ class PaymentsConfigurationTest < ActiveSupport::TestCase
     ENV["PORTONE_CHANNEL_KEY"] = "test-channel"
     ENV["PORTONE_WEBHOOK_SECRET"] = "test-webhook"
     assert portone.ready?
+    assert portone.checkout_ready?
     assert portone.webhook_ready?
   end
 
@@ -42,5 +44,26 @@ class PaymentsConfigurationTest < ActiveSupport::TestCase
     assert_not configuration.ready?
     assert_not configuration.webhook_ready?
     assert_equal [ "PAYMENT_PROVIDER" ], configuration.missing_keys
+  end
+
+  test "current configuration and gateway require an explicit exact provider" do
+    [ nil, "", " ", "PortOne", "unknown" ].each do |value|
+      value.nil? ? ENV.delete("PAYMENT_PROVIDER") : ENV["PAYMENT_PROVIDER"] = value
+
+      assert_not Payments::Configuration.current.valid_provider?
+      assert_raises(KeyError) { Payments::Gateway.current }
+    end
+
+    ENV["PAYMENT_PROVIDER"] = "portone"
+    assert_equal "portone", Payments::Configuration.current.provider
+    assert_instance_of Payments::PortoneGateway, Payments::Gateway.current
+
+    ENV["PAYMENT_PROVIDER"] = "toss"
+    ENV["TOSS_CLIENT_KEY"] = "test-client"
+    ENV["TOSS_SECRET_KEY"] = "test-secret"
+    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook"
+    assert Payments::Configuration.current.ready?
+    assert_not Payments::Configuration.current.checkout_ready?
+    assert_raises(KeyError) { Payments::Gateway.current }
   end
 end

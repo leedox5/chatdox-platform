@@ -7,7 +7,7 @@ module Commerce
       end
     end
 
-    def self.call(provider: ENV.fetch("PAYMENT_PROVIDER", "toss"), at: Time.current)
+    def self.call(provider: ENV["PAYMENT_PROVIDER"], at: Time.current)
       new(provider: provider, at: at).call
     end
 
@@ -27,6 +27,7 @@ module Commerce
         check("global_sale_gate", !Commerce::Sales.globally_enabled?, "must remain disabled before approval"),
         check("chatdox_sale_gate", chatdox.present? && !chatdox.sale_enabled?, "must remain disabled before approval"),
         check("claudox_sale_gate", claudox.present? && !claudox.sale_enabled? && claudox.product_offers.empty?, "sale disabled and no offers"),
+        runtime_provider_check,
         configuration_check(configuration),
         check("callback_routes", callback_routes_present?, "callback and webhook routes recognized")
       ]
@@ -49,6 +50,13 @@ module Commerce
           detail: "missing environment variables: #{configuration.missing_keys.join(',')}"
         )
       end
+    end
+
+    def runtime_provider_check
+      runtime_provider = ENV["PAYMENT_PROVIDER"]
+      passed = @provider.present? && runtime_provider.present? && @provider == runtime_provider && @provider == "portone"
+      detail = passed ? "runtime and preflight provider are explicitly portone" : "runtime and preflight provider must match explicit portone"
+      check("runtime_provider", passed, detail)
     end
 
     def migrations_current?
