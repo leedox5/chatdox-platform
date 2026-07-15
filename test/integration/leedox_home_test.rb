@@ -605,6 +605,17 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/최종 업데이트: \d{4}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2}/, response.body)
   end
 
+  test "Claudox chapter page has a back-to-list link outside the desktop-only sidebar" do
+    get claudox_chapter_path("01")
+
+    assert_response :success
+    doc = Nokogiri::HTML(response.body)
+    main_content = doc.at_css("main")
+    back_link = main_content.at_css("a[href='#{claudox_read_path}']")
+    assert back_link, "expected a back-to-list link inside <main>, visible on mobile"
+    assert_equal "← 클로독스 목록", back_link.text.strip
+  end
+
   test "Claudox index is a full chapter table of contents, not a single chapter's content" do
     get claudox_read_path
 
