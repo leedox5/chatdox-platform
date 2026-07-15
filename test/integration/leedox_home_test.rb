@@ -181,6 +181,107 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/Investigated and fixed/, response.body)
   end
 
+  test "publishing a ticket and adding a job auto-fill requester/author from the signed-in user's email, ignoring any submitted value" do
+    admin = User.create!(email: "sd-admin-autofill@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    post service_desk_path, params: { service_desk_request: { subject: "Autofill ticket", visibility: "visible", description: "body" } }
+    created = ServiceDeskRequest.order(:request_number).last
+    assert_equal admin.email, created.requester
+
+    post service_desk_request_jobs_path(created), params: { service_desk_job: { author: "Someone Else", content: "Autofill job" } }
+    job = created.service_desk_jobs.order(:job_number).last
+    assert_equal admin.email, job.author
+  end
+
+  test "admin can edit a ticket's subject/status/visibility/description but not requester/request_number/date" do
+    request = ServiceDeskRequest.create!(request_number: 5009, requester: "Original Requester", subject: "Original subject", visibility: :visible, status: :pending)
+    original_date = request.date
+
+    admin = User.create!(email: "sd-admin-edit@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get edit_service_desk_request_path(request)
+    assert_response :success
+    assert_select "input[name=?]", "service_desk_request[requester]", count: 0
+
+    patch service_desk_request_path(request), params: { service_desk_request: { subject: "Updated subject", status: "confirmed", visibility: "restricted", description: "Updated body", requester: "Hijacked requester" } }
+
+    assert_redirected_to service_desk_request_path(request)
+    request.reload
+    assert_equal "Updated subject", request.subject
+    assert_equal "confirmed", request.status
+    assert_equal "restricted", request.visibility
+    assert_equal "Updated body", request.description
+    assert_equal "Original Requester", request.requester
+    assert_equal 5009, request.request_number
+    assert_equal original_date, request.date
+  end
+
+  test "editing a ticket with an invalid subject re-renders the edit form with errors" do
+    request = ServiceDeskRequest.create!(request_number: 5010, requester: "Tester", subject: "Keep me", visibility: :visible)
+
+    admin = User.create!(email: "sd-admin-edit-invalid@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    patch service_desk_request_path(request), params: { service_desk_request: { subject: "", visibility: "visible", description: "" } }
+
+    assert_response :unprocessable_content
+    request.reload
+    assert_equal "Keep me", request.subject
+  end
+
+  test "admin can edit a job's content but author and performed_at stay unchanged" do
+    request = ServiceDeskRequest.create!(request_number: 5011, requester: "Tester", subject: "Job edit target", visibility: :visible)
+    job = request.service_desk_jobs.create!(author: "Original Author", content: "Original content")
+    original_performed_at = job.performed_at
+
+    admin = User.create!(email: "sd-admin-job-edit@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get edit_service_desk_request_job_path(request, job.job_number)
+    assert_response :success
+
+    patch service_desk_request_job_path(request, job.job_number), params: { service_desk_job: { content: "Updated content", author: "Hijacked author" } }
+
+    assert_redirected_to service_desk_request_path(request)
+    job.reload
+    assert_equal "Updated content", job.content
+    assert_equal "Original Author", job.author
+    assert_equal original_performed_at.to_i, job.performed_at.to_i
+  end
+
+  test "ticket and job edit routes block guests and non-admin users" do
+    request = ServiceDeskRequest.create!(request_number: 5012, requester: "Tester", subject: "Guard check", visibility: :visible)
+    job = request.service_desk_jobs.create!(author: "Tester", content: "content")
+
+    get edit_service_desk_request_path(request)
+    assert_redirected_to new_user_session_path
+    patch service_desk_request_path(request), params: { service_desk_request: { subject: "Nope" } }
+    assert_redirected_to new_user_session_path
+    get edit_service_desk_request_job_path(request, job.job_number)
+    assert_redirected_to new_user_session_path
+    patch service_desk_request_job_path(request, job.job_number), params: { service_desk_job: { content: "Nope" } }
+    assert_redirected_to new_user_session_path
+
+    user = User.create!(email: "sd-user-edit-guard@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get edit_service_desk_request_path(request)
+    assert_redirected_to root_path
+    patch service_desk_request_path(request), params: { service_desk_request: { subject: "Nope" } }
+    assert_redirected_to root_path
+    get edit_service_desk_request_job_path(request, job.job_number)
+    assert_redirected_to root_path
+    patch service_desk_request_job_path(request, job.job_number), params: { service_desk_job: { content: "Nope" } }
+    assert_redirected_to root_path
+
+    request.reload
+    job.reload
+    assert_equal "Guard check", request.subject
+    assert_equal "content", job.content
+  end
+
   test "service desk export downloads a zip of all requests" do
     ServiceDeskRequest.create!(request_number: 5008, requester: "Tester", subject: "Export me", visibility: :visible)
 

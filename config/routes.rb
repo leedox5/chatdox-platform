@@ -25,7 +25,11 @@ Rails.application.routes.draw do
   post "/service-desk", to: "service_desk#create"
   post "/service-desk/export", to: "service_desk#export", as: :service_desk_export
   get "/service-desk/requests/:id", to: "service_desk#show", as: :service_desk_request
+  get "/service-desk/requests/:id/edit", to: "service_desk#edit", as: :edit_service_desk_request
+  patch "/service-desk/requests/:id", to: "service_desk#update"
   post "/service-desk/requests/:id/jobs", to: "service_desk_jobs#create", as: :service_desk_request_jobs
+  get "/service-desk/requests/:id/jobs/:job_id/edit", to: "service_desk_jobs#edit", as: :edit_service_desk_request_job
+  patch "/service-desk/requests/:id/jobs/:job_id", to: "service_desk_jobs#update", as: :service_desk_request_job
 
   post "/service-desk/api/requests", to: "service_desk/api/requests#create", as: :service_desk_api_requests
   get "/service-desk/api/requests", to: "service_desk/api/requests#index"

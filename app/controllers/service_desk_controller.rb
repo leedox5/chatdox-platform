@@ -35,12 +35,28 @@ class ServiceDeskController < ApplicationController
   end
 
   def create
-    @service_desk_request = ServiceDeskRequest.new(service_desk_request_params)
+    @service_desk_request = ServiceDeskRequest.new(service_desk_request_params.merge(requester: current_user.email))
 
     if @service_desk_request.save
       redirect_to service_desk_request_path(@service_desk_request), notice: "티켓이 발행되었습니다."
     else
       render :new, status: :unprocessable_content
+    end
+  end
+
+  def edit
+    @service_desk_request = ServiceDeskRequest.find_by(request_number: params[:id].to_i)
+    return render(plain: "요청을 찾을 수 없습니다.", status: :not_found) unless @service_desk_request
+  end
+
+  def update
+    @service_desk_request = ServiceDeskRequest.find_by(request_number: params[:id].to_i)
+    return render(plain: "요청을 찾을 수 없습니다.", status: :not_found) unless @service_desk_request
+
+    if @service_desk_request.update(service_desk_request_update_params)
+      redirect_to service_desk_request_path(@service_desk_request), notice: "티켓이 수정되었습니다."
+    else
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -56,6 +72,10 @@ class ServiceDeskController < ApplicationController
   end
 
   def service_desk_request_params
-    params.require(:service_desk_request).permit(:subject, :requester, :visibility, :description)
+    params.require(:service_desk_request).permit(:subject, :visibility, :description)
+  end
+
+  def service_desk_request_update_params
+    params.require(:service_desk_request).permit(:subject, :description, :status, :visibility)
   end
 end
