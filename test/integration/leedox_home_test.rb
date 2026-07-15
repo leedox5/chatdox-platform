@@ -282,6 +282,77 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_equal "content", job.content
   end
 
+  test "job timestamps render in KST (UTC+9), not UTC" do
+    request = ServiceDeskRequest.create!(request_number: 5013, requester: "Tester", subject: "Timezone check", visibility: :visible)
+    job = nil
+    travel_to Time.utc(2026, 3, 15, 5, 6, 0) do
+      job = request.service_desk_jobs.create!(author: "Tester", content: "job at a known instant")
+    end
+
+    admin = User.create!(email: "sd-admin-tz@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_request_path(request)
+
+    assert_response :success
+    assert_equal "Asia/Seoul", Time.zone.name
+    assert_equal 14, job.performed_at.hour
+    assert_match(/14:06/, response.body)
+    assert_no_match(/05:06/, response.body)
+  end
+
+  test "service desk home shows a '내 관련' card scoped to the signed-in admin's own requester/author matches" do
+    admin = User.create!(email: "sd-admin-mine@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    ServiceDeskRequest.create!(request_number: 5014, requester: admin.email, subject: "Filed by me", visibility: :visible)
+    mine_by_job = ServiceDeskRequest.create!(request_number: 5015, requester: "someone-else@example.com", subject: "I left a job here", visibility: :visible)
+    mine_by_job.service_desk_jobs.create!(author: admin.email, content: "my note")
+    not_mine = ServiceDeskRequest.create!(request_number: 5016, requester: "someone-else@example.com", subject: "Not related to me", visibility: :visible)
+    not_mine.service_desk_jobs.create!(author: "someone-else@example.com", content: "their note")
+
+    get service_desk_path
+    assert_response :success
+
+    doc = Nokogiri::HTML(response.body)
+    my_related_card = doc.css("article").find { |article| article.at_css("h2")&.text == "내 관련" }
+    assert my_related_card, "expected a '내 관련' card"
+    assert_match(/2건/, my_related_card.at_css("span").text)
+    assert_match(/Filed by me/, my_related_card.text)
+    assert_match(/I left a job here/, my_related_card.text)
+    assert_no_match(/Not related to me/, my_related_card.text)
+  end
+
+  test "service desk home shows a '신규' card for New-status tickets" do
+    admin = User.create!(email: "sd-admin-new@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    ServiceDeskRequest.create!(request_number: 5017, requester: "Tester", subject: "Freshly filed", visibility: :visible, status: :pending)
+    ServiceDeskRequest.create!(request_number: 5018, requester: "Tester", subject: "Already confirmed", visibility: :visible, status: :confirmed)
+
+    get service_desk_path
+    assert_response :success
+
+    doc = Nokogiri::HTML(response.body)
+    new_card = doc.css("article").find { |article| article.at_css("h2")&.text == "신규" }
+    assert new_card, "expected a '신규' card"
+    assert_match(/1건/, new_card.at_css("span").text)
+    assert_match(/Freshly filed/, new_card.text)
+    assert_no_match(/Already confirmed/, new_card.text)
+  end
+
+  test "service desk home still renders the full unfiltered list below the summary cards" do
+    admin = User.create!(email: "sd-admin-full-list@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    ServiceDeskRequest.create!(request_number: 5019, requester: "someone-else@example.com", subject: "Unrelated confirmed ticket", visibility: :visible, status: :confirmed)
+
+    get service_desk_path
+
+    assert_response :success
+    assert_match(/Unrelated confirmed ticket/, response.body)
+  end
+
   test "service desk export downloads a zip of all requests" do
     ServiceDeskRequest.create!(request_number: 5008, requester: "Tester", subject: "Export me", visibility: :visible)
 

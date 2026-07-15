@@ -3,7 +3,9 @@ class ServiceDeskController < ApplicationController
   before_action :authorize_service_desk!
 
   def index
-    @requests = ServiceDeskRequest.visible.order(request_number: :desc)
+    @requests = ServiceDeskRequest.visible.includes(:service_desk_jobs).order(request_number: :desc)
+    @my_related_requests = @requests.select { |request| my_related?(request) }
+    @new_requests = @requests.select(&:pending?)
   end
 
   def show
@@ -69,6 +71,10 @@ class ServiceDeskController < ApplicationController
 
   def authorize_service_desk!
     authorize :admin, :access?
+  end
+
+  def my_related?(request)
+    request.requester == current_user.email || request.service_desk_jobs.any? { |job| job.author == current_user.email }
   end
 
   def service_desk_request_params

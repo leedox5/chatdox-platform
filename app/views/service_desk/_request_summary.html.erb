@@ -1,0 +1,11 @@
+<%= link_to service_desk_request_path(service_desk_request), class: "block rounded-lg border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:bg-blue-50" do %>
+  <div class="flex items-start gap-3">
+    <span class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-xs font-semibold text-gray-500">
+      <%= service_desk_request.to_param %>
+    </span>
+    <div class="min-w-0 flex-1">
+      <p class="font-medium text-gray-900"><%= service_desk_request.subject %></p>
+      <p class="mt-1 text-xs text-gray-400"><%= service_desk_request.requester %> · <%= service_desk_request.status_label %> · <%= service_desk_request.visibility_label %> · <%= l(service_desk_request.date, format: :long) %></p>
+    </div>
+  </div>
+<% end %>
