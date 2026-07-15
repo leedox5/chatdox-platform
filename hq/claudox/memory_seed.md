@@ -34,7 +34,13 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 
 ## 관련 프로젝트: chatdox-platform
 
-`chatdox-platform`(이 리포를 `docs/curriculum/`에 subtree로 받는 Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬로 clone돼 있다(chatdox-curriculum의 형제 폴더). 그쪽 전용 Claude Code 페르소나는 **Codidox**(Claudox와 대구를 이루는 이름)라고 부른다. `docs/curriculum/`은 읽기 전용이라 platform 쪽 작업은 별도의 `chatdox-platform/request/` 폴더에 티켓 사본 + handoff 메모로 남긴다. Tommy가 "platform 쪽 처리 결과 확인해줘"라고 하면 `service-desk/sync-platform.ps1`을 먼저 돌려서(`chatdox-platform/request/`를 gitignore된 `service-desk/_platform_sync/`로 미러) 그 내용을 읽고, 원본 `service-desk/requests/NNNN.md`에 Job/Status로 반영하는 순서로 처리한다.
+`chatdox-platform`(DEV, Rails 앱)이 `D:\RubyOnRails\chatdox-platform`에 로컬 clone돼 있다(chatdox-curriculum=HQ의 형제 폴더). 이 PC엔 클론이 두 벌 있다 — 편집용 Windows 마운트 클론과 테스트/서버 구동용 WSL 네이티브 클론(`~/dev/chatdox-platform`, Windows 쪽은 CRLF 때문에 `bin/rails` 셔뱅이 깨짐).
+
+**동기화**: 예전엔 git subtree로 HQ 전체를 `docs/curriculum/`에 받았으나(REQ 0022로 폐지), 지금은 `script/sync_curriculum.sh`가 HQ의 git 스냅샷에서 실제 쓰는 3개 폴더만 뽑아 `hq/chatdox/`, `hq/claudox/`, `hq/service-desk/`로 미러링한다(`hq/` 접두어로 "HQ가 제공, DEV 소유 아님"을 명시).
+
+**Platform 쪽 구현 방식**: 예전에 있던 "Codidox" 페르소나 + `chatdox-platform/request/` 미러 + `sync-platform.ps1` 방식은 더 이상 안 쓴다. 지금은 Claudox가 `.local/handoff/inbox/<패키지명>/request.md`에 자기완결형 요청서를 쓰고, Tommy가 이걸 **Platform Agent**(DEV 쪽 구현자, Codex 기반)에게 전달, `result.md`(+ 리비전은 `result_r2.md`)로 결과를 돌려받는다. 승인되면 `.local/handoff/completed/<패키지명>/`으로 옮기고 `STATUS.md`를 남긴다.
+
+**서비스데스크 이원화** (REQ 0023, 2026-07-14~15): git 기반 `service-desk/`(HQ, 정책/구조 결정 기록용)와 별개로, DEV에 **DB 기반 웹 서비스데스크**를 신규 구축 — 팀+AI 에이전트가 웹에서 직접 티켓 발행/Job 기록. 두 시스템은 서로 동기화하지 않음(Tommy의 명시적 결정). AI 에이전트는 `SERVICE_DESK_API_TOKEN`(Railway 환경변수, 값은 로컬 메모리에만 있고 이 파일엔 안 적음 — git에 비밀값을 넣지 않는다는 원칙) bearer 토큰으로 `/service-desk/api/requests`, `/service-desk/api/requests/:id/jobs`를 호출해 티켓/Job을 기록할 수 있다. 2026-07-15 커밋 `ed88bb1`(chatdox-platform)로 배포, Tommy가 직접 재현 확인 후 Confirmed.
 
 ## LEEDOX 리브랜드 — 홈+상품페이지 배포 완료 (2026-07-14)
 

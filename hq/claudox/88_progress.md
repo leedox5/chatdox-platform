@@ -19,7 +19,7 @@
 
 | # | 챕터 | 파일 | 완성도 | 상태 |
 |---|------|------|:---:|:---:|
-| 9 | 폴더 구조를 다시 짜다 | [09_folder_structure.md](09_folder_structure.md) | 0% | ⬜ |
+| 9 | 폴더 구조를 다시 짜다 | [09_folder_structure.md](09_folder_structure.md) | 85% | ✅ |
 | 10 | 코드 리뷰를 부탁하다 | [10_code_review.md](10_code_review.md) | 90% | ✅ |
 | 11 | 버그를 함께 잡다 | [11_bugfix.md](11_bugfix.md) | 90% | ✅ |
 | 12 | 테스트 코드를 짜다 | [12_testing.md](12_testing.md) | 85% | ✅ |
@@ -35,8 +35,8 @@
 | 17 | 워크플로우로 규모를 키우다 | [17_workflow_scale.md](17_workflow_scale.md) | 95% | ✅ |
 | 18 | 스킬(Skill)로 반복 작업 줄이기 | [18_skill_automation.md](18_skill_automation.md) | 0% | ⬜ |
 | 19 | 보안 리뷰 체크리스트 | [19_security_review.md](19_security_review.md) | 90% | ✅ |
-| 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 85% | ✅ |
+| 20 | 마무리 — 극대화된 생산성, 그 이후 | [20_wrap_up.md](20_wrap_up.md) | 90% | ✅ |
 
-**완료(✅): 15 / 20 (75%) · 전체 평균 완성도: 66.25%**
+**완료(✅): 16 / 20 (80%) · 전체 평균 완성도: 70.75%**
 
 *완성도는 챕터가 해당 주제의 기승전결을 얼마나 갖췄는지에 대한 정성적 평가치이며, ✅ 상태는 80% 이상을 기준으로 표시한다.*
