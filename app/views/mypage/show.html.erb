@@ -42,8 +42,8 @@
         </div>
         <p class="mt-5 text-sm text-gray-600"><%= subscription_period_text(current_user, @subscription) %></p>
         <% unless current_user.subscribed? || current_user.admin? %>
-          <%= link_to "구독 시작",
-            billing_checkout_path,
+          <%= link_to "판매 준비 상태 보기",
+            chatdox_path(anchor: "pricing"),
             class: "mt-4 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700" %>
         <% end %>
       </article>

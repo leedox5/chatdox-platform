@@ -243,21 +243,28 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_user_session_path, count: 0
   end
 
-  test "Chatdox preserves the original landing sections" do
+  test "Chatdox presents fixed-term VAT-inclusive prices without a purchase path" do
     get chatdox_path
 
     assert_response :success
     assert_select "h1", text: /웹서비스 구축 패키지/
     assert_select "h2", text: /완전한 커리큘럼/
     assert_select "h2", text: /상품 구성/
-    assert_select "h2", text: /단품 구매 안내/
+    assert_select "h2", text: /기간별 이용 안내/
     assert_select "h2", text: /기술 스택/
     assert_select "h2", text: /자주 묻는 질문/
-    assert_match(/평생 접근|1년 무료 업데이트|개인 학습·활용 라이선스|7일 이내 100% 환불/, response.body)
-    assert_match(/검증 중인 가설 가격/, response.body)
+    assert_match(/7,700원/, response.body)
+    assert_match(/23,100원/, response.body)
+    assert_match(/41,580원/, response.body)
+    assert_match(/73,920원/, response.body)
+    assert_match(/VAT 포함/, response.body)
+    assert_match(/자동 갱신 없는 기간제 선불 라이선스/, response.body)
+    assert_match(/구매 준비 중/, response.body)
+    assert_no_match(/9,900원|평생 접근|1년 무료 업데이트|7일 이내 100% 환불|언제든 취소|월 구독/, response.body)
     assert_no_match(/무료 체험|프리미엄형|오픈 알림/, response.body)
     assert_no_match(/선택형 운영 지원|커뮤니티 이용|라이브 오피스아워|코드리뷰 크레딧|아키텍처 클리닉/, response.body)
     assert_select "a[href=?]", docs_path, text: /커리큘럼 문서 보기/
+    assert_select "a[href=?]", billing_checkout_path, count: 0
   end
 
   test "Claudox product page includes required structure and links into viewer" do
@@ -268,10 +275,53 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/실제 구성과 목차/, response.body)
     assert_match(/포함 항목 \/ 미포함 항목/, response.body)
     assert_match(/FAQ/, response.body)
-    assert_match(/9,900원/, response.body)
-    assert_match(/검증 중인 가설/, response.body)
+    assert_match(/판매 준비 중/, response.body)
+    assert_no_match(/9,900원|평생 접근|1년 무료 업데이트|7일 이내 100% 환불/, response.body)
     assert_select "a[href=?]", claudox_read_path, text: /읽기 시작하기/
     assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
+    assert_select "a[href=?]", billing_checkout_path, count: 0
+  end
+
+  test "signed-in product pages also keep the legacy checkout link hidden" do
+    user = User.create!(email: "policy-user@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    [ chatdox_path, claudox_path ].each do |path|
+      get path
+      assert_response :success
+      assert_select "a[href=?]", billing_checkout_path, count: 0
+    end
+  end
+
+  test "legacy checkout is a server-rendered inactive screen for guests and users" do
+    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
+      get billing_checkout_path
+    end
+
+    assert_response :success
+    assert_match(/신규 결제를 준비하고 있습니다/, response.body)
+    assert_match(/결제나 결제 수단 등록을 시작할 수 없습니다/, response.body)
+    assert_select "#pay-button", count: 0
+    assert_select "script[src*='tosspayments']", count: 0
+    assert_select "script[src*='portone']", count: 0
+
+    user = User.create!(email: "checkout-blocked@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
+      get billing_checkout_path
+    end
+    assert_response :success
+    assert_match(/신규 결제를 준비하고 있습니다/, response.body)
+  end
+
+  test "billing auth endpoint is blocked without issuing a billing key" do
+    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
+      post billing_auths_path, params: { authKey: "must-not-be-used", billingKey: "must-not-be-used" }
+    end
+
+    assert_response :see_other
+    assert_redirected_to chatdox_path
   end
 
   test "Claudox product page marks chapter completion accurately against source chapter files" do
@@ -308,6 +358,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_response :redirect
 
     get billing_checkout_path
-    assert_response :redirect
+    assert_response :success
+    assert_match(/신규 결제를 준비하고 있습니다/, response.body)
   end
 end

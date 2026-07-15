@@ -28,14 +28,14 @@
         </p>
 
         <% if @subscription&.status == "past_due" %>
-          <%= link_to "결제 수단 확인",
-            billing_checkout_path,
+          <%= link_to "상품 안내 확인",
+            chatdox_path(anchor: "pricing"),
             class: "mt-4 inline-block text-sm font-semibold text-amber-700 hover:text-amber-800" %>
         <% elsif current_user.subscribed? %>
           <span class="mt-4 inline-block text-sm font-semibold text-emerald-700">전체 커리큘럼 이용 가능</span>
         <% else %>
-          <%= link_to "구독 시작",
-            billing_checkout_path,
+          <%= link_to "판매 준비 상태 보기",
+            chatdox_path(anchor: "pricing"),
             class: "mt-4 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700" %>
         <% end %>
       </article>

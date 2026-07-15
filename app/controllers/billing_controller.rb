@@ -1,14 +1,8 @@
 class BillingController < ApplicationController
-  before_action :authenticate_user!
+  before_action :authenticate_user!, except: :checkout
 
   def checkout
-    @order_id = "chatdox-#{current_user.id}-#{Time.current.to_i}"
-    @amount = payment_amount
-    @currency = payment_currency
-    @payment_provider = payment_provider
-    @portone_store_id = ENV.fetch("PORTONE_STORE_ID", "")
-    @portone_channel_key = ENV.fetch("PORTONE_CHANNEL_KEY", "")
-    prepare_pending_portone_payment! if @payment_provider == "portone"
+    # 신규 기간제 라이선스 결제가 준비될 때까지 기존 월 구독 결제를 시작하지 않는다.
   end
 
   def success
