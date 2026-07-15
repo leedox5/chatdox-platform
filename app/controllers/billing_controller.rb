@@ -8,6 +8,17 @@ class BillingController < ApplicationController
       return
     end
 
+    configuration = Payments::Configuration.current
+    unless configuration.ready?
+      Commerce::EventLogger.log(
+        event: "commerce.gate_configuration_mismatch",
+        provider: configuration.provider,
+        status: "missing_configuration"
+      )
+      render :checkout
+      return
+    end
+
     authenticate_user!
     return if performed?
 
@@ -44,14 +55,11 @@ class BillingController < ApplicationController
     update_subscription_for_payment!(subscription, payment_attributes)
 
     respond_to_payment_success
-  rescue ActiveRecord::ActiveRecordError => e
-    Rails.logger.fatal(
-      "Payment persistence error: provider=#{provider} " \
-      "payment_id=#{payment_id_param} order_id=#{params[:orderId]} error=#{e.message}"
-    )
+  rescue ActiveRecord::ActiveRecordError
+    log_callback_failure(order: order, provider: provider, status: "persistence_failed")
     respond_to_payment_reconciliation_failure
-  rescue StandardError => e
-    Rails.logger.error("#{provider || 'unknown'} payment confirm error: #{e.message}")
+  rescue StandardError
+    log_callback_failure(order: order, provider: provider, status: "verification_failed")
     respond_to_payment_failure
   end
 
@@ -224,7 +232,12 @@ class BillingController < ApplicationController
     request.post? && request.media_type == "application/json"
   end
 
-  def payment_id_param
-    params[:paymentId].presence || params[:paymentKey]
+  def log_callback_failure(order:, provider:, status:)
+    Commerce::EventLogger.log(
+      event: "commerce.callback_processing_failed",
+      provider: order&.provider || provider,
+      order: order,
+      status: status
+    )
   end
 end

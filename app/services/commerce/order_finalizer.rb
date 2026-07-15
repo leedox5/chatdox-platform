@@ -13,40 +13,59 @@ module Commerce
     end
 
     def call!
-      ApplicationRecord.transaction do
+      finalized = false
+      result = ApplicationRecord.transaction do
         @order.lock!
         verify_payment!
 
         if @order.status == "paid"
           verify_finalized_payment_id!
-          return @order
-        end
+        else
+          raise VerificationError, "order is not pending" unless @order.status == "pending"
 
-        raise VerificationError, "order is not pending" unless @order.status == "pending"
-
-        transaction = @order.payment_transaction
-        transaction.update!(
-          provider: @payment.fetch(:provider),
-          provider_payment_id: @payment.fetch(:provider_payment_id),
-          order_id: @order.public_id,
-          status: "active",
-          amount: @payment.fetch(:amount),
-          currency: @payment.fetch(:currency),
-          provider_payload: @payment.fetch(:provider_payload, {})
-        )
-
-        @order.order_items.includes(:product).each do |item|
-          Commerce::LicenseScheduler.create_for!(
-            user: @order.user,
-            order_item: item,
-            requested_start_on: @order.requested_start_on,
-            at: @at
+          transaction = @order.payment_transaction
+          transaction.update!(
+            provider: @payment.fetch(:provider),
+            provider_payment_id: @payment.fetch(:provider_payment_id),
+            order_id: @order.public_id,
+            status: "active",
+            amount: @payment.fetch(:amount),
+            currency: @payment.fetch(:currency),
+            provider_payload: @payment.fetch(:provider_payload, {})
           )
-        end
 
-        @order.transition_to!("paid", paid_at: @at, finalized_at: @at)
+          @order.order_items.includes(:product).each do |item|
+            Commerce::LicenseScheduler.create_for!(
+              user: @order.user,
+              order_item: item,
+              requested_start_on: @order.requested_start_on,
+              at: @at
+            )
+          end
+
+          @order.transition_to!("paid", paid_at: @at, finalized_at: @at)
+          finalized = true
+        end
         @order
       end
+
+      if finalized
+        Commerce::EventLogger.log(
+          event: "commerce.order_finalized",
+          provider: @order.provider,
+          order: @order,
+          status: @order.status,
+          at: @at,
+          level: :info
+        )
+      end
+      result
+    rescue VerificationError
+      log_failure("commerce.payment_verification_failed")
+      raise
+    rescue StandardError
+      log_failure("commerce.order_finalization_failed")
+      raise
     end
 
     private
@@ -69,6 +88,16 @@ module Commerce
       return if @order.payment_transaction.provider_payment_id == @payment.fetch(:provider_payment_id)
 
       raise VerificationError, "order was finalized with a different payment"
+    end
+
+    def log_failure(event)
+      Commerce::EventLogger.log(
+        event: event,
+        provider: @order.provider,
+        order: @order,
+        status: @order.status,
+        at: @at
+      )
     end
   end
 end

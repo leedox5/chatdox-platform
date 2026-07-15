@@ -1,6 +1,7 @@
 class BillingOrdersController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_chatdox_sales_enabled
+  before_action :ensure_payment_configuration
 
   def create
     order = Commerce::OrderCreator.call!(
@@ -8,7 +9,7 @@ class BillingOrdersController < ApplicationController
       product_code: order_params.fetch(:product_code),
       offer_code: order_params.fetch(:offer_code),
       requested_start_on: order_params[:requested_start_on],
-      provider: Payments::Gateway.current.provider
+      provider: Payments::Configuration.current.provider
     )
 
     redirect_to billing_order_path(order.public_id)
@@ -46,5 +47,17 @@ class BillingOrdersController < ApplicationController
     return if Commerce::Sales.enabled_for_code?("chatdox")
 
     redirect_to billing_checkout_path, alert: "신규 결제는 준비 중입니다."
+  end
+
+  def ensure_payment_configuration
+    configuration = Payments::Configuration.current
+    return if configuration.ready?
+
+    Commerce::EventLogger.log(
+      event: "commerce.gate_configuration_mismatch",
+      provider: configuration.provider,
+      status: "missing_configuration"
+    )
+    redirect_to billing_checkout_path, alert: "결제 설정을 준비 중입니다."
   end
 end

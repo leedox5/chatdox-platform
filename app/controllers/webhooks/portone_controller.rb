@@ -2,6 +2,16 @@ class Webhooks::PortoneController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def receive
+    configuration = Payments::Configuration.new(provider: "portone")
+    unless configuration.webhook_ready?
+      Commerce::EventLogger.log(
+        event: "commerce.gate_configuration_mismatch",
+        provider: "portone",
+        status: "webhook_configuration_missing"
+      )
+      return head :service_unavailable
+    end
+
     raw_payload = request.raw_post
     Portone::WebhookVerifier.verify!(
       secret: ENV.fetch("PORTONE_WEBHOOK_SECRET", ""),
@@ -17,14 +27,14 @@ class Webhooks::PortoneController < ApplicationController
     sync_payment!(payment)
 
     head :ok
-  rescue Portone::WebhookVerifier::VerificationError => e
-    Rails.logger.warn("PortOne webhook verification error: #{e.message}")
+  rescue Portone::WebhookVerifier::VerificationError
+    log_webhook_failure("verification_failed")
     head :bad_request
-  rescue JSON::ParserError => e
-    Rails.logger.warn("PortOne webhook parse error: #{e.message}")
+  rescue JSON::ParserError
+    log_webhook_failure("invalid_json")
     head :bad_request
-  rescue StandardError => e
-    Rails.logger.error("PortOne webhook error: #{e.message}")
+  rescue StandardError
+    log_webhook_failure("processing_failed")
     head :internal_server_error
   end
 
@@ -43,7 +53,11 @@ class Webhooks::PortoneController < ApplicationController
     )
     subscription = transaction.subscription
     unless subscription
-      Rails.logger.warn("PortOne webhook missing pending transaction: payment_id=#{provider_payment_id}")
+      Commerce::EventLogger.log(
+        event: "commerce.webhook_processing_failed",
+        provider: "portone",
+        status: "pending_transaction_missing"
+      )
       return
     end
 
@@ -106,5 +120,13 @@ class Webhooks::PortoneController < ApplicationController
     else
       "pending"
     end
+  end
+
+  def log_webhook_failure(status)
+    Commerce::EventLogger.log(
+      event: "commerce.webhook_processing_failed",
+      provider: "portone",
+      status: status
+    )
   end
 end

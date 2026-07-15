@@ -2,6 +2,16 @@ class Webhooks::TossPaymentsController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def receive
+    configuration = Payments::Configuration.new(provider: "toss")
+    unless configuration.webhook_ready?
+      Commerce::EventLogger.log(
+        event: "commerce.gate_configuration_mismatch",
+        provider: "toss",
+        status: "webhook_configuration_missing"
+      )
+      return head :service_unavailable
+    end
+
     payload = JSON.parse(request.raw_post)
 
     unless ActiveSupport::SecurityUtils.secure_compare(
@@ -37,11 +47,11 @@ class Webhooks::TossPaymentsController < ApplicationController
       )
     end
     head :ok
-  rescue JSON::ParserError => e
-    Rails.logger.warn("Toss webhook parse error: #{e.message}")
+  rescue JSON::ParserError
+    log_webhook_failure("invalid_json")
     head :bad_request
-  rescue StandardError => e
-    Rails.logger.error("Toss webhook error: #{e.message}")
+  rescue StandardError
+    log_webhook_failure("processing_failed")
     head :internal_server_error
   end
 
@@ -79,5 +89,14 @@ class Webhooks::TossPaymentsController < ApplicationController
     else
       "pending"
     end
+  end
+
+  def log_webhook_failure(status)
+    Commerce::EventLogger.log(
+      event: "commerce.webhook_processing_failed",
+      provider: "toss",
+      order: Order.find_by(public_id: params[:orderId]),
+      status: status
+    )
   end
 end

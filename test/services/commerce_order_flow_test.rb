@@ -68,20 +68,22 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
   end
 
   test "server verification rejects provider order amount and currency mismatches" do
-    {
-      provider: "portone",
-      order_id: "another-order",
-      amount: 1,
-      currency: "USD"
-    }.each do |field, bad_value|
-      order = create_order
-      bad_payment = payment_for(order).merge(field => bad_value)
+    %w[toss portone].each do |provider|
+      order = create_order(provider: provider)
+      {
+        provider: provider == "toss" ? "portone" : "toss",
+        order_id: "another-order",
+        amount: 1,
+        currency: "USD"
+      }.each do |field, bad_value|
+        bad_payment = payment_for(order, provider: provider).merge(field => bad_value)
 
-      assert_raises(Commerce::OrderFinalizer::VerificationError) do
-        Commerce::OrderFinalizer.call!(order: order, payment: bad_payment, at: @at)
+        assert_raises(Commerce::OrderFinalizer::VerificationError) do
+          Commerce::OrderFinalizer.call!(order: order, payment: bad_payment, at: @at)
+        end
+        assert_equal "pending", order.reload.status
+        assert_empty order.licenses
       end
-      assert_equal "pending", order.reload.status
-      assert_empty order.licenses
     end
   end
 
@@ -136,27 +138,64 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
     assert_equal "failed", order.reload.status
   end
 
+  test "database failure rolls finalization back and the same payment safely recovers" do
+    order = create_order
+    payment = payment_for(order)
+    failure = ->(**_arguments) { raise ActiveRecord::StatementInvalid, "simulated database failure" }
+
+    with_singleton_method(Commerce::LicenseScheduler, :create_for!, failure) do
+      assert_raises(ActiveRecord::StatementInvalid) do
+        Commerce::OrderFinalizer.call!(order: order, payment: payment, at: @at)
+      end
+    end
+
+    order.reload
+    assert_equal "pending", order.status
+    assert_equal "pending", order.payment_transaction.status
+    assert_match(/\Apending:/, order.payment_transaction.provider_payment_id)
+    assert_empty order.licenses
+    assert_nil order.paid_at
+    assert_nil order.finalized_at
+
+    assert_difference "License.count", 1 do
+      Commerce::OrderFinalizer.call!(order: order, payment: payment, at: @at + 1.minute)
+    end
+    assert_equal "paid", order.reload.status
+    assert_equal 1, order.licenses.count
+    assert_equal 1, PaymentTransaction.where(purchase_order: order).count
+    assert_nil @user.reload.subscription
+  end
+
   private
 
-  def create_order
+  def create_order(provider: "toss")
     Commerce::OrderCreator.call!(
       user: @user,
       product_code: "chatdox",
       offer_code: @offer.code,
       requested_start_on: @at.to_date,
-      provider: "toss",
+      provider: provider,
       at: @at
     )
   end
 
-  def payment_for(order)
+  def payment_for(order, provider: order.provider)
     {
-      provider: "toss",
+      provider: provider,
       provider_payment_id: "provider-payment-#{order.public_id}",
       order_id: order.public_id,
       amount: order.total_amount,
       currency: order.currency,
       provider_payload: { "status" => "DONE" }
     }
+  end
+
+
+  def with_singleton_method(object, method_name, replacement)
+    original = object.method(method_name)
+    object.define_singleton_method(method_name, replacement)
+    yield
+  ensure
+    object.define_singleton_method(method_name, original)
   end
 end

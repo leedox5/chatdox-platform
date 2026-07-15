@@ -1,17 +1,21 @@
 require "test_helper"
 
 class CommerceCheckoutTest < ActionDispatch::IntegrationTest
+  PAYMENT_ENV_KEYS = %w[
+    LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY
+    TOSS_WEBHOOK_SECRET PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY
+    PORTONE_WEBHOOK_SECRET
+  ].freeze
+
   setup do
     Commerce::CatalogBootstrap.call!
-    @previous_commerce_flag = ENV["LEEDOX_COMMERCE_ENABLED"]
-    @previous_webhook_secret = ENV["TOSS_WEBHOOK_SECRET"]
+    @previous_payment_env = PAYMENT_ENV_KEYS.to_h { |key| [ key, ENV[key] ] }
     @product = Product.find_by!(code: "chatdox")
     @user = User.create!(email: "checkout-r2b@example.com", password: "password123", created_at: 30.days.ago)
   end
 
   teardown do
-    restore_env("LEEDOX_COMMERCE_ENABLED", @previous_commerce_flag)
-    restore_env("TOSS_WEBHOOK_SECRET", @previous_webhook_secret)
+    @previous_payment_env.each { |key, value| restore_env(key, value) }
   end
 
   test "default configuration preserves the R2A inactive checkout and blocks direct order POST" do
@@ -75,6 +79,26 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/7,700원/, response.body)
     assert_match(/자동 갱신되지 않는 일회성 선불 결제/, response.body)
+  end
+
+  test "enabled sale gates with missing PG configuration fail closed without exposing values" do
+    ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
+    @product.update!(sale_enabled: true)
+    (PAYMENT_ENV_KEYS - %w[LEEDOX_COMMERCE_ENABLED]).each { |key| ENV.delete(key) }
+    sign_in
+
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
+      get billing_checkout_path
+      assert_response :success
+      assert_match(/신규 결제를 준비하고 있습니다/, response.body)
+      assert_select "script[src*='tosspayments']", count: 0
+      assert_select "script[src*='portone']", count: 0
+
+      post billing_orders_path, params: {
+        order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
+      }
+      assert_redirected_to billing_checkout_path
+    end
   end
 
   test "existing Chatdox period is displayed as a fixed extension date" do
@@ -237,6 +261,14 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
   def enable_chatdox_sales
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
+    ENV["PAYMENT_PROVIDER"] = "toss"
+    ENV["TOSS_CLIENT_KEY"] = "test-client-key"
+    ENV["TOSS_SECRET_KEY"] = "test-secret-key"
+    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"
+    ENV["PORTONE_API_SECRET"] = "test-api-secret"
+    ENV["PORTONE_STORE_ID"] = "test-store-id"
+    ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
+    ENV["PORTONE_WEBHOOK_SECRET"] = "test-portone-webhook-secret"
     @product.update!(sale_enabled: true)
   end
 

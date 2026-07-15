@@ -1,0 +1,46 @@
+require "test_helper"
+
+class PaymentsConfigurationTest < ActiveSupport::TestCase
+  KEYS = %w[
+    PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY TOSS_WEBHOOK_SECRET
+    PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET
+  ].freeze
+
+  setup do
+    @previous = KEYS.to_h { |key| [ key, ENV[key] ] }
+    KEYS.each { |key| ENV.delete(key) }
+  end
+
+  teardown do
+    @previous.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
+
+  test "Toss and PortOne configurations report names only and require every sale setting" do
+    toss = Payments::Configuration.new(provider: "toss")
+    assert_not toss.ready?
+    assert_equal %w[TOSS_CLIENT_KEY TOSS_SECRET_KEY TOSS_WEBHOOK_SECRET], toss.missing_keys
+
+    ENV["TOSS_CLIENT_KEY"] = "test-client"
+    ENV["TOSS_SECRET_KEY"] = "test-secret"
+    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook"
+    assert toss.ready?
+    assert toss.webhook_ready?
+
+    portone = Payments::Configuration.new(provider: "portone")
+    assert_not portone.ready?
+    ENV["PORTONE_API_SECRET"] = "test-api"
+    ENV["PORTONE_STORE_ID"] = "test-store"
+    ENV["PORTONE_CHANNEL_KEY"] = "test-channel"
+    ENV["PORTONE_WEBHOOK_SECRET"] = "test-webhook"
+    assert portone.ready?
+    assert portone.webhook_ready?
+  end
+
+  test "invalid provider fails closed" do
+    configuration = Payments::Configuration.new(provider: "unconfigured")
+
+    assert_not configuration.ready?
+    assert_not configuration.webhook_ready?
+    assert_equal [ "PAYMENT_PROVIDER" ], configuration.missing_keys
+  end
+end
