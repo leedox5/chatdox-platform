@@ -10,8 +10,9 @@ class ProductEntitlementAccessTest < ActionDispatch::IntegrationTest
   test "Claudox index cannot use id parameter to bypass paid chapter policy" do
     get claudox_read_path, params: { id: "06" }
 
-    assert_redirected_to root_path
-    assert_equal "이 작업을 할 권한이 없습니다.", flash[:alert]
+    assert_response :success
+    assert_select "span", text: "잠금"
+    assert_no_match(/낯선 오류 화면이 메일 한 통과 함께 도착했다/, response.body)
   end
 
   test "product license opens only its matching controller" do

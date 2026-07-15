@@ -2,3 +2,6 @@ ko:
   date:
     formats:
       long: "%Y년 %-m월 %-d일"
+  time:
+    formats:
+      long: "%Y년 %-m월 %-d일 %H:%M"

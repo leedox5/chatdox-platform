@@ -4,21 +4,6 @@ class ClaudoxController < ApplicationController
   def index
     @chapters = available_chapters
     @phase_chapters = chapters_by_phase(@chapters)
-    @current_id = params[:id].to_s.rjust(2, "0")
-    @current_chapter = @chapters.find { |chapter| chapter[:id] == @current_id } || @chapters.first
-
-    unless @current_chapter&.dig(:available)
-      render plain: "아직 공개되지 않은 챕터입니다.", status: :not_found
-      return
-    end
-
-    authorize @current_chapter, :view?, policy_class: DocPolicy
-
-    file_path = CLAUDOX_PATH.join("#{@current_chapter[:slug]}.md")
-    @last_updated_at = File.mtime(file_path)
-    raw_markdown = File.read(file_path)
-
-    @content_html = render_markdown(raw_markdown)
   end
 
   def show
@@ -38,7 +23,7 @@ class ClaudoxController < ApplicationController
     @last_updated_at = File.mtime(file_path)
     raw_markdown = File.read(file_path)
 
-    @content_html = render_markdown(raw_markdown)
+    @content_html = render_markdown(strip_leading_heading(raw_markdown))
   end
 
   private
@@ -81,6 +66,10 @@ class ClaudoxController < ApplicationController
     end
 
     File.basename(file_path, ".md").tr("_", " ")
+  end
+
+  def strip_leading_heading(raw_markdown)
+    raw_markdown.sub(/\A\s*#[^\n]*\n?/, "")
   end
 
   def render_markdown(raw_markdown)

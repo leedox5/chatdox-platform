@@ -588,6 +588,35 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/CH\s*#{incomplete_id.to_s.rjust(2, "0")}.*?>준비 중</m, response.body) if incomplete_id
   end
 
+  test "Claudox chapter page does not duplicate the chapter title as a second heading in the body" do
+    get claudox_chapter_path("01")
+
+    assert_response :success
+    doc = Nokogiri::HTML(response.body)
+    doc_content = doc.at_css(".doc-content")
+    assert doc_content, "expected a .doc-content section"
+    assert_equal 0, doc_content.css("h1").size, "chapter body should not re-render the page's own <h1> title"
+  end
+
+  test "Claudox chapter page shows the last-updated timestamp in Korean date/time format" do
+    get claudox_chapter_path("01")
+
+    assert_response :success
+    assert_match(/최종 업데이트: \d{4}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2}/, response.body)
+  end
+
+  test "Claudox index is a full chapter table of contents, not a single chapter's content" do
+    get claudox_read_path
+
+    assert_response :success
+    assert_select "h1", text: "전체 목차"
+    assert_match(/Phase 1/, response.body)
+    assert_match(/Phase 2/, response.body)
+    assert_match(/Phase 3/, response.body)
+    assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
+    assert_no_match(/Claude를 우리 팀에 합류시키려면/, response.body)
+  end
+
   test "Claudox and existing core entry points remain reachable" do
     get claudox_path
     assert_response :success
