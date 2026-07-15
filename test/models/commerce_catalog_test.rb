@@ -52,7 +52,7 @@ class CommerceCatalogTest < ActiveSupport::TestCase
     assert_not offer.valid?
     assert_includes offer.errors[:total_amount], "must equal supply amount plus VAT"
 
-    user = User.create!(email: "legacy-transaction@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "legacy-transaction@example.com", password: "password123")
     subscription = user.create_subscription!(
       provider: "toss",
       provider_customer_id: "legacy-customer",

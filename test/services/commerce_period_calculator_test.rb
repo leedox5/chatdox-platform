@@ -5,7 +5,7 @@ class CommercePeriodCalculatorTest < ActiveSupport::TestCase
 
   setup do
     Commerce::CatalogBootstrap.call!
-    @user = User.create!(email: "period@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "period@example.com", password: "password123", created_at: 30.days.ago)
     @chatdox = Product.find_by!(code: "chatdox")
     @claudox = Product.find_by!(code: "claudox")
   end

@@ -6,9 +6,9 @@ class ExternalAccessOperationsTest < ActiveSupport::TestCase
   setup do
     Commerce::CatalogBootstrap.call!
     @product = Product.find_by!(code: "chatdox")
-    @user = User.create!(email: "external-user@example.com", password: "password123", created_at: 30.days.ago)
-    @other = User.create!(email: "external-other@example.com", password: "password123", created_at: 30.days.ago)
-    @admin = User.create!(email: "external-admin@example.com", password: "password123", role: :admin)
+    @user = User.create!(name: "테스트 유저", email: "external-user@example.com", password: "password123", created_at: 30.days.ago)
+    @other = User.create!(name: "테스트 유저", email: "external-other@example.com", password: "password123", created_at: 30.days.ago)
+    @admin = User.create!(name: "테스트 유저", email: "external-admin@example.com", password: "password123", role: :admin)
     @at = KST.local(2026, 7, 15, 12)
   end
 

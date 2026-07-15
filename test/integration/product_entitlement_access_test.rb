@@ -3,7 +3,7 @@ require "test_helper"
 class ProductEntitlementAccessTest < ActionDispatch::IntegrationTest
   setup do
     Commerce::CatalogBootstrap.call!
-    @user = User.create!(email: "reader@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "reader@example.com", password: "password123", created_at: 30.days.ago)
     post user_session_path, params: { user: { email: @user.email, password: "password123" } }
   end
 

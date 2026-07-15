@@ -23,7 +23,7 @@ class CommerceProviderSequenceTest < ActionDispatch::IntegrationTest
     )
     @product = Product.find_by!(code: "chatdox")
     @product.update!(sale_enabled: true)
-    @user = User.create!(email: "provider-sequence@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "provider-sequence@example.com", password: "password123", created_at: 30.days.ago)
     post user_session_path, params: { user: { email: @user.email, password: "password123" } }
   end
 

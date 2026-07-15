@@ -19,10 +19,17 @@
       <% end %>
 
       <div class="mb-4">
+        <%= form.label :name, "이름", class: "mb-2 block font-bold text-gray-700" %>
+        <%= form.text_field :name,
+          class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
+          autofocus: true,
+          required: true %>
+      </div>
+
+      <div class="mb-4">
         <%= form.label :email, "이메일", class: "mb-2 block font-bold text-gray-700" %>
         <%= form.email_field :email,
           class: "w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none",
-          autofocus: true,
           autocomplete: "email",
           required: true %>
       </div>

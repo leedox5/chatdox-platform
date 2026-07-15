@@ -16,8 +16,8 @@ class CommerceOperationsTest < ActiveSupport::TestCase
     )
     @product = Product.find_by!(code: "chatdox")
     @product.update!(sale_enabled: true)
-    @buyer = User.create!(email: "operations-buyer@example.com", password: "password123", created_at: 30.days.ago)
-    @admin = User.create!(email: "operations-admin@example.com", password: "password123", role: :admin, created_at: 30.days.ago)
+    @buyer = User.create!(name: "테스트 유저", email: "operations-buyer@example.com", password: "password123", created_at: 30.days.ago)
+    @admin = User.create!(name: "테스트 유저", email: "operations-admin@example.com", password: "password123", role: :admin, created_at: 30.days.ago)
     @at = KST.local(2026, 7, 15, 12)
   end
 
@@ -138,7 +138,7 @@ class CommerceOperationsTest < ActiveSupport::TestCase
 
   test "invalid refund transitions and non-owner submissions are rejected" do
     order = finalized_order
-    other = User.create!(email: "operations-other@example.com", password: "password123")
+    other = User.create!(name: "테스트 유저", email: "operations-other@example.com", password: "password123")
     request = Commerce::RefundRequestSubmission.call!(user: @buyer, order: order, reason_code: "other", customer_note: nil)
 
     assert_raises(Pundit::NotAuthorizedError) do

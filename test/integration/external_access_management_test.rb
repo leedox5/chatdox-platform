@@ -6,9 +6,9 @@ class ExternalAccessManagementTest < ActionDispatch::IntegrationTest
   setup do
     Commerce::CatalogBootstrap.call!
     @product = Product.find_by!(code: "chatdox")
-    @user = User.create!(email: "github-customer@example.com", password: "password123", created_at: 30.days.ago)
-    @other = User.create!(email: "github-other@example.com", password: "password123", created_at: 30.days.ago)
-    @admin = User.create!(email: "github-admin@example.com", password: "password123", role: :admin)
+    @user = User.create!(name: "테스트 유저", email: "github-customer@example.com", password: "password123", created_at: 30.days.ago)
+    @other = User.create!(name: "테스트 유저", email: "github-other@example.com", password: "password123", created_at: 30.days.ago)
+    @admin = User.create!(name: "테스트 유저", email: "github-admin@example.com", password: "password123", role: :admin)
     @at = Time.current.change(usec: 0)
   end
 
@@ -123,7 +123,7 @@ class ExternalAccessManagementTest < ActionDispatch::IntegrationTest
   end
 
   test "admin task filters and customer dashboard link render without N plus one growth" do
-    3.times { |index| ExternalAccess::LinkSubmission.call!(user: User.create!(email: "filter-#{index}@example.com", password: "password123"), username: "filter-#{index}", at: @at - index.hours) }
+    3.times { |index| ExternalAccess::LinkSubmission.call!(user: User.create!(name: "테스트 유저", email: "filter-#{index}@example.com", password: "password123"), username: "filter-#{index}", at: @at - index.hours) }
     sign_in(@admin)
 
     get admin_commerce_external_access_tasks_path, params: { task_type: "verify_account", status: "pending", due: "overdue" }

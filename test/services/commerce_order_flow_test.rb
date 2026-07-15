@@ -7,7 +7,7 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
     Commerce::CatalogBootstrap.call!
     @previous_flag = ENV["LEEDOX_COMMERCE_ENABLED"]
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
-    @user = User.create!(email: "buyer@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "buyer@example.com", password: "password123", created_at: 30.days.ago)
     @product = Product.find_by!(code: "chatdox")
     @product.update!(sale_enabled: true)
     @offer = @product.product_offers.find_by!(code: "chatdox-1m-v1")

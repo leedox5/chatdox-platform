@@ -26,8 +26,8 @@
             <% @users.each do |user| %>
               <tr>
                 <td class="px-5 py-4">
-                  <p class="font-medium text-gray-900"><%= user.email %></p>
-                  <p class="text-xs text-gray-500">ID <%= user.id %></p>
+                  <p class="font-medium text-gray-900"><%= user.name %></p>
+                  <p class="text-xs text-gray-500"><%= user.email %> · ID <%= user.id %></p>
                 </td>
                 <td class="px-5 py-4 text-gray-700"><%= user.role %></td>
                 <td class="px-5 py-4">

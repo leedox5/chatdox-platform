@@ -11,7 +11,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     Commerce::CatalogBootstrap.call!
     @previous_payment_env = PAYMENT_ENV_KEYS.to_h { |key| [ key, ENV[key] ] }
     @product = Product.find_by!(code: "chatdox")
-    @user = User.create!(email: "checkout-r2b@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "checkout-r2b@example.com", password: "password123", created_at: 30.days.ago)
   end
 
   teardown do
@@ -209,7 +209,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
   test "success callback cannot finalize another users matching order" do
     enable_chatdox_sales
-    other_user = User.create!(email: "other-checkout-user@example.com", password: "password123", created_at: 30.days.ago)
+    other_user = User.create!(name: "테스트 유저", email: "other-checkout-user@example.com", password: "password123", created_at: 30.days.ago)
     other_order = Commerce::OrderCreator.call!(
       user: other_user,
       product_code: "chatdox",

@@ -15,9 +15,16 @@
         <%= render "users/shared/error_messages", resource: resource %>
 
         <div>
+          <%= form.label :name, "이름", class: "mb-2 block text-sm font-semibold text-gray-700" %>
+          <%= form.text_field :name,
+            autofocus: true,
+            required: true,
+            class: "w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-blue-500 focus:outline-none" %>
+        </div>
+
+        <div>
           <%= form.label :email, "이메일", class: "mb-2 block text-sm font-semibold text-gray-700" %>
           <%= form.email_field :email,
-            autofocus: true,
             autocomplete: "email",
             class: "w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-blue-500 focus:outline-none" %>
         </div>

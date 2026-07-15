@@ -20,6 +20,8 @@ class User < ApplicationRecord
 
   enum :role, { user: 0, admin: 1 }
 
+  validates :name, presence: true
+
   def trial_started_at
     created_at
   end

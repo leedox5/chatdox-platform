@@ -36,7 +36,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "nav[aria-label='모바일 내비게이션'] a[href=?]", docs_path, count: 0
     assert_select "a[href=?]", service_desk_path, count: 0
 
-    user = User.create!(email: "nav-user@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "nav-user@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     get root_path
@@ -47,7 +47,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "admin navigation keeps a working service desk link" do
-    admin = User.create!(email: "nav-admin@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "nav-admin@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get root_path
@@ -74,7 +74,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     assert_redirected_to new_user_session_path
 
-    user = User.create!(email: "sd-user@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "sd-user@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     get service_desk_path
@@ -83,7 +83,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
 
     delete destroy_user_session_path
 
-    admin = User.create!(email: "sd-admin@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_path
@@ -97,7 +97,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     visible_request = ServiceDeskRequest.create!(request_number: 5002, requester: "Tester", subject: "Public ticket should show", visibility: :visible)
     private_request = ServiceDeskRequest.create!(request_number: 5003, requester: "Tester", subject: "Private ticket should stay hidden", visibility: :restricted)
 
-    admin = User.create!(email: "sd-admin-vis@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-vis@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_path
@@ -117,7 +117,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     second = ServiceDeskRequest.create!(request_number: 5005, requester: "Tester", subject: "Second ticket", description: "Second body", visibility: :visible)
     first.service_desk_jobs.create!(author: "Claudox", content: "Did the work")
 
-    admin = User.create!(email: "sd-admin-render@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-render@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_request_path(first)
@@ -134,7 +134,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   test "service desk list stays visible without a desktop-only breakpoint (mobile regression)" do
     ServiceDeskRequest.create!(request_number: 5006, requester: "Tester", subject: "Mobile visible ticket", visibility: :visible)
 
-    admin = User.create!(email: "sd-admin-mobile@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-mobile@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_path
@@ -145,7 +145,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can publish a new ticket via the web form and it gets an auto-numbered request_number" do
-    admin = User.create!(email: "sd-admin-create@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-create@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get new_service_desk_request_path
@@ -166,7 +166,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   test "admin can add a job entry via the web form with auto-numbered job_number" do
     request = ServiceDeskRequest.create!(request_number: 5007, requester: "Tester", subject: "Job target", visibility: :visible)
 
-    admin = User.create!(email: "sd-admin-job@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-job@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     assert_difference "request.service_desk_jobs.count", 1 do
@@ -182,7 +182,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "publishing a ticket and adding a job auto-fill requester/author from the signed-in user's email, ignoring any submitted value" do
-    admin = User.create!(email: "sd-admin-autofill@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-autofill@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     post service_desk_path, params: { service_desk_request: { subject: "Autofill ticket", visibility: "visible", description: "body" } }
@@ -198,7 +198,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     request = ServiceDeskRequest.create!(request_number: 5009, requester: "Original Requester", subject: "Original subject", visibility: :visible, status: :pending)
     original_date = request.date
 
-    admin = User.create!(email: "sd-admin-edit@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-edit@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get edit_service_desk_request_path(request)
@@ -221,7 +221,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   test "editing a ticket with an invalid subject re-renders the edit form with errors" do
     request = ServiceDeskRequest.create!(request_number: 5010, requester: "Tester", subject: "Keep me", visibility: :visible)
 
-    admin = User.create!(email: "sd-admin-edit-invalid@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-edit-invalid@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     patch service_desk_request_path(request), params: { service_desk_request: { subject: "", visibility: "visible", description: "" } }
@@ -236,7 +236,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     job = request.service_desk_jobs.create!(author: "Original Author", content: "Original content")
     original_performed_at = job.performed_at
 
-    admin = User.create!(email: "sd-admin-job-edit@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-job-edit@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get edit_service_desk_request_job_path(request, job.job_number)
@@ -264,7 +264,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     patch service_desk_request_job_path(request, job.job_number), params: { service_desk_job: { content: "Nope" } }
     assert_redirected_to new_user_session_path
 
-    user = User.create!(email: "sd-user-edit-guard@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "sd-user-edit-guard@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     get edit_service_desk_request_path(request)
@@ -289,7 +289,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
       job = request.service_desk_jobs.create!(author: "Tester", content: "job at a known instant")
     end
 
-    admin = User.create!(email: "sd-admin-tz@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-tz@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     get service_desk_request_path(request)
@@ -302,7 +302,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "service desk home shows a '내 관련' card scoped to the signed-in admin's own requester/author matches" do
-    admin = User.create!(email: "sd-admin-mine@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-mine@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     ServiceDeskRequest.create!(request_number: 5014, requester: admin.email, subject: "Filed by me", visibility: :visible)
@@ -324,7 +324,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "service desk home shows a '신규' card for New-status tickets" do
-    admin = User.create!(email: "sd-admin-new@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-new@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     ServiceDeskRequest.create!(request_number: 5017, requester: "Tester", subject: "Freshly filed", visibility: :visible, status: :pending)
@@ -342,7 +342,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "service desk home still renders the full unfiltered list below the summary cards" do
-    admin = User.create!(email: "sd-admin-full-list@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-full-list@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     ServiceDeskRequest.create!(request_number: 5019, requester: "someone-else@example.com", subject: "Unrelated confirmed ticket", visibility: :visible, status: :confirmed)
@@ -356,7 +356,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   test "service desk export downloads a zip of all requests" do
     ServiceDeskRequest.create!(request_number: 5008, requester: "Tester", subject: "Export me", visibility: :visible)
 
-    admin = User.create!(email: "sd-admin-export@example.com", password: "password123", role: :admin)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-export@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     post service_desk_export_path
@@ -481,16 +481,132 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "signed in header keeps account identity and sign out actions" do
-    user = User.create!(email: "home-test@example.com", password: "password123")
+    user = User.create!(name: "홈테스트 유저", email: "home-test@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     get root_path
 
     assert_response :success
-    assert_select "header", text: /home-test@example.com/
+    assert_select "header", text: /홈테스트 유저/
     assert_select "a[href=?][data-turbo-method='delete']", destroy_user_session_path, text: "로그아웃", count: 2
     assert_select "a[href=?]", mypage_path, minimum: 1
     assert_select "a[href=?]", new_user_session_path, count: 0
+  end
+
+  test "signing up without a name fails validation and does not create a User" do
+    assert_no_difference "User.count" do
+      post user_registration_path, params: { user: { email: "no-name@example.com", password: "password123", password_confirmation: "password123" } }
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  test "signing up with a name creates the User with that name and signs them in" do
+    assert_difference "User.count", 1 do
+      post user_registration_path, params: { user: { name: "새 유저", email: "new-signup@example.com", password: "password123", password_confirmation: "password123" } }
+    end
+
+    created = User.order(:created_at).last
+    assert_equal "새 유저", created.name
+    assert_equal "new-signup@example.com", created.email
+    assert_redirected_to dashboard_path
+  end
+
+  test "the signup form has no name field pre-filled and shows Korean labels" do
+    get new_user_registration_path
+
+    assert_response :success
+    assert_select "input[name='user[name]']"
+    assert_select "input[name='user[email]']"
+    assert_match(/이름/, response.body)
+  end
+
+  test "editing account info can change the name without touching email/password" do
+    user = User.create!(name: "원래 이름", email: "edit-name@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    patch user_registration_path, params: { user: { name: "바뀐 이름", current_password: "password123" } }
+
+    assert_redirected_to root_path
+    user.reload
+    assert_equal "바뀐 이름", user.name
+    assert_equal "edit-name@example.com", user.email
+  end
+
+  test "dashboard greets the signed-in user by name" do
+    user = User.create!(name: "대시보드 유저", email: "dashboard-name@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get dashboard_path
+
+    assert_response :success
+    assert_match(/안녕하세요, 대시보드 유저님/, response.body)
+    assert_no_match(/dashboard-name@example\.com/, response.body)
+  end
+
+  test "mypage shows both name and email in account info" do
+    user = User.create!(name: "마이페이지 유저", email: "mypage-name@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get mypage_path
+
+    assert_response :success
+    assert_select "dt", text: "이름"
+    assert_select "dd", text: "마이페이지 유저"
+    assert_select "dt", text: "이메일"
+    assert_select "dd", text: "mypage-name@example.com"
+  end
+
+  test "admin users index shows name as primary text and email as secondary" do
+    admin = User.create!(name: "관리자 유저", email: "admin-index@example.com", password: "password123", role: :admin)
+    other = User.create!(name: "다른 유저", email: "other-index@example.com", password: "password123")
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get admin_users_path
+
+    assert_response :success
+    doc = Nokogiri::HTML(response.body)
+    row = doc.css("tbody tr").find { |tr| tr.text.include?(other.email) }
+    assert row, "expected a row for #{other.email}"
+    assert_equal "다른 유저", row.at_css("td p.font-medium").text
+    assert_match(/other-index@example\.com/, row.at_css("td p.text-xs").text)
+  end
+
+  test "billing order page still sends the user's email (not name) to the payment widgets" do
+    Commerce::CatalogBootstrap.call!
+    original_env = %w[LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY TOSS_WEBHOOK_SECRET
+                       PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET].to_h { |key| [ key, ENV[key] ] }
+    ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
+    ENV["PAYMENT_PROVIDER"] = "portone"
+    ENV["TOSS_CLIENT_KEY"] = "test-client-key"
+    ENV["TOSS_SECRET_KEY"] = "test-secret-key"
+    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"
+    ENV["PORTONE_API_SECRET"] = "test-api-secret"
+    ENV["PORTONE_STORE_ID"] = "test-store-id"
+    ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
+    ENV["PORTONE_WEBHOOK_SECRET"] = "test-portone-webhook-secret"
+    Product.find_by!(code: "chatdox").update!(sale_enabled: true)
+
+    user = User.create!(name: "결제 유저", email: "billing-name-regression@example.com", password: "password123")
+    order = Commerce::OrderCreator.call!(
+      user: user,
+      product_code: "chatdox",
+      offer_code: "chatdox-1m-v1",
+      requested_start_on: Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date,
+      provider: "portone"
+    )
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get billing_order_path(order.public_id)
+
+    assert_response :success
+    doc = Nokogiri::HTML(response.body)
+    widget_script = doc.css("script").map(&:text).find { |text| text.include?("PortOne.requestPayment") }
+    assert widget_script, "expected the PortOne payment widget script"
+    assert_match(/customer: \{ email: "billing-name-regression@example\.com" \}/, widget_script)
+    assert_no_match(/결제 유저/, widget_script)
+  ensure
+    original_env.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
   end
 
   test "Chatdox presents fixed-term VAT-inclusive prices without a purchase path" do
@@ -533,7 +649,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "signed-in product pages also keep the legacy checkout link hidden" do
-    user = User.create!(email: "policy-user@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "policy-user@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     [ chatdox_path, claudox_path ].each do |path|
@@ -555,7 +671,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_select "script[src*='tosspayments']", count: 0
     assert_select "script[src*='portone']", count: 0
 
-    user = User.create!(email: "checkout-blocked@example.com", password: "password123")
+    user = User.create!(name: "테스트 유저", email: "checkout-blocked@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
     assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do

@@ -134,6 +134,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
   def create_order(at: @at)
     @sequence += 1
     user = User.create!(
+      name: "테스트 유저",
       email: "reconciliation-#{@sequence}@example.com",
       password: "password123",
       created_at: 30.days.ago
@@ -165,7 +166,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
   end
 
   def create_overlapping_licenses
-    user = User.create!(email: "overlap@example.com", password: "password123", created_at: 30.days.ago)
+    user = User.create!(name: "테스트 유저", email: "overlap@example.com", password: "password123", created_at: 30.days.ago)
     first_start = @at.in_time_zone(KST).to_date
     [ first_start, first_start + 1.day ].each do |start_on|
       last_on = start_on + 1.month - 1.day

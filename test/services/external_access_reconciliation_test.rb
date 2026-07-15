@@ -91,7 +91,7 @@ class ExternalAccessReconciliationTest < ActiveSupport::TestCase
 
   def create_user
     @sequence += 1
-    User.create!(email: "external-reconcile-#{@sequence}@example.com", password: "password123", created_at: 30.days.ago)
+    User.create!(name: "테스트 유저", email: "external-reconcile-#{@sequence}@example.com", password: "password123", created_at: 30.days.ago)
   end
 
   def create_verified_link(user)

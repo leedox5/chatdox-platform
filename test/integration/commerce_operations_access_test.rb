@@ -14,9 +14,9 @@ class CommerceOperationsAccessTest < ActionDispatch::IntegrationTest
     )
     @product = Product.find_by!(code: "chatdox")
     @product.update!(sale_enabled: true)
-    @admin = User.create!(email: "commerce-admin@example.com", password: "password123", role: :admin)
-    @buyer = User.create!(email: "commerce-buyer@example.com", password: "password123", created_at: 30.days.ago)
-    @other = User.create!(email: "commerce-other@example.com", password: "password123", created_at: 30.days.ago)
+    @admin = User.create!(name: "테스트 유저", email: "commerce-admin@example.com", password: "password123", role: :admin)
+    @buyer = User.create!(name: "테스트 유저", email: "commerce-buyer@example.com", password: "password123", created_at: 30.days.ago)
+    @other = User.create!(name: "테스트 유저", email: "commerce-other@example.com", password: "password123", created_at: 30.days.ago)
     @at = Time.current.change(usec: 0)
   end
 

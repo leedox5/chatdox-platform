@@ -7,8 +7,8 @@ class ProductEntitlementTest < ActiveSupport::TestCase
     Commerce::CatalogBootstrap.call!
     @previous_legacy_access = ENV.delete("LEEDOX_LEGACY_CHATDOX_ACCESS")
     @at = Time.current
-    @user = User.create!(email: "entitled@example.com", password: "password123", created_at: 30.days.ago)
-    @other_user = User.create!(email: "other@example.com", password: "password123", created_at: 30.days.ago)
+    @user = User.create!(name: "테스트 유저", email: "entitled@example.com", password: "password123", created_at: 30.days.ago)
+    @other_user = User.create!(name: "테스트 유저", email: "other@example.com", password: "password123", created_at: 30.days.ago)
     @chatdox = Product.find_by!(code: "chatdox")
     @claudox = Product.find_by!(code: "claudox")
   end
@@ -50,7 +50,7 @@ class ProductEntitlementTest < ActiveSupport::TestCase
   end
 
   test "guest and trial chapter ranges remain two and five" do
-    trial_user = User.create!(email: "trial@example.com", password: "password123")
+    trial_user = User.create!(name: "테스트 유저", email: "trial@example.com", password: "password123")
 
     assert DocPolicy.new(nil, chapter("chatdox", 2)).view?
     assert_not DocPolicy.new(nil, chapter("chatdox", 3)).view?
