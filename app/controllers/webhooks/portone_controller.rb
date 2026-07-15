@@ -32,6 +32,11 @@ class Webhooks::PortoneController < ApplicationController
 
   def sync_payment!(payment)
     provider_payment_id = payment["id"] || payment["paymentId"]
+    if (order = Order.find_by(public_id: provider_payment_id))
+      sync_purchase_order!(order, payment, provider_payment_id)
+      return
+    end
+
     transaction = PaymentTransaction.find_or_initialize_by(
       provider: "portone",
       provider_payment_id: provider_payment_id
@@ -55,6 +60,27 @@ class Webhooks::PortoneController < ApplicationController
         provider_payload: payment
       )
       subscription.update!(subscription_attributes(subscription, status, order_id))
+    end
+  end
+
+  def sync_purchase_order!(order, payment, provider_payment_id)
+    attributes = {
+      provider: "portone",
+      provider_payment_id: provider_payment_id,
+      order_id: order.public_id,
+      amount: payment.dig("amount", "total") || 0,
+      currency: payment["currency"] || "KRW",
+      provider_payload: payment
+    }
+
+    if payment["status"] == "PAID"
+      Commerce::OrderFinalizer.call!(order: order, payment: attributes)
+    else
+      Commerce::OrderStatusSync.call!(
+        order: order,
+        status: subscription_status(payment["status"]),
+        payment: attributes
+      )
     end
   end
 

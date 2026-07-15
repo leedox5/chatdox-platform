@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_100000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -21,6 +21,66 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
     t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
   end
 
+  create_table "licenses", force: :cascade do |t|
+    t.datetime "access_ends_at", null: false
+    t.datetime "created_at", null: false
+    t.date "last_usable_on", null: false
+    t.integer "order_item_id"
+    t.integer "product_id", null: false
+    t.string "source", default: "paid", null: false
+    t.date "starts_on", null: false
+    t.string "status", default: "scheduled", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["order_item_id"], name: "index_licenses_on_order_item_id", unique: true
+    t.index ["product_id"], name: "index_licenses_on_product_id"
+    t.index ["user_id", "product_id", "access_ends_at"], name: "index_licenses_on_user_product_access_end"
+    t.index ["user_id", "product_id", "starts_on"], name: "index_licenses_on_user_product_start", unique: true
+    t.index ["user_id"], name: "index_licenses_on_user_id"
+  end
+
+  create_table "order_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "KRW", null: false
+    t.integer "discount_bps", default: 0, null: false
+    t.integer "duration_months", null: false
+    t.string "offer_code", null: false
+    t.integer "offer_version", null: false
+    t.integer "order_id", null: false
+    t.string "product_code", null: false
+    t.integer "product_id", null: false
+    t.string "product_name", null: false
+    t.integer "product_offer_id", null: false
+    t.integer "supply_amount", null: false
+    t.integer "total_amount", null: false
+    t.datetime "updated_at", null: false
+    t.integer "vat_amount", null: false
+    t.index ["order_id", "product_id"], name: "index_order_items_on_order_id_and_product_id", unique: true
+    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["product_id"], name: "index_order_items_on_product_id"
+    t.index ["product_offer_id"], name: "index_order_items_on_product_offer_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "KRW", null: false
+    t.datetime "finalized_at"
+    t.datetime "paid_at"
+    t.datetime "payment_requested_at", null: false
+    t.string "provider", null: false
+    t.string "public_id", null: false
+    t.date "requested_start_on", null: false
+    t.string "status", default: "pending", null: false
+    t.integer "supply_amount", null: false
+    t.integer "total_amount", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "vat_amount", null: false
+    t.index ["public_id"], name: "index_orders_on_public_id", unique: true
+    t.index ["user_id", "status"], name: "index_orders_on_user_id_and_status"
+    t.index ["user_id"], name: "index_orders_on_user_id"
+  end
+
   create_table "payment_transactions", force: :cascade do |t|
     t.integer "amount", null: false
     t.datetime "created_at", null: false
@@ -29,11 +89,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
     t.string "provider", null: false
     t.json "provider_payload"
     t.string "provider_payment_id", null: false
+    t.integer "purchase_order_id"
     t.string "status", default: "pending", null: false
-    t.integer "subscription_id", null: false
+    t.integer "subscription_id"
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payment_transactions_on_order_id", unique: true
     t.index ["provider", "provider_payment_id"], name: "index_payment_transactions_on_provider_and_provider_payment_id", unique: true
+    t.index ["purchase_order_id"], name: "index_payment_transactions_on_purchase_order_id", unique: true
     t.index ["subscription_id"], name: "index_payment_transactions_on_subscription_id"
   end
 
@@ -43,6 +105,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
     t.string "source", default: "landing_pricing", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_premium_waitlists_on_email", unique: true
+  end
+
+  create_table "product_offers", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "available_from"
+    t.datetime "available_until"
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "KRW", null: false
+    t.integer "discount_bps", default: 0, null: false
+    t.integer "duration_months", null: false
+    t.integer "product_id", null: false
+    t.integer "supply_amount", null: false
+    t.integer "total_amount", null: false
+    t.datetime "updated_at", null: false
+    t.integer "vat_amount", null: false
+    t.integer "version", null: false
+    t.index ["code"], name: "index_product_offers_on_code", unique: true
+    t.index ["product_id", "duration_months", "version"], name: "index_product_offers_on_product_duration_version", unique: true
+    t.index ["product_id"], name: "index_product_offers_on_product_id"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.boolean "sale_enabled", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_products_on_code", unique: true
   end
 
   create_table "service_desk_jobs", force: :cascade do |t|
@@ -107,7 +199,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_140346) do
   end
 
   add_foreign_key "chapter_progresses", "users"
+  add_foreign_key "licenses", "order_items"
+  add_foreign_key "licenses", "products"
+  add_foreign_key "licenses", "users"
+  add_foreign_key "order_items", "orders"
+  add_foreign_key "order_items", "product_offers"
+  add_foreign_key "order_items", "products"
+  add_foreign_key "orders", "users"
+  add_foreign_key "payment_transactions", "orders", column: "purchase_order_id"
   add_foreign_key "payment_transactions", "subscriptions"
+  add_foreign_key "product_offers", "products"
   add_foreign_key "service_desk_jobs", "service_desk_requests"
   add_foreign_key "subscriptions", "users"
 end

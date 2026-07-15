@@ -12,6 +12,8 @@ class ClaudoxController < ApplicationController
       return
     end
 
+    authorize @current_chapter, :view?, policy_class: DocPolicy
+
     file_path = CLAUDOX_PATH.join("#{@current_chapter[:slug]}.md")
     @last_updated_at = File.mtime(file_path)
     raw_markdown = File.read(file_path)
@@ -50,6 +52,7 @@ class ClaudoxController < ApplicationController
         id: id,
         slug: File.basename(file_path, ".md"),
         title: extract_title(file_path),
+        product_code: "claudox",
         available: true
       }
 

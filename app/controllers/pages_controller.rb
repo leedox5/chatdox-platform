@@ -4,7 +4,9 @@ class PagesController < ApplicationController
   end
 
   def chatdox
-    # Preserve the original Chatdox landing content as a dedicated product page.
+    @chatdox_product = Product.find_by(code: "chatdox")
+    @chatdox_offers = @chatdox_product&.product_offers&.active&.ordered || ProductOffer.none
+    @chatdox_sales_enabled = Commerce::Sales.enabled_for?(@chatdox_product)
   end
 
   def getting_started; end

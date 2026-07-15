@@ -5,6 +5,8 @@ class DashboardController < ApplicationController
     authorize :dashboard, :access?
 
     @subscription = current_user.subscription
+    @licenses = current_user.licenses.includes(:product).order(starts_on: :asc)
+    @orders = current_user.orders.includes(:order_items).order(created_at: :desc).limit(10)
     @completed_ids = current_user.chapter_progresses
       .completed
       .order(completed_at: :desc)
@@ -15,7 +17,7 @@ class DashboardController < ApplicationController
     @recent_chapters = @completed_ids.first(3).filter_map { |id| Curriculum.find(id) }
     @next_chapter = Curriculum.all.find { |chapter| @completed_ids.exclude?(chapter[:id]) }
     @accessible_chapters = Curriculum.all.count do |chapter|
-      current_user.can_view_chapter?(chapter[:id])
+      current_user.can_view_chapter?(chapter[:id], product_code: "chatdox")
     end
   end
 

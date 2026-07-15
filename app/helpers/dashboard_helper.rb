@@ -8,6 +8,10 @@ module DashboardHelper
   }.freeze
 
   def subscription_badge(user, subscription)
+    if subscription.blank? && user.licensed_for?("chatdox")
+      return tag.span("Chatdox 이용 중", class: "inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700")
+    end
+
     label, classes = SUBSCRIPTION_BADGES.fetch(
       subscription&.status,
       fallback_badge(user)
@@ -19,6 +23,8 @@ module DashboardHelper
   def subscription_period_text(user, subscription)
     if subscription&.status == "active" && subscription.current_period_end.present?
       "이용 종료일: #{I18n.l(subscription.current_period_end.to_date, format: :long, locale: :ko)}"
+    elsif (license = user.licenses.for_product("chatdox").not_canceled.find { |item| item.active_at? })
+      "Chatdox 이용 종료일: #{I18n.l(license.last_usable_on, format: :long, locale: :ko)}"
     elsif user.trial_active?
       "무료 Trial #{user.trial_days_remaining}일 남음"
     else

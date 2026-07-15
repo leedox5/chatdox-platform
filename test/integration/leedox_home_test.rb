@@ -1,6 +1,10 @@
 require "test_helper"
 
 class LeedoxHomeTest < ActionDispatch::IntegrationTest
+  setup do
+    Commerce::CatalogBootstrap.call!
+  end
+
   test "integrated home presents LEEDOX and both products without unconfirmed pricing" do
     get root_path
 

@@ -2,10 +2,36 @@ class BillingController < ApplicationController
   before_action :authenticate_user!, except: :checkout
 
   def checkout
-    # 신규 기간제 라이선스 결제가 준비될 때까지 기존 월 구독 결제를 시작하지 않는다.
+    @chatdox_product = Product.find_by(code: "chatdox")
+    unless Commerce::Sales.enabled_for?(@chatdox_product)
+      render :checkout
+      return
+    end
+
+    authenticate_user!
+    return if performed?
+
+    @offers = @chatdox_product.product_offers.active.ordered.select(&:available_at?)
+    @existing_license = current_user.licenses
+      .where(product: @chatdox_product)
+      .not_canceled
+      .where("access_ends_at > ?", Time.current)
+      .order(last_usable_on: :desc)
+      .first
+    kst_today = Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date
+    @minimum_start_on = kst_today
+    @maximum_start_on = kst_today + 7.days
+
+    render :checkout_enabled
   end
 
   def success
+    order = find_purchase_order
+    if order
+      process_purchase_order_success(order)
+      return
+    end
+
     gateway = Payments::Gateway.current
     provider = gateway.provider
     payment_attributes =
@@ -35,11 +61,34 @@ class BillingController < ApplicationController
 
   private
 
-  def complete_toss_payment(gateway)
+  def process_purchase_order_success(order)
+    raise Pundit::NotAuthorizedError unless order.user == current_user
+
+    gateway = Payments::Gateway.for(order.provider)
+    payment_attributes = if order.provider == "portone"
+      complete_portone_payment(
+        gateway,
+        expected_amount: order.total_amount,
+        expected_currency: order.currency
+      )
+    else
+      complete_toss_payment(gateway, expected_amount: order.total_amount)
+    end
+
+    Commerce::OrderFinalizer.call!(order: order, payment: payment_attributes)
+    respond_to_payment_success
+  end
+
+  def find_purchase_order
+    public_id = params[:orderId].presence || params[:paymentId].presence
+    Order.find_by(public_id: public_id) if public_id
+  end
+
+  def complete_toss_payment(gateway, expected_amount: payment_amount)
     payment = gateway.confirm_payment!(
       payment_key: params[:paymentKey],
       order_id: params[:orderId],
-      amount: payment_amount
+      amount: expected_amount
     )
 
     {
@@ -57,12 +106,16 @@ class BillingController < ApplicationController
     }
   end
 
-  def complete_portone_payment(gateway)
+  def complete_portone_payment(
+    gateway,
+    expected_amount: payment_amount,
+    expected_currency: payment_currency
+  )
     payment_id = params[:paymentId].presence || params[:orderId]
     payment = gateway.verify_payment!(
       payment_id: payment_id,
-      expected_amount: payment_amount,
-      expected_currency: payment_currency
+      expected_amount: expected_amount,
+      expected_currency: expected_currency
     )
 
     {

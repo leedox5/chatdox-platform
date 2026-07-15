@@ -56,6 +56,8 @@ Rails.application.routes.draw do
   get  "/billing/success",  to: "billing#success",   as: :billing_success
   post "/billing/success",  to: "billing#success"
   get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
+  post "/billing/orders", to: "billing_orders#create", as: :billing_orders
+  get "/billing/orders/:id", to: "billing_orders#show", as: :billing_order
 
   post "/billing/auths", to: "billing_auths#create", as: :billing_auths
   resources :premium_waitlists, only: :create

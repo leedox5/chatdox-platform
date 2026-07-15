@@ -12,7 +12,7 @@ class DocsController < ApplicationController
     @chapters = chapters_with_availability
     @phase_chapters = chapters_by_phase(@chapters)
     @current_id = params[:id].to_s.rjust(2, "0")
-    @current_chapter = Curriculum.find(@current_id)
+    @current_chapter = Curriculum.find(@current_id)&.merge(product_code: "chatdox")
 
     unless @current_chapter
       render plain: "챕터를 찾을 수 없습니다.", status: :not_found
@@ -76,9 +76,10 @@ class DocsController < ApplicationController
   def chapters_with_availability
     Curriculum.all.map do |chapter|
       file_path = DOCS_PATH.join("#{chapter[:slug]}.md")
-      chapter.merge(
+      product_chapter = chapter.merge(product_code: "chatdox")
+      product_chapter.merge(
         available: File.exist?(file_path),
-        accessible: DocPolicy.new(current_user, chapter).view?
+        accessible: DocPolicy.new(current_user, product_chapter).view?
       )
     end
   end
