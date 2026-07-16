@@ -61,15 +61,13 @@ Rails.application.routes.draw do
         post :abandon, on: :member
       end
       resources :refund_requests, only: %i[show update], param: :id
-      resources :external_account_links, only: %i[index show], param: :id
-      resources :external_access_tasks, only: %i[index show update], param: :id
+      get "/github_access", to: "github_access#index", as: :github_access
+      patch "/github_access/:id/invite", to: "github_access#invite", as: :invite_github_access
+      patch "/github_access/:id/revoke", to: "github_access#revoke", as: :revoke_github_access
     end
   end
 
-  resource :github_access, only: %i[show create], controller: :github_access do
-    post :change, on: :member
-    post :disconnect, on: :member
-  end
+  resource :github_access, only: %i[show create], controller: :github_access
 
   get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
   get  "/billing/success",  to: "billing#success",   as: :billing_success

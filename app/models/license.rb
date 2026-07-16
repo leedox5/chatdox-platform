@@ -6,8 +6,6 @@ class License < ApplicationRecord
   belongs_to :user
   belongs_to :product
   belongs_to :order_item, optional: true
-  has_many :external_access_grants, dependent: :restrict_with_error
-  has_many :external_access_tasks, dependent: :restrict_with_error
 
   validates :source, inclusion: { in: SOURCES }
   validates :status, inclusion: { in: STATUSES }

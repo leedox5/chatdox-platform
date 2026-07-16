@@ -194,8 +194,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
   def database_snapshot
     [
       Order, OrderItem, PaymentTransaction, License, RefundRequest,
-      CommerceAuditEvent, ExternalAccountLink, ExternalAccessGrant,
-      ExternalAccessTask, ExternalAccessEvent
+      CommerceAuditEvent, ExternalAccountLink
     ].to_h do |model|
       [ model.name, [ model.count, model.order(:id).pluck(:id, :updated_at) ] ]
     end

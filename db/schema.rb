@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_140000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -37,105 +37,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
     t.index ["auditable_type", "auditable_id", "occurred_at"], name: "index_commerce_audits_on_target_and_time"
   end
 
-  create_table "external_access_events", force: :cascade do |t|
-    t.string "action", null: false
-    t.integer "actor_id"
-    t.datetime "created_at", null: false
-    t.text "evidence_note"
-    t.integer "external_access_grant_id"
-    t.integer "external_access_task_id"
-    t.integer "external_account_link_id"
-    t.string "from_state"
-    t.datetime "occurred_at", null: false
-    t.string "reason_code"
-    t.integer "subject_id", null: false
-    t.string "subject_type", null: false
-    t.string "to_state"
-    t.datetime "updated_at", null: false
-    t.index ["action", "occurred_at"], name: "index_external_access_events_on_action_and_occurred_at"
-    t.index ["actor_id"], name: "index_external_access_events_on_actor_id"
-    t.index ["external_access_grant_id"], name: "index_external_access_events_on_external_access_grant_id"
-    t.index ["external_access_task_id"], name: "index_external_access_events_on_external_access_task_id"
-    t.index ["external_account_link_id"], name: "index_external_access_events_on_external_account_link_id"
-    t.index ["subject_type", "subject_id", "occurred_at"], name: "idx_external_access_events_on_subject_and_time"
-  end
-
-  create_table "external_access_grants", force: :cascade do |t|
-    t.datetime "accepted_at"
-    t.datetime "created_at", null: false
-    t.integer "external_account_link_id", null: false
-    t.string "failure_reason_code"
-    t.text "internal_note"
-    t.datetime "invited_at"
-    t.integer "license_id", null: false
-    t.integer "product_id", null: false
-    t.string "public_id", null: false
-    t.text "public_message"
-    t.string "repository_key", default: "chatdox_lab", null: false
-    t.string "resume_state"
-    t.boolean "retryable", default: true, null: false
-    t.datetime "revoke_due_at"
-    t.datetime "revoked_at"
-    t.string "status", default: "pending", null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["external_account_link_id"], name: "index_external_access_grants_on_external_account_link_id"
-    t.index ["license_id", "external_account_link_id", "repository_key"], name: "idx_external_grants_on_license_link_repository", unique: true
-    t.index ["license_id"], name: "index_external_access_grants_on_license_id"
-    t.index ["product_id"], name: "index_external_access_grants_on_product_id"
-    t.index ["public_id"], name: "index_external_access_grants_on_public_id", unique: true
-    t.index ["user_id", "product_id"], name: "idx_external_grants_on_one_live_user_product", unique: true, where: "status IN ('grant_due','invited','active','revoke_due')"
-    t.index ["user_id"], name: "index_external_access_grants_on_user_id"
-  end
-
-  create_table "external_access_tasks", force: :cascade do |t|
-    t.datetime "completed_at"
-    t.datetime "created_at", null: false
-    t.string "dedup_key", null: false
-    t.datetime "due_at", null: false
-    t.text "evidence_note"
-    t.integer "external_access_grant_id"
-    t.integer "external_account_link_id", null: false
-    t.text "internal_note"
-    t.integer "license_id"
-    t.integer "processed_by_id"
-    t.integer "product_id"
-    t.string "public_id", null: false
-    t.text "public_message"
-    t.string "reason_code"
-    t.boolean "retryable", default: true, null: false
-    t.string "status", default: "pending", null: false
-    t.string "task_type", null: false
-    t.datetime "updated_at", null: false
-    t.index ["dedup_key"], name: "idx_external_access_tasks_on_one_open_dedup_key", unique: true, where: "status IN ('pending','failed')"
-    t.index ["external_access_grant_id"], name: "index_external_access_tasks_on_external_access_grant_id"
-    t.index ["external_account_link_id"], name: "index_external_access_tasks_on_external_account_link_id"
-    t.index ["license_id"], name: "index_external_access_tasks_on_license_id"
-    t.index ["processed_by_id"], name: "index_external_access_tasks_on_processed_by_id"
-    t.index ["product_id"], name: "index_external_access_tasks_on_product_id"
-    t.index ["public_id"], name: "index_external_access_tasks_on_public_id", unique: true
-    t.index ["status", "due_at"], name: "index_external_access_tasks_on_status_and_due_at"
-  end
-
   create_table "external_account_links", force: :cascade do |t|
-    t.datetime "change_requested_at"
     t.datetime "created_at", null: false
-    t.datetime "disabled_at"
-    t.string "external_uid"
+    t.datetime "invited_at"
     t.string "normalized_username", null: false
     t.string "provider", default: "github", null: false
     t.string "public_id", null: false
-    t.integer "replaces_link_id"
-    t.string "status", default: "pending_verification", null: false
+    t.datetime "revoked_at"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.string "username", null: false
-    t.datetime "verified_at"
-    t.index ["provider", "external_uid"], name: "idx_external_links_on_active_provider_uid", unique: true, where: "external_uid IS NOT NULL AND status != 'disabled'"
-    t.index ["provider", "normalized_username"], name: "idx_external_links_on_active_provider_username", unique: true, where: "status != 'disabled'"
     t.index ["public_id"], name: "index_external_account_links_on_public_id", unique: true
-    t.index ["replaces_link_id"], name: "index_external_account_links_on_replaces_link_id", unique: true
-    t.index ["user_id"], name: "index_external_account_links_on_user_id"
+    t.index ["user_id"], name: "index_external_account_links_on_user_id", unique: true
   end
 
   create_table "licenses", force: :cascade do |t|
@@ -328,20 +241,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
 
   add_foreign_key "chapter_progresses", "users"
   add_foreign_key "commerce_audit_events", "users", column: "actor_id"
-  add_foreign_key "external_access_events", "external_access_grants"
-  add_foreign_key "external_access_events", "external_access_tasks"
-  add_foreign_key "external_access_events", "external_account_links"
-  add_foreign_key "external_access_events", "users", column: "actor_id"
-  add_foreign_key "external_access_grants", "external_account_links"
-  add_foreign_key "external_access_grants", "licenses"
-  add_foreign_key "external_access_grants", "products"
-  add_foreign_key "external_access_grants", "users"
-  add_foreign_key "external_access_tasks", "external_access_grants"
-  add_foreign_key "external_access_tasks", "external_account_links"
-  add_foreign_key "external_access_tasks", "licenses"
-  add_foreign_key "external_access_tasks", "products"
-  add_foreign_key "external_access_tasks", "users", column: "processed_by_id"
-  add_foreign_key "external_account_links", "external_account_links", column: "replaces_link_id"
   add_foreign_key "external_account_links", "users"
   add_foreign_key "licenses", "order_items"
   add_foreign_key "licenses", "products"
