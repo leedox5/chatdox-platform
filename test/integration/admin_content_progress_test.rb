@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AdminContentProgressTest < ActionDispatch::IntegrationTest
-  test "guests and non-admins are blocked, admins see accurate Chatdox and Claudox progress" do
+  test "guests and non-admins are blocked, admins see accurate Chatdox and Claudox progress grouped by phase" do
     user = User.create!(name: "테스트 유저", email: "content-progress-user@example.com", password: "password123")
     admin = User.create!(name: "테스트 유저", email: "content-progress-admin@example.com", password: "password123", role: :admin)
 
@@ -17,34 +17,38 @@ class AdminContentProgressTest < ActionDispatch::IntegrationTest
     get admin_content_progress_path
     assert_response :success
 
-    written_count = Curriculum.all.count { |chapter| File.exist?(Rails.root.join("hq/chatdox/#{chapter[:slug]}.md")) }
-    assert_match(/#{written_count}\s*\/\s*20/, response.body)
+    chatdox_done = Curriculum.all.count { |chapter| File.exist?(Rails.root.join("hq/chatdox/#{chapter[:slug]}.md")) }
+    claudox_rows = File.read(Rails.root.join("hq/claudox/88_progress.md")).scan(Admin::ContentProgressController::CLAUDOX_ROW_PATTERN)
+    claudox_done = claudox_rows.count { |_title, _id, status| status == "✅" }
+
+    assert_match(/#{chatdox_done}\s*\/\s*20/, response.body)
+    assert_match(/#{claudox_done}\s*\/\s*20/, response.body)
 
     doc = Nokogiri::HTML(response.body)
-    Curriculum.all.each do |chapter|
-      written = File.exist?(Rails.root.join("hq/chatdox/#{chapter[:slug]}.md"))
-      row = doc.css("li").find { |li| li.text.include?(chapter[:title]) }
-      assert row, "expected a row for #{chapter[:title]}"
-      assert_equal written, row.text.include?("✅")
-    end
+    cards = doc.css("article")
+    assert_equal 2, cards.size, "expected one card per product"
 
-    row_pattern = Admin::ContentProgressController::CLAUDOX_ROW_PATTERN
-    progress_source = File.read(Rails.root.join("hq/claudox/88_progress.md"))
-    claudox_rows = progress_source.scan(row_pattern)
-    assert_equal 20, claudox_rows.size
-    done_count = claudox_rows.count { |_title, _slug, _percent, status| status == "✅" }
-    assert_match(/#{done_count}\s*\/\s*20/, response.body)
+    [
+      [ cards[0], Curriculum.all.map { |c| c.merge(done: File.exist?(Rails.root.join("hq/chatdox/#{c[:slug]}.md"))) }, Curriculum.phases, "doc_path" ],
+      [ cards[1], claudox_rows.map { |title, id, status| { id: id, title: title, done: status == "✅" } }, Claudox.phases, "claudox_chapter_path" ]
+    ].each do |card, chapters, phases, path_helper|
+      # No percent or last-modified data should leak into this page anymore.
+      assert_no_match(/\d+%/, card.text)
+      assert_no_match(/\d{4}년 \d{1,2}월 \d{1,2}일/, card.text)
 
-    claudox_rows.each do |title, slug, percent, status|
-      id = slug[0, 2]
-      row = doc.css("table tbody tr").find { |tr| tr.text.include?(title) }
-      assert row, "expected a Claudox row for #{title}"
+      phase_headers = card.css("h3").map(&:text)
+      assert_equal phases.map { |phase| "#{phase[:label]} · #{phase[:title]}" }, phase_headers
 
-      link = row.at_css("a")
-      assert_equal title, link.text
-      assert_equal claudox_chapter_path(id), link["href"]
-      assert_equal "#{percent}%", row.css("td")[2].text.strip
-      assert_equal(status == "✅", row.css("td")[3].text.include?("✅"))
+      chapters.each do |chapter|
+        row = card.css("li").find { |li| li.text.include?(chapter[:title]) }
+        assert row, "expected a row for #{chapter[:title]} in #{path_helper}'s card"
+
+        link = row.at_css("a")
+        assert_equal "#{chapter[:id]}. #{chapter[:title]}", link.text
+        expected_path = path_helper == "doc_path" ? doc_path(chapter[:id]) : claudox_chapter_path(chapter[:id])
+        assert_equal expected_path, link["href"]
+        assert_equal chapter[:done], row.text.include?("✅")
+      end
     end
   end
 

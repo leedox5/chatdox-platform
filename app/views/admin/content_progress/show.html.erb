@@ -10,70 +10,33 @@
       <p class="mt-2 text-gray-600">Chatdox·Claudox 두 상품의 문서 작성 진행률을 확인합니다.</p>
     </header>
 
-    <section class="grid gap-8 lg:grid-cols-2">
-      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-lg font-bold text-gray-900">Chatdox</h2>
-          <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-            <%= @chatdox_written_count %> / <%= @chatdox_chapters.size %>
-          </span>
+    <section class="mb-8 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <div class="flex items-baseline justify-between">
+          <p class="text-sm font-semibold text-gray-500">Chatdox</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @chatdox_percent %>%</p>
         </div>
-        <ul class="mt-4 divide-y divide-gray-100">
-          <% @chatdox_chapters.each do |chapter| %>
-            <li class="flex items-center justify-between gap-4 py-2.5 text-sm">
-              <%= link_to "#{chapter[:id]}. #{chapter[:title]}", doc_path(chapter[:id]), class: "text-gray-700 hover:text-blue-600 hover:underline" %>
-              <% if chapter[:written] %>
-                <span aria-label="작성됨">✅</span>
-              <% else %>
-                <span class="text-gray-300" aria-label="미작성">⬜</span>
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
-      </article>
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div class="h-full rounded-full bg-blue-600" style="width: <%= @chatdox_percent %>%"></div>
+        </div>
+        <p class="mt-2 text-xs text-gray-500"><%= @chatdox_done_count %> / <%= @chatdox_chapters.size %>개 챕터 작성됨</p>
+      </div>
 
-      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-lg font-bold text-gray-900">Claudox</h2>
-          <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-            <%= @claudox_done_count %> / <%= @claudox_chapters.size %>
-          </span>
+      <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <div class="flex items-baseline justify-between">
+          <p class="text-sm font-semibold text-gray-500">Claudox</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @claudox_percent %>%</p>
         </div>
-        <% if @claudox_chapters.any? %>
-          <table class="mt-4 w-full text-sm">
-            <thead>
-              <tr class="border-b border-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <th class="py-2">챕터</th>
-                <th class="py-2">최종 수정일</th>
-                <th class="py-2 text-right">완성도</th>
-                <th class="py-2 text-center">상태</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <% @claudox_chapters.each do |chapter| %>
-                <tr>
-                  <td class="py-2.5">
-                    <%= link_to chapter[:title], claudox_chapter_path(chapter[:id]), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
-                  </td>
-                  <td class="py-2.5 text-gray-500">
-                    <%= chapter[:updated_at] ? l(chapter[:updated_at].to_date, format: :long, locale: :ko) : "-" %>
-                  </td>
-                  <td class="py-2.5 text-right text-gray-700"><%= chapter[:percent] %>%</td>
-                  <td class="py-2.5 text-center">
-                    <% if chapter[:done] %>
-                      <span aria-label="완료">✅</span>
-                    <% else %>
-                      <span class="text-gray-300" aria-label="미완료">⬜</span>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        <% else %>
-          <p class="mt-4 rounded-lg bg-gray-50 p-6 text-center text-gray-600">88_progress.md 파일을 찾을 수 없습니다.</p>
-        <% end %>
-      </article>
+        <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div class="h-full rounded-full bg-blue-600" style="width: <%= @claudox_percent %>%"></div>
+        </div>
+        <p class="mt-2 text-xs text-gray-500"><%= @claudox_done_count %> / <%= @claudox_chapters.size %>개 챕터 완료</p>
+      </div>
+    </section>
+
+    <section class="grid gap-8 lg:grid-cols-2">
+      <%= render "product_card", title: "Chatdox", done_count: @chatdox_done_count, chapters: @chatdox_chapters, phases: @chatdox_phases %>
+      <%= render "product_card", title: "Claudox", done_count: @claudox_done_count, chapters: @claudox_chapters, phases: @claudox_phases %>
     </section>
   </main>
 </div>

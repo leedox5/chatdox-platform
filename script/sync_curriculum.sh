@@ -69,8 +69,45 @@ sync_one() {
     rsync "${RSYNC_OPTS[@]}" "$TMP_DIR/$src/" "$dest/" | grep -v '^\.' || true
   else
     rsync "${RSYNC_OPTS[@]}" "$TMP_DIR/$src/" "$dest/"
+    restore_mtimes "$src" "$dest"
   fi
   echo "  $src -> ${dest#$PROJECT_ROOT/}"
+}
+
+# `git archive` stamps every extracted file with the archive (checkout) time, not
+# the time the file's content actually last changed, and rsync -a preserves that.
+# So every single sync — even a no-op one — makes every file look "just modified",
+# which breaks File.mtime-based "last updated" displays in the app. Fix it up here:
+# look up each file's real last-commit time in the HQ source repo and stamp that
+# instead, so unchanged files keep a stable mtime across repeated syncs.
+restore_mtimes() {
+  local src="$1" dest="$2"
+  local rel_path="" commit_date=""
+  declare -A commit_dates=()
+
+  # A NUL-byte separator (the usual trick for this) can't survive here: it gets
+  # truncated out of the argv string before git even sees it, and bash `read`
+  # can't hold a NUL in a variable either. Use a plain marker prefix instead —
+  # it can never collide with a real path under hq/.
+  while IFS= read -r line; do
+    if [[ "$line" == COMMIT_DATE:* ]]; then
+      commit_date="${line#COMMIT_DATE:}"
+    elif [[ -n "$line" ]]; then
+      rel_path="${line#"$src"/}"
+      # git log lists newest commit first, so the first date seen per file is its
+      # most recent change — keep only that one.
+      if [[ -z "${commit_dates[$rel_path]:-}" ]]; then
+        commit_dates["$rel_path"]="$commit_date"
+      fi
+    fi
+  done < <(git -C "$SOURCE_REPO" log --format="COMMIT_DATE:%cI" --name-only "$REF" -- "$src")
+
+  while IFS= read -r file; do
+    rel_path="${file#$dest/}"
+    if [[ -n "${commit_dates[$rel_path]:-}" ]]; then
+      touch -d "${commit_dates[$rel_path]}" "$file"
+    fi
+  done < <(find "$dest" -type f)
 }
 
 echo "Syncing chatdox-curriculum ($REF), runtime folders only:"
