@@ -44,6 +44,12 @@
 	@apply text-blue-600 underline decoration-blue-200 underline-offset-2 hover:text-blue-800 hover:decoration-blue-400;
 }
 
+.doc-content img {
+	@apply my-5 rounded-lg border border-slate-200;
+	max-width: 100%;
+	height: auto;
+}
+
 .doc-content blockquote {
 	@apply my-5 border-l-4 border-blue-200 bg-blue-50 px-4 py-3 text-slate-700;
 }

@@ -16,9 +16,11 @@ Rails.application.routes.draw do
   get "/chatdox", to: "pages#chatdox", as: :chatdox
 
   get "/docs", to: "docs#index"
+  get "/docs/images/*filename", to: "docs#image", as: :doc_image, format: false
   get "/docs/:id", to: "docs#show", as: :doc
   get "/claudox", to: "claudox_products#show", as: :claudox
   get "/claudox/read", to: "claudox#index", as: :claudox_read
+  get "/claudox/images/*filename", to: "claudox#image", as: :claudox_image, format: false
   get "/claudox/read/:id", to: "claudox#show", as: :claudox_chapter
   get "/service-desk", to: "service_desk#index", as: :service_desk
   get "/service-desk/new", to: "service_desk#new", as: :new_service_desk_request

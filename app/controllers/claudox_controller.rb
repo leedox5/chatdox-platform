@@ -1,9 +1,15 @@
 class ClaudoxController < ApplicationController
+  include ChapterImages
+
   CLAUDOX_PATH = Rails.root.join("hq/claudox")
 
   def index
     @chapters = available_chapters
     @phase_chapters = chapters_by_phase(@chapters)
+  end
+
+  def image
+    serve_chapter_image(CLAUDOX_PATH.join("images"), params[:filename])
   end
 
   def show

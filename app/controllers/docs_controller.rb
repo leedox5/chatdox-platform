@@ -1,9 +1,15 @@
 class DocsController < ApplicationController
+  include ChapterImages
+
   DOCS_PATH = Rails.root.join("hq/chatdox")
 
   def index
     @chapters = chapters_with_availability
     @phase_chapters = chapters_by_phase(@chapters)
+  end
+
+  def image
+    serve_chapter_image(DOCS_PATH.join("images"), params[:filename])
   end
 
   def show

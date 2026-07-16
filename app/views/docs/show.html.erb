@@ -74,10 +74,10 @@
           <%= sanitize(
             @content_html,
             tags: %w[
-              h1 h2 h3 h4 h5 h6 p br hr ul ol li pre code blockquote strong em a
+              h1 h2 h3 h4 h5 h6 p br hr ul ol li pre code blockquote strong em a img
               table thead tbody tr th td
             ],
-            attributes: %w[href target rel]
+            attributes: %w[href target rel src alt]
           ) %>
         </div>
 
