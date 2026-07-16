@@ -8,15 +8,19 @@
 
 - 이 저장소(`chatdox-platform`)는 **DEV** — 실제 코드가 사는 곳.
 - 커리큘럼/handoff 저장소는 **HQ** (`chatdox-curriculum`). 이 WSL 환경에서는 `/mnt/d/RubyOnRails/chatdox-curriculum`에 마운트되어 있다.
+- **`script/`에 HQ 연동 스크립트 3개가 있다 — 이름이 서로 안 비슷하니 매번 `ls script/`로 전체를 확인하고 얘기할 것, 하나만 보고 "이 방향은 스크립트가 없다"고 단정하지 말 것(2026-07-16 실수).**
+  - `sync_handoff.sh` — HQ→DEV, handoff 패키지(request/result/STATUS) 전체 미러.
+  - `push_handoff_to_curriculum.sh` — DEV→HQ, handoff 패키지 하나를 HQ inbox로 push.
+  - `sync_curriculum.sh` — HQ→DEV, handoff와 무관하게 **실제 런타임 콘텐츠**(커리큘럼 문서/claudox/service-desk 요청)를 HQ git 저장소에서 `git archive`로 스냅샷 떠서 `hq/`(git 추적됨, `.local/`이 아님) 아래로 미러. REQ 0022에서 git subtree pull을 대체한 것 — subtree는 HQ 저장소 전체(QA/, SETUP/ 등 안 쓰는 것까지)를 끌어오고 merge conflict가 잦아서, 실제 쓰는 3개 폴더만 골라 받는 방식으로 바꿨다.
 - Handoff 작업 흐름:
   1. HQ가 `.local/handoff/inbox/<package>/request.md`를 만든다.
-  2. DEV는 `script/sync_handoff.sh`(`--dry-run`으로 먼저 확인 후 `--mirror`)로 HQ의 `.local/handoff/`를 이 저장소의 `.local/handoff/`로 끌어온다. `--mirror`는 HQ에 없는 로컬 전용 파일/폴더(예: `outbox/`)까지 지우는 진짜 미러링이므로 실행 전 `--dry-run` 결과를 반드시 확인한다.
-  3. 구현 후 `.local/handoff/inbox/<package>/result.md`를 작성하고, HQ 쪽 대응 경로(`/mnt/d/RubyOnRails/chatdox-curriculum/.local/handoff/inbox/<package>/`)에 `cp`로 직접 복사해 전달한다 — 반대 방향(DEV→HQ) 자동 스크립트는 아직 없다.
+  2. DEV는 `script/sync_handoff.sh`(`--dry-run`으로 먼저 확인 후 `--mirror`)로 HQ의 `.local/handoff/`를 이 저장소의 `.local/handoff/`로 끌어온다. `--mirror`는 HQ에 없는 로컬 전용 폴더(`outbox/`)까지 지우는 진짜 미러링이므로 실행 전 `--dry-run` 결과를 반드시 확인한다. `outbox/`가 매번 삭제되는 건 정상이다 — HQ는 애초에 `outbox/`를 갖지 않고, 그 폴더는 push 전 임시 스테이징 용도라 pull 시점엔 이미 역할이 끝나 있어야 한다.
+  3. 구현 후 결과물(`result.md` 등)을 `.local/handoff/outbox/<package>/`에 채워 넣고, `script/push_handoff_to_curriculum.sh --source .local/handoff/outbox/<package>`(`--dry-run`으로 먼저 확인)로 HQ의 `.local/handoff/inbox/<package>/`에 보낸다. `--source`는 반드시 패키지 하나의 경로여야 한다(outbox 루트 자체를 넘기면 이미 completed로 옮겨진 과거 패키지까지 되살아나 HQ 쪽에 스푸리어스 파일이 생긴다 — 스크립트가 이 실수를 막아준다).
+  4. `.local/handoff/inbox/<package>/`에도 같은 `result.md`를 남겨서 로컬 전체 기록(request+result)을 유지한다.
 - **"완료(completed)" 판정과 STATUS.md는 HQ의 권한이다.** DEV가 임의로 STATUS.md를 지어내지 말 것. "HQ에서 completed 처리했다"는 말을 들으면 직접 작성하지 말고 `script/sync_handoff.sh --mirror`로 HQ의 실제 사본을 가져올 것.
 - `.local/`은 `.gitignore`에 포함되어 커밋되지 않는다 — handoff 패키지, STATUS.md, 참고 정책 문서 등은 전부 로컬 전용이고, git 이력에는 실제 코드/테스트/마이그레이션만 남는다.
-- **이 handoff 워크플로우 자체가 아직 시험 운영(trial) 단계다(2026-07-16 Tommy 확인).** 고정된 프로세스로 여기지 말고, 실제로 작업하면서 걸리는 지점(비대칭적인 동기화 방향, 라운드가 쌓일 때의 구조, 스크린샷↔서면 요청서 사이 정보 손실 등)이 보이면 매번 그냥 넘어가지 말고 개선 아이디어를 제안할 것. 지금까지 눈에 띈 것들:
-  - **DEV→HQ 방향은 스크립트가 없어 매번 수동 `cp`다.** `script/sync_handoff.sh`처럼 `result*.md`를 HQ의 대응 경로로 보내는 반대 방향 스크립트가 있으면 복사 누락/경로 실수 위험이 줄어든다.
-  - **스크린샷 주석과 서면 request_rN.md 사이에 정보가 누락될 수 있다.** R2에서 실제로 겪음(Tommy가 스크린샷에 표시한 것 하나가 서면 스펙에서 빠졌다가 R3에서 확정됨). 서면 요청서를 작성할 때 스크린샷의 모든 표시 항목을 명시적으로 나열하면 이런 누락을 줄일 수 있다.
+- **이 handoff 워크플로우 자체가 아직 시험 운영(trial) 단계다(2026-07-16 Tommy 확인).** 고정된 프로세스로 여기지 말고, 실제로 작업하면서 걸리는 지점이 보이면 매번 그냥 넘어가지 말고 개선 아이디어를 제안할 것. 지금까지 눈에 띈 것:
+  - **스크린샷 주석과 서면 request_rN.md 사이에 정보가 누락될 수 있다.** `/chatdox` R2에서 실제로 겪음(Tommy가 스크린샷에 표시한 것 하나가 서면 스펙에서 빠졌다가 R3에서 확정됨). 서면 요청서를 작성할 때 스크린샷의 모든 표시 항목을 명시적으로 나열하면 이런 누락을 줄일 수 있다.
 
 ## 환경 특이사항
 
