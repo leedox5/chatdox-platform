@@ -709,6 +709,14 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/최종 업데이트: \d{4}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2}/, response.body)
   end
 
+  test "Docs chapter page shows the last-updated timestamp in Korean, not the app's default English locale" do
+    get doc_path("01")
+
+    assert_response :success
+    assert_match(/최종 업데이트: \d{4}년 \d{1,2}월 \d{1,2}일 \d{2}:\d{2}/, response.body)
+    assert_no_match(/최종 업데이트: [A-Za-z]/, response.body)
+  end
+
   test "Claudox chapter page has a back-to-list link outside the desktop-only sidebar" do
     get claudox_chapter_path("01")
 
