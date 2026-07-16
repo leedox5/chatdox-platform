@@ -31,6 +31,8 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 13. **HQ/DEV 단축어** (2026-07-14부터) — "여기"/"거기" 대신 `HQ`=chatdox-curriculum(이 저장소), `DEV`=chatdox-platform(실제 코드 구현 쪽)로 부른다. `claudox/97_commands.md` 표에도 등록됨.
 15. **DEV는 이 PC에 체크아웃이 두 곳, 역할이 다름** (2026-07-14 제정, 2026-07-16 정정) — WSL 네이티브 클론(`~/dev/chatdox-platform`)이 **진짜 DEV**(Platform Agent가 실제로 개발·커밋하는 곳). Windows 마운트 클론(`D:\RubyOnRails\chatdox-platform`)은 **HQ의 read-only 참조용 체크아웃** — 코드 읽기 전용, 여기서 commit/push 하면 안 됨(2026-07-16 실수로 한 번 어겨서 Tommy가 DEV에 직접 정정함, 커밋 e43e689). Windows 쪽은 CRLF 때문에 `bin/rails` 셔뱅도 깨짐.
 14. **Platform 작업 라우팅** (2026-07-14 제정, 2026-07-16 강화) — DEV 쪽 작업이 생기면: (a) **Handoff**(기본값, 사소한 것 포함 거의 전부), (b) Tommy가 이미 정확히 원하는 바를 알고 있어 기획 개입이 불필요하면 **Tommy가 Platform Agent에 직접 요청**. 2026-07-16부터 "Claudox가 DEV를 직접 수정"(구 (b) 옵션)은 폐지 — 읽기/조사는 자유지만, 아무리 사소해도(문서 한 줄이라도) **DEV 저장소에 직접 commit/push 하지 않는다.** 상대 repo는 서로 read-only로 다루고, 넘길 게 있으면 항상 handoff/제안 채널(파일)로만 전달한다. 반대 방향(DEV→HQ)도 동일 원칙.
+16. **handoff 발행 = 파일 작성** (2026-07-16) — `.local/handoff/inbox/<패키지명>/request.md`를 쓰는 것 자체가 발행이다. 파일을 만든 뒤에 "발행할까요?"라고 다시 물을 필요 없다(Tommy가 직접 정정: "이미 발행되 있는데?").
+17. **handoff 요청서 디테일은 복잡도에 맞춰 조절** (2026-07-17) — 기계적인 1~2줄 수정은 짧게, 숨은 제약/여러 파일이 얽힌 건은 지금까지처럼 자세히(근거 코드, 대안 비교, 제외범위, Acceptance Criteria). Platform Agent 쪽은 "재조사 불필요" 표시를 믿지 않고 항상 재검증하는 정책이라, 디테일이 있으면 재조사가 "확인"이 되고 없으면 "처음부터 탐색"이 된다 — 디테일 자체가 낭비는 아니라는 게 이 세션에서 실증됨(동기화 손상 버그, 중복주문 방지 건). Tommy가 이 판단은 "Agent들이 알아서 할 문제"라며 직접 개입 안 하기로 함.
 
 ## 관련 프로젝트: chatdox-platform
 
