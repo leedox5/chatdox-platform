@@ -5,7 +5,7 @@
     <%= link_to "← #{@service_desk_request.to_param}로 돌아가기", service_desk_request_path(@service_desk_request), class: "mb-6 inline-block text-sm text-gray-500 hover:text-blue-600" %>
 
     <h1 class="mb-2 text-3xl font-bold text-gray-900">Job 수정 — <%= @job.job_number.to_s.rjust(4, "0") %></h1>
-    <p class="mb-8 text-sm text-gray-500"><%= @job.author %> · <%= l(@job.performed_at, format: :long) %></p>
+    <p class="mb-8 text-sm text-gray-500"><%= @job.author %> · <%= l(@job.performed_at, format: :service_desk) %></p>
 
     <%= form_with model: @job, url: service_desk_request_job_path(@service_desk_request, @job.job_number), method: :patch, class: "space-y-5" do |form| %>
       <% if @job.errors.any? %>

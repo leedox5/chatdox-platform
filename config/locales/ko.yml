@@ -2,6 +2,8 @@ ko:
   date:
     formats:
       long: "%Y년 %-m월 %-d일"
+      service_desk: "%Y.%m.%d"
   time:
     formats:
       long: "%Y년 %-m월 %-d일 %H:%M"
+      service_desk: "%Y.%m.%d %H:%M"

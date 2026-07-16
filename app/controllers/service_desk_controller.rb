@@ -37,7 +37,7 @@ class ServiceDeskController < ApplicationController
   end
 
   def create
-    @service_desk_request = ServiceDeskRequest.new(service_desk_request_params.merge(requester: current_user.email))
+    @service_desk_request = ServiceDeskRequest.new(service_desk_request_params.merge(requester: current_user.name))
 
     if @service_desk_request.save
       redirect_to service_desk_request_path(@service_desk_request), notice: "티켓이 발행되었습니다."
@@ -74,7 +74,7 @@ class ServiceDeskController < ApplicationController
   end
 
   def my_related?(request)
-    request.requester == current_user.email || request.service_desk_jobs.any? { |job| job.author == current_user.email }
+    request.requester == current_user.name || request.service_desk_jobs.any? { |job| job.author == current_user.name }
   end
 
   def service_desk_request_params

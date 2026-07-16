@@ -181,17 +181,17 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/Investigated and fixed/, response.body)
   end
 
-  test "publishing a ticket and adding a job auto-fill requester/author from the signed-in user's email, ignoring any submitted value" do
-    admin = User.create!(name: "테스트 유저", email: "sd-admin-autofill@example.com", password: "password123", role: :admin)
+  test "publishing a ticket and adding a job auto-fill requester/author from the signed-in user's name, ignoring any submitted value" do
+    admin = User.create!(name: "오토필 관리자", email: "sd-admin-autofill@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
     post service_desk_path, params: { service_desk_request: { subject: "Autofill ticket", visibility: "visible", description: "body" } }
     created = ServiceDeskRequest.order(:request_number).last
-    assert_equal admin.email, created.requester
+    assert_equal admin.name, created.requester
 
     post service_desk_request_jobs_path(created), params: { service_desk_job: { author: "Someone Else", content: "Autofill job" } }
     job = created.service_desk_jobs.order(:job_number).last
-    assert_equal admin.email, job.author
+    assert_equal admin.name, job.author
   end
 
   test "admin can edit a ticket's subject/status/visibility/description but not requester/request_number/date" do
@@ -305,9 +305,9 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     admin = User.create!(name: "테스트 유저", email: "sd-admin-mine@example.com", password: "password123", role: :admin)
     post user_session_path, params: { user: { email: admin.email, password: "password123" } }
 
-    ServiceDeskRequest.create!(request_number: 5014, requester: admin.email, subject: "Filed by me", visibility: :visible)
+    ServiceDeskRequest.create!(request_number: 5014, requester: admin.name, subject: "Filed by me", visibility: :visible)
     mine_by_job = ServiceDeskRequest.create!(request_number: 5015, requester: "someone-else@example.com", subject: "I left a job here", visibility: :visible)
-    mine_by_job.service_desk_jobs.create!(author: admin.email, content: "my note")
+    mine_by_job.service_desk_jobs.create!(author: admin.name, content: "my note")
     not_mine = ServiceDeskRequest.create!(request_number: 5016, requester: "someone-else@example.com", subject: "Not related to me", visibility: :visible)
     not_mine.service_desk_jobs.create!(author: "someone-else@example.com", content: "their note")
 
@@ -858,5 +858,39 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/결제가 완료되지 않은 주문입니다/, response.body)
   ensure
     original_env&.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
+
+  test "service desk ticket and job detail pages show the author's name, not their email" do
+    admin = User.create!(name: "이름표시 관리자", email: "sd-name-display@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    post service_desk_path, params: { service_desk_request: { subject: "Name display ticket", visibility: "visible", description: "body" } }
+    created = ServiceDeskRequest.order(:request_number).last
+    post service_desk_request_jobs_path(created), params: { service_desk_job: { content: "Name display job" } }
+
+    get service_desk_request_path(created)
+
+    assert_response :success
+    assert_match(/이름표시 관리자/, response.body)
+    assert_no_match(/sd-name-display@example\.com/, response.body)
+  end
+
+  test "service desk dates render as YYYY.MM.DD while other pages keep their existing date format" do
+    request = ServiceDeskRequest.create!(request_number: 5020, requester: "Tester", subject: "Date format check", visibility: :visible)
+    admin = User.create!(name: "테스트 유저", email: "sd-admin-dateformat@example.com", password: "password123", role: :admin)
+    post user_session_path, params: { user: { email: admin.email, password: "password123" } }
+
+    get service_desk_path
+    assert_response :success
+    assert_match(/#{Regexp.escape(I18n.l(request.date, format: :service_desk))}/, response.body)
+    assert_no_match(/#{Regexp.escape(I18n.l(request.date, format: :long))}/, response.body)
+
+    get service_desk_request_path(request)
+    assert_response :success
+    assert_match(/#{Regexp.escape(I18n.l(request.date, format: :service_desk))}/, response.body)
+
+    get claudox_chapter_path("01")
+    assert_response :success
+    assert_no_match(/\d{4}\.\d{2}\.\d{2}/, response.body)
   end
 end

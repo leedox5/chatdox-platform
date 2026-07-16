@@ -5,7 +5,7 @@
     </span>
     <div class="min-w-0 flex-1">
       <p class="font-medium text-gray-900"><%= service_desk_request.subject %></p>
-      <p class="mt-1 text-xs text-gray-400"><%= service_desk_request.requester %> · <%= service_desk_request.status_label %> · <%= service_desk_request.visibility_label %> · <%= l(service_desk_request.date, format: :long) %></p>
+      <p class="mt-1 text-xs text-gray-400"><%= service_desk_request.requester %> · <%= service_desk_request.status_label %> · <%= service_desk_request.visibility_label %> · <%= l(service_desk_request.date, format: :service_desk) %></p>
     </div>
   </div>
 <% end %>

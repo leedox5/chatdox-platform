@@ -29,3 +29,9 @@
 
 en:
   hello: "Hello world"
+  date:
+    formats:
+      service_desk: "%Y.%m.%d"
+  time:
+    formats:
+      service_desk: "%Y.%m.%d %H:%M"
