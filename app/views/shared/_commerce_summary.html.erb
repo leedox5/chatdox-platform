@@ -29,19 +29,24 @@
       <h3 class="font-bold text-slate-900">최근 주문</h3>
       <ul class="mt-3 divide-y divide-slate-100 text-sm">
         <% orders.each do |order| %>
-          <li class="flex flex-wrap items-center justify-between gap-2 py-3">
-            <span class="text-slate-700"><%= order.order_items.first&.product_name || "상품" %> · <%= number_with_delimiter(order.total_amount) %>원</span>
-            <div class="flex flex-wrap items-center gap-3">
-              <span class="font-semibold text-slate-600"><%= { "pending" => "결제 대기", "paid" => "결제 완료", "failed" => "결제 실패", "canceled" => "취소", "abandoned" => "결제 이탈" }.fetch(order.status) %></span>
-              <% open_refund = order.refund_requests.find(&:open?) %>
-              <% if open_refund %>
-                <%= link_to "환불 요청 확인", refund_request_path(open_refund.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
-              <% elsif order.status == "paid" %>
-                <%= link_to "환불 요청", new_billing_order_refund_request_path(order.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
-              <% elsif (order.status == "abandoned" || (order.status == "pending" && Commerce::PendingOrderAssessment.call(order: order).safe_to_abandon)) && Commerce::Sales.enabled_for_code?("chatdox") && Payments::Configuration.current.checkout_ready? %>
-                <%= link_to "새 주문으로 재시도", retry_billing_order_path(order.public_id), class: "font-semibold text-blue-700 hover:underline" %>
-              <% end %>
+          <li class="py-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-slate-700"><%= order.order_items.first&.product_name || "상품" %> · <%= number_with_delimiter(order.total_amount) %>원</span>
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="font-semibold text-slate-600"><%= { "pending" => "결제 대기", "paid" => "결제 완료", "failed" => "결제 실패", "canceled" => "취소", "abandoned" => "결제 이탈" }.fetch(order.status) %></span>
+                <% open_refund = order.refund_requests.find(&:open?) %>
+                <% if open_refund %>
+                  <%= link_to "환불 요청 확인", refund_request_path(open_refund.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
+                <% elsif order.status == "paid" %>
+                  <%= link_to "환불 요청", new_billing_order_refund_request_path(order.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
+                <% elsif (order.status == "abandoned" || (order.status == "pending" && Commerce::PendingOrderAssessment.call(order: order).safe_to_abandon)) && Commerce::Sales.enabled_for_code?("chatdox") && Payments::Configuration.current.checkout_ready? %>
+                  <%= link_to "새 주문으로 재시도", retry_billing_order_path(order.public_id), class: "font-semibold text-blue-700 hover:underline" %>
+                <% end %>
+              </div>
             </div>
+            <% if order.status == "pending" %>
+              <p class="mt-1 text-xs text-slate-500">결제가 완료되지 않은 주문입니다.</p>
+            <% end %>
           </li>
         <% end %>
       </ul>

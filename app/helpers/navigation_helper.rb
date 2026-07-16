@@ -34,6 +34,7 @@ module NavigationHelper
     [
       [ "Chatdox", chatdox_path ],
       [ "Claudox", claudox_path ],
+      [ "대시보드", dashboard_path ],
       [ "마이페이지", mypage_path ]
     ]
   end

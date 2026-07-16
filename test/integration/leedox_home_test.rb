@@ -791,4 +791,72 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/신규 결제를 준비하고 있습니다/, response.body)
   end
+
+  test "Chatdox pricing banner only shows when sales are actually disabled" do
+    get chatdox_path
+
+    assert_response :success
+    assert_match(/신규 결제 시스템을 준비 중이며 현재는 구매할 수 없습니다/, response.body)
+
+    Commerce::CatalogBootstrap.call!
+    original_env = %w[LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER
+                       PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET].to_h { |key| [ key, ENV[key] ] }
+    ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
+    ENV["PAYMENT_PROVIDER"] = "portone"
+    ENV["PORTONE_API_SECRET"] = "test-api-secret"
+    ENV["PORTONE_STORE_ID"] = "test-store-id"
+    ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
+    ENV["PORTONE_WEBHOOK_SECRET"] = "test-portone-webhook-secret"
+    Product.find_by!(code: "chatdox").update!(sale_enabled: true)
+
+    get chatdox_path
+
+    assert_response :success
+    assert_no_match(/신규 결제 시스템을 준비 중이며 현재는 구매할 수 없습니다/, response.body)
+    assert_select "a[href=?]", billing_checkout_path, text: /기간제 라이선스 구매/
+  ensure
+    original_env&.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
+
+  test "signed-in regular user's navigation includes a link back to /dashboard" do
+    user = User.create!(name: "네비 유저", email: "nav-dashboard-user@example.com", password: "password123")
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get root_path
+
+    assert_response :success
+    assert_select "header nav[aria-label='주요 내비게이션'] a[href=?]", dashboard_path, text: "대시보드"
+    assert_select "nav[aria-label='모바일 내비게이션'] a[href=?]", dashboard_path, text: "대시보드"
+  end
+
+  test "pending order in the commerce summary explains what 'pending' means" do
+    Commerce::CatalogBootstrap.call!
+    original_env = %w[LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER
+                       PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET].to_h { |key| [ key, ENV[key] ] }
+    ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
+    ENV["PAYMENT_PROVIDER"] = "portone"
+    ENV["PORTONE_API_SECRET"] = "test-api-secret"
+    ENV["PORTONE_STORE_ID"] = "test-store-id"
+    ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
+    ENV["PORTONE_WEBHOOK_SECRET"] = "test-portone-webhook-secret"
+    Product.find_by!(code: "chatdox").update!(sale_enabled: true)
+
+    user = User.create!(name: "대기 유저", email: "pending-order-user@example.com", password: "password123")
+    Commerce::OrderCreator.call!(
+      user: user,
+      product_code: "chatdox",
+      offer_code: "chatdox-1m-v1",
+      requested_start_on: Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date,
+      provider: "portone"
+    )
+    post user_session_path, params: { user: { email: user.email, password: "password123" } }
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "span", text: "결제 대기"
+    assert_match(/결제가 완료되지 않은 주문입니다/, response.body)
+  ensure
+    original_env&.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
 end
