@@ -14,6 +14,9 @@
   3. 구현 후 `.local/handoff/inbox/<package>/result.md`를 작성하고, HQ 쪽 대응 경로(`/mnt/d/RubyOnRails/chatdox-curriculum/.local/handoff/inbox/<package>/`)에 `cp`로 직접 복사해 전달한다 — 반대 방향(DEV→HQ) 자동 스크립트는 아직 없다.
 - **"완료(completed)" 판정과 STATUS.md는 HQ의 권한이다.** DEV가 임의로 STATUS.md를 지어내지 말 것. "HQ에서 completed 처리했다"는 말을 들으면 직접 작성하지 말고 `script/sync_handoff.sh --mirror`로 HQ의 실제 사본을 가져올 것.
 - `.local/`은 `.gitignore`에 포함되어 커밋되지 않는다 — handoff 패키지, STATUS.md, 참고 정책 문서 등은 전부 로컬 전용이고, git 이력에는 실제 코드/테스트/마이그레이션만 남는다.
+- **이 handoff 워크플로우 자체가 아직 시험 운영(trial) 단계다(2026-07-16 Tommy 확인).** 고정된 프로세스로 여기지 말고, 실제로 작업하면서 걸리는 지점(비대칭적인 동기화 방향, 라운드가 쌓일 때의 구조, 스크린샷↔서면 요청서 사이 정보 손실 등)이 보이면 매번 그냥 넘어가지 말고 개선 아이디어를 제안할 것. 지금까지 눈에 띈 것들:
+  - **DEV→HQ 방향은 스크립트가 없어 매번 수동 `cp`다.** `script/sync_handoff.sh`처럼 `result*.md`를 HQ의 대응 경로로 보내는 반대 방향 스크립트가 있으면 복사 누락/경로 실수 위험이 줄어든다.
+  - **스크린샷 주석과 서면 request_rN.md 사이에 정보가 누락될 수 있다.** R2에서 실제로 겪음(Tommy가 스크린샷에 표시한 것 하나가 서면 스펙에서 빠졌다가 R3에서 확정됨). 서면 요청서를 작성할 때 스크린샷의 모든 표시 항목을 명시적으로 나열하면 이런 누락을 줄일 수 있다.
 
 ## 환경 특이사항
 
