@@ -29,8 +29,8 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 11. **Job 타임스탬프는 실제 시각** (REQ 0011부터, 이전 요청은 소급 정정 안 함) — Claudox는 실시간 시계가 없으므로, `Job` 완료 일시를 적을 때 셸에서 `date` 명령을 실행해 나온 값을 쓴다. 대화 흐름상 그럴듯한 시간을 지어내지 않는다.
 12. **티켓 발행 기준 = No Ticket 기본값** (2026-07-13, REQ 0021로 확정, REQ 0012의 "일단 전부" 규칙을 대체) — 이제 명시적으로 트래킹할 가치가 있는 요청만 티켓으로 남긴다. 기준은 `chatdox/git_document_guidelines.md` 5절의 "Remote에 남길 가치가 높은 경우" 체크리스트(여러 명이 진행 상태 공유 필요, 코드 변경과 요청 연결 필요, 결정의 책임·배경 보존 필요, 교육 콘텐츠·공개 프로세스의 일부 등). 애매하면 Claudox가 먼저 Tommy에게 묻고 Tommy가 결정한다.
 13. **HQ/DEV 단축어** (2026-07-14부터) — "여기"/"거기" 대신 `HQ`=chatdox-curriculum(이 저장소), `DEV`=chatdox-platform(실제 코드 구현 쪽)로 부른다. `claudox/97_commands.md` 표에도 등록됨.
-15. **DEV는 이 PC에 두 벌** (2026-07-14부터) — Windows 마운트 클론(`D:\RubyOnRails\chatdox-platform`, 파일 편집용)과 WSL 네이티브 클론(`~/dev/chatdox-platform`, 테스트/서버 구동용 — Windows 마운트 쪽은 CRLF 때문에 `bin/rails` 셔뱅이 깨짐). 편집은 Windows 쪽에서, 커밋·푸시 후 WSL 네이티브 쪽에서 pull 받아 테스트 실행.
-14. **Platform 작업 라우팅 3분기 기준** (2026-07-14부터) — DEV 쪽 작업이 생기면: (a) 사업적 판단·Acceptance Criteria가 필요하거나 여러 파일/라우팅/권한/결제처럼 위험하면 **Handoff**(기본값), (b) 아주 작고 위험 낮은데 Claudox가 이미 정확한 수정 내용을 조사·파악했으면 **Claudox가 DEV를 직접 수정**, (c) Tommy가 이미 정확히 원하는 바를 알고 있어 기획 개입이 불필요하면 **Tommy가 Platform Agent에 직접 요청**. 애매하면 Handoff로 기운다.
+15. **DEV는 이 PC에 체크아웃이 두 곳, 역할이 다름** (2026-07-14 제정, 2026-07-16 정정) — WSL 네이티브 클론(`~/dev/chatdox-platform`)이 **진짜 DEV**(Platform Agent가 실제로 개발·커밋하는 곳). Windows 마운트 클론(`D:\RubyOnRails\chatdox-platform`)은 **HQ의 read-only 참조용 체크아웃** — 코드 읽기 전용, 여기서 commit/push 하면 안 됨(2026-07-16 실수로 한 번 어겨서 Tommy가 DEV에 직접 정정함, 커밋 e43e689). Windows 쪽은 CRLF 때문에 `bin/rails` 셔뱅도 깨짐.
+14. **Platform 작업 라우팅** (2026-07-14 제정, 2026-07-16 강화) — DEV 쪽 작업이 생기면: (a) **Handoff**(기본값, 사소한 것 포함 거의 전부), (b) Tommy가 이미 정확히 원하는 바를 알고 있어 기획 개입이 불필요하면 **Tommy가 Platform Agent에 직접 요청**. 2026-07-16부터 "Claudox가 DEV를 직접 수정"(구 (b) 옵션)은 폐지 — 읽기/조사는 자유지만, 아무리 사소해도(문서 한 줄이라도) **DEV 저장소에 직접 commit/push 하지 않는다.** 상대 repo는 서로 read-only로 다루고, 넘길 게 있으면 항상 handoff/제안 채널(파일)로만 전달한다. 반대 방향(DEV→HQ)도 동일 원칙.
 
 ## 관련 프로젝트: chatdox-platform
 
@@ -38,7 +38,9 @@ Claudox의 실제 메모리는 이 PC의 사용자 홈 디렉토리(`~/.claude/p
 
 **동기화**: 예전엔 git subtree로 HQ 전체를 `docs/curriculum/`에 받았으나(REQ 0022로 폐지), 지금은 `script/sync_curriculum.sh`가 HQ의 git 스냅샷에서 실제 쓰는 3개 폴더만 뽑아 `hq/chatdox/`, `hq/claudox/`, `hq/service-desk/`로 미러링한다(`hq/` 접두어로 "HQ가 제공, DEV 소유 아님"을 명시).
 
-**Platform 쪽 구현 방식**: 예전에 있던 "Codidox" 페르소나 + `chatdox-platform/request/` 미러 + `sync-platform.ps1` 방식은 더 이상 안 쓴다. 지금은 Claudox가 `.local/handoff/inbox/<패키지명>/request.md`에 자기완결형 요청서를 쓰고, Tommy가 이걸 **Platform Agent**(DEV 쪽 구현자, Codex 기반)에게 전달, `result.md`(+ 리비전은 `result_r2.md`)로 결과를 돌려받는다. 승인되면 `.local/handoff/completed/<패키지명>/`으로 옮기고 `STATUS.md`를 남긴다.
+**Platform 쪽 구현 방식**: 예전에 있던 "Codidox" 페르소나 + `chatdox-platform/request/` 미러 + `sync-platform.ps1` 방식은 더 이상 안 쓴다. 지금은 Claudox가 `.local/handoff/inbox/<패키지명>/request.md`에 자기완결형 요청서를 쓰고, Tommy가 이걸 **Platform Agent**(DEV 쪽 구현자, Claude Code 기반 — Codex 아님, 2026-07-16 정정)에게 전달, `result.md`(+ 리비전은 `result_r2.md`)로 결과를 돌려받는다. 승인되면 `.local/handoff/completed/<패키지명>/`으로 옮기고 `STATUS.md`를 남긴다.
+
+**DEV→HQ 역방향 채널도 있다** (2026-07-16부터): `script/push_handoff_to_curriculum.sh`로 Platform Agent가 콘텐츠 소재 제안을 HQ의 inbox로 직접 올릴 수 있다(`leedox_dev_content_loop_r1`이 첫 사례, 승인됨). **양방향 다 파일 채널로만 오간다 — 어느 쪽도 상대 저장소에 직접 commit/push하지 않는다**(상대 repo는 서로 read-only, 2026-07-16 Tommy 확인 — 협업규칙 14번 참고).
 
 **서비스데스크 이원화** (REQ 0023, 2026-07-14~15): git 기반 `service-desk/`(HQ, 정책/구조 결정 기록용)와 별개로, DEV에 **DB 기반 웹 서비스데스크**를 신규 구축 — 팀+AI 에이전트가 웹에서 직접 티켓 발행/Job 기록. 두 시스템은 서로 동기화하지 않음(Tommy의 명시적 결정). AI 에이전트는 `SERVICE_DESK_API_TOKEN`(Railway 환경변수, 값은 로컬 메모리에만 있고 이 파일엔 안 적음 — git에 비밀값을 넣지 않는다는 원칙) bearer 토큰으로 `/service-desk/api/requests`, `/service-desk/api/requests/:id/jobs`를 호출해 티켓/Job을 기록할 수 있다. 2026-07-15 커밋 `ed88bb1`(chatdox-platform)로 배포, Tommy가 직접 재현 확인 후 Confirmed.
 
