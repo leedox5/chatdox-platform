@@ -45,6 +45,7 @@
 
 ## 알게 된 실수와 교훈
 
+- **`git add path1 path2 path3`에서 어느 한 pathspec이라도 안 맞으면(예: 이미 `git rm`으로 지워진 경로를 또 add하려는 경우) 명령 전체가 에러로 실패하고, 나머지 경로들도 스테이징이 안 된다.** 그 상태로 바로 `git commit`을 하면 의도한 파일 중 일부만(혹은 엉뚱한 파일만) 커밋되는데도 에러 메시지를 놓치면 눈치채기 어렵다. 여러 경로를 한 번에 `git add`한 뒤에는 커밋 전에 `git status`/`git diff --cached --stat`으로 실제 스테이징된 게 의도와 맞는지 반드시 확인할 것. (2026-07-16, `markdown_renderer.rb`를 `git rm -f`로 지운 뒤 같은 커밋에 다른 파일 3개를 묶으려다 이 문제로 실제로 잘못된 커밋을 만들었다 — force-push 없이 새 커밋으로 바로잡음.)
 - **`has_one` 연관 + `dependent: :restrict_with_error` 상태에서 `owner.build_association(...)`을 이미 연관이 존재하는데 다시 호출하면 `ActiveRecord::RecordNotSaved`가 발생한다** (Rails가 기존 레코드를 "교체"하려다 restrict에 막힘). 존재 여부를 먼저 확인하고, 필요하면 `Model.new(user: owner, ...)`으로 직접 생성해 이 replace 시맨틱 자체를 피할 것. (2026-07-16, GitHub access 단순화 작업 중 수동 curl 검증으로 발견. 흥미롭게도 동일 시나리오의 자동 통합 테스트(`assert_no_difference`)는 이 예외를 잡아내지 못했고 원인은 못 밝혔다 — `bin/rails test` 통과만으로 안심하지 말고 실제 화면 조작을 흉내 낸 수동 검증을 병행할 것.)
 - 라우트 헬퍼 이름은 `namespace :admin { namespace :commerce { ... as: :foo } }`이면 `admin_commerce_foo_path`가 된다(네임스페이스 접두사가 지정한 이름 앞에 붙는다) — `foo_admin_commerce_path`처럼 순서를 반대로 짐작해서 쓰면 뷰 렌더링 시점에야 `NoMethodError`로 드러난다. `bin/rails routes`로 실제 이름을 확인하고 쓸 것.
 - 마이그레이션에서 테이블을 drop할 때는 그 테이블을 참조하는 FK부터 `remove_foreign_key`로 먼저 제거하고, 여러 테이블이 서로 참조하면 참조받는 쪽이 없어지기 전에 참조하는 쪽부터 순서대로 drop한다(예: `events → tasks → grants`). `drop_table`에 컬럼 정의 블록을 넣어두면 롤백 시 원래 스키마로 복원되는 reversible 마이그레이션이 된다.
