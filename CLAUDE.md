@@ -8,7 +8,10 @@
 
 - 이 저장소(`chatdox-platform`)는 **DEV** — 실제 코드가 사는 곳.
 - 커리큘럼/handoff 저장소는 **HQ** (`chatdox-curriculum`). 이 WSL 환경에서는 `/mnt/d/RubyOnRails/chatdox-curriculum`에 마운트되어 있다.
-- **이 저장소(chatdox-platform) 자체도 클론이 두 개다.** 지금 이 세션이 작업하는 `~/dev/chatdox-platform`(WSL 네이티브) 외에, `/mnt/d/RubyOnRails/chatdox-platform`(Windows 쪽, Tommy/다른 세션이 직접 씀)이 같은 origin(`github.com/leedox5/chatdox-platform`)을 본다. 2026-07-16에 그쪽에서 커밋(`e43e689`, CLAUDE.md에 피드백 직접 반영)이 origin에 먼저 push된 걸 모르고 있다가 뒤늦게 fetch/pull로 알아챘다 — **커밋 히스토리가 안 맞는 것 같으면 먼저 `git fetch origin`으로 뒤처진 건 아닌지 확인할 것.** D: 드라이브 클론은 건드리지 않는다(Tommy가 직접 쓰는 쪽이고, `git status`로 보면 거의 전 파일이 CRLF 때문에 modified로 뜨는 등 이쪽과 다른 상태라 함부로 손댈 대상이 아니다) — origin을 통해서만 간접적으로 주고받는다.
+- **이 저장소(chatdox-platform) 자체도 체크아웃이 두 곳이다 — 역할이 다르다.**
+  - `~/dev/chatdox-platform`(WSL 네이티브) — **여기가 진짜 DEV**. Linux 환경에서 실제로 웹을 구동하며 개발이 이뤄지는 곳. 지금 이 세션이 작업하는 곳도 여기.
+  - `/mnt/d/RubyOnRails/chatdox-platform`(Windows) — **HQ가 DEV 코드를 참조용으로 체크아웃해둔 것.** 작업하는 곳이 아니라 "커리큘럼 쓸 때 실제 코드가 어떻게 생겼는지 확인하는" 용도. 2026-07-16에 HQ 쪽 에이전트가 실수로 여기에 직접 커밋(`e43e689`, CLAUDE.md 피드백)해서 origin에 올라간 적이 있다 — 이건 정상 흐름이 아니라 사고였고, Tommy가 이것 자체를 "AI 실수" 콘텐츠 소재로 올릴 예정이다.
+  - 둘 다 같은 origin(`github.com/leedox5/chatdox-platform`)을 보므로, 커밋 히스토리가 안 맞는 것 같으면 먼저 `git fetch origin`으로 이쪽이 뒤처진 건 아닌지 확인할 것. D: 드라이브 쪽은 참조 전용이라 원래 커밋이 발생할 일이 없는 곳이니, 직접 건드리지 않고 origin을 통해서만 간접적으로 주고받는다.
 - **`script/`에 HQ 연동 스크립트 3개가 있다 — 이름이 서로 안 비슷하니 매번 `ls script/`로 전체를 확인하고 얘기할 것, 하나만 보고 "이 방향은 스크립트가 없다"고 단정하지 말 것(2026-07-16 실수).**
   - `sync_handoff.sh` — HQ→DEV, handoff 패키지(request/result/STATUS) 전체 미러.
   - `push_handoff_to_curriculum.sh` — DEV→HQ, handoff 패키지 하나를 HQ inbox로 push.
