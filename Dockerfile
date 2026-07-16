@@ -14,9 +14,23 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages
+# Install base packages, plus postgresql-client from the official PGDG apt
+# repo -- Debian's own repo only carries client 17.x, but Railway's managed
+# Postgres is 18.x, and pg_dump refuses to dump a server newer than itself
+# (confirmed via production error: "server version mismatch ... server
+# version: 18.4; pg_dump version: 17.10"). VERSION_CODENAME is read from
+# /etc/os-release rather than hardcoded, so this keeps working if the Ruby
+# base image's Debian release changes later.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 postgresql-client && \
+    apt-get install --no-install-recommends -y curl gnupg ca-certificates libjemalloc2 libvips sqlite3 && \
+    install -d /usr/share/postgresql-common/pgdg && \
+    curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail \
+      https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+    . /etc/os-release && \
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update -qq && \
+    apt-get install --no-install-recommends -y postgresql-client-18 && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
