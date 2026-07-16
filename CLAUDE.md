@@ -36,6 +36,7 @@
 
 ## 작업 규칙 (Tommy와의 협업 패턴)
 
+- **모든 작업이 handoff를 타지는 않는다(2026-07-16 Tommy 확인).** 정식 handoff(`request.md`)는 규모가 있거나 HQ 쪽에도 기록이 남아야 하는 작업용이고, 간단한 건 그냥 대화로 바로 요청한다. 대화로 온 요청은 `.local/handoff/`에 억지로 request.md/result.md를 지어내지 말고, 필요하면 커밋 메시지와 이 대화 자체가 기록이 된다 — 정식 handoff 패턴(아래 두 줄)은 실제로 `.local/handoff/inbox/`에 request.md가 있을 때만 적용.
 - 작업 요청은 `.local/handoff/inbox/<package>/request.md`로 온다. 문서 맨 끝 "Platform 실행 문구" 섹션이 실제 지시사항.
 - 구현 후에는 거의 항상 커밋 + push, 그리고 `result.md`로 (조사 결과 / 실제 채택한 설계와 제안 대비 달라진 점 + 이유 / 변경·삭제 파일 / 테스트 결과 / 미결정 사항) 보고하는 게 표준 패턴이다.
 - **request.md의 "현재 코드 확인 완료, 재조사 불필요"를 그대로 믿지 말 것.** 실제로 매 작업마다 request.md가 나열하지 않은 관련 참조가 더 있었다(예: Toss/Subscription 제거 때 admin 컨트롤러 4곳 + `Commerce::Reconciliation`/`EventLogger`, GitHub access 단순화 때 `event_recorder.rb`/`task_factory.rb` + `Commerce::Reconciliation`). 삭제·리팩터링 대상 클래스/모델명으로 항상 sitewide grep을 먼저 돌려 숨은 참조를 확인한다.
