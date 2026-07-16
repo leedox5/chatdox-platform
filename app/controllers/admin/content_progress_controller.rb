@@ -8,6 +8,14 @@ class Admin::ContentProgressController < Admin::BaseController
     end
     @chatdox_written_count = @chatdox_chapters.count { |chapter| chapter[:written] }
 
-    @claudox_progress_html = MarkdownRenderer.render(File.read(CLAUDOX_PROGRESS_PATH)) if File.exist?(CLAUDOX_PROGRESS_PATH)
+    if File.exist?(CLAUDOX_PROGRESS_PATH)
+      @claudox_progress_html = MarkdownRenderer.render(linked_claudox_progress_source)
+    end
+  end
+
+  private
+
+  def linked_claudox_progress_source
+    File.read(CLAUDOX_PROGRESS_PATH).gsub(/\]\((\d{2})_[a-z0-9_]+\.md\)/) { "](#{claudox_chapter_path($1)})" }
   end
 end
