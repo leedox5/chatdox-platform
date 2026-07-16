@@ -55,7 +55,7 @@
 }
 
 .doc-content table {
-	@apply my-5 w-full border-collapse overflow-hidden rounded-lg border border-slate-200;
+	@apply my-5 block w-full border-collapse overflow-x-auto rounded-lg border border-slate-200;
 }
 
 .doc-content th,
