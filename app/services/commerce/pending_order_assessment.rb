@@ -11,6 +11,15 @@ module Commerce
       new(order: order, at: at, stale_after: stale_after).call
     end
 
+    # Same "no provider evidence this might have actually succeeded" check `call`
+    # uses for safe_to_abandon, but without the staleness gate -- for callers that
+    # already have a stronger, immediate signal of intent (the order's own owner,
+    # in the current authenticated request, replacing it with a new choice) instead
+    # of inferring abandonment from elapsed time.
+    def self.evidence_free?(order:)
+      new(order: order, at: Time.current, stale_after: DEFAULT_STALE_AFTER).evidence_free?
+    end
+
     def self.configured_stale_after
       minutes = Integer(ENV.fetch("COMMERCE_PENDING_STALE_MINUTES", "30"), 10)
       (minutes.positive? ? minutes : 30).minutes
@@ -33,8 +42,7 @@ module Commerce
         SUCCESS_STATUSES.include?(transaction.provider_payload.to_h["status"]) ||
         transaction.status == "active"
       )
-      safe = stale && transaction&.status == "pending" && !actual_payment_id && !success &&
-        transaction.provider_status.blank? && transaction.provider_payload.to_h.empty?
+      safe = stale && evidence_free?
 
       Result.new(
         classification: stale ? "stale" : "fresh",
@@ -46,6 +54,18 @@ module Commerce
         last_event_at: @order.last_provider_event_at || transaction&.provider_observed_at,
         reason_code: reason_code(stale, safe, actual_payment_id, success, transaction)
       )
+    end
+
+    def evidence_free?
+      transaction = @order.payment_transaction
+      actual_payment_id = transaction&.provider_payment_id.present? && !transaction.provider_payment_id.start_with?("pending:")
+      success = transaction.present? && (
+        SUCCESS_STATUSES.include?(transaction.provider_status) ||
+        SUCCESS_STATUSES.include?(transaction.provider_payload.to_h["status"]) ||
+        transaction.status == "active"
+      )
+      transaction&.status == "pending" && !actual_payment_id && !success &&
+        transaction.provider_status.blank? && transaction.provider_payload.to_h.empty?
     end
 
     private

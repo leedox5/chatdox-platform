@@ -162,6 +162,20 @@ class CommerceOperationsAccessTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "resubmitting checkout redirects to the same pending order instead of piling up duplicates" do
+    sign_in(@buyer)
+
+    assert_difference "Order.count", 1 do
+      post billing_orders_path, params: { order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: @at.to_date.iso8601 } }
+    end
+    first_redirect = response.location
+
+    assert_no_difference "Order.count" do
+      post billing_orders_path, params: { order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: @at.to_date.iso8601 } }
+    end
+    assert_equal first_redirect, response.location
+  end
+
   private
 
   def sign_in(user)

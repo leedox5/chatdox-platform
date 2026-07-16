@@ -4,7 +4,7 @@ class BillingOrdersController < ApplicationController
   before_action :ensure_payment_configuration
 
   def create
-    order = Commerce::OrderCreator.call!(
+    order = Commerce::CheckoutSubmission.call!(
       user: current_user,
       product_code: order_params.fetch(:product_code),
       offer_code: order_params.fetch(:offer_code),
