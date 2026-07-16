@@ -28,10 +28,24 @@ class AdminContentProgressTest < ActionDispatch::IntegrationTest
       assert_equal written, row.text.include?("✅")
     end
 
+    row_pattern = Admin::ContentProgressController::CLAUDOX_ROW_PATTERN
     progress_source = File.read(Rails.root.join("hq/claudox/88_progress.md"))
-    completed_line = progress_source.lines.find { |line| line.include?("완료(") }
-    assert response.body.include?(completed_line.strip.delete("*")), "expected the Claudox progress summary line in the rendered output"
-    assert_select "table"
+    claudox_rows = progress_source.scan(row_pattern)
+    assert_equal 20, claudox_rows.size
+    done_count = claudox_rows.count { |_title, _slug, _percent, status| status == "✅" }
+    assert_match(/#{done_count}\s*\/\s*20/, response.body)
+
+    claudox_rows.each do |title, slug, percent, status|
+      id = slug[0, 2]
+      row = doc.css("table tbody tr").find { |tr| tr.text.include?(title) }
+      assert row, "expected a Claudox row for #{title}"
+
+      link = row.at_css("a")
+      assert_equal title, link.text
+      assert_equal claudox_chapter_path(id), link["href"]
+      assert_equal "#{percent}%", row.css("td")[2].text.strip
+      assert_equal(status == "✅", row.css("td")[3].text.include?("✅"))
+    end
   end
 
   test "admin dashboard links to the content progress page" do
