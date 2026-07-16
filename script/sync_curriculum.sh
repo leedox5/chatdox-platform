@@ -52,7 +52,21 @@ git -C "$SOURCE_REPO" archive "$REF" | tar -x -C "$TMP_DIR"
 # that away, every file compares as changed against DEV's LF copies on every
 # single run (size + content both differ by a \r per line), even when HQ hasn't
 # actually touched the content. Strip it here so the sync is a real diff.
-find "$TMP_DIR" -type f -exec sed -i 's/\r$//' {} +
+#
+# This MUST skip binary files. Every PNG's fixed 8-byte signature contains
+# `0d 0a` (89 50 4e 47 0d 0a 1a 0a) by spec, so a blanket `sed -i 's/\r$//'`
+# silently corrupts the signature of every synced image (1 byte shorter, all
+# following bytes shifted) -- git itself never CRLF-converts these files (its
+# own `text=auto` binary detection skips them at archive time), so this step
+# must replicate that same distinction instead of applying to every file
+# unconditionally. `grep -Iq ''` uses grep's own binary-content heuristic
+# (same idea as git's: bail out if the file looks binary) -- exit status 1
+# means "binary", so skip. See leedox_image_binary_corruption_fix_r1.
+find "$TMP_DIR" -type f -print0 | while IFS= read -r -d '' f; do
+  if grep -Iq '' "$f"; then
+    sed -i 's/\r$//' "$f"
+  fi
+done
 
 RSYNC_OPTS=("-a" "--delete" "--checksum")
 if [[ "$DRY_RUN_MODE" == "true" ]]; then

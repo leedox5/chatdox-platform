@@ -7,3 +7,12 @@ db/schema.rb linguist-generated
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
+
+# Defensive: chapter images synced from HQ (hq/chatdox/images, hq/claudox/images)
+# must never go through any text/eol normalization -- see
+# leedox_image_binary_corruption_fix_r1 for the corruption this guards against.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
