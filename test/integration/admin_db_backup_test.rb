@@ -75,6 +75,48 @@ class AdminDbBackupTest < ActionDispatch::IntegrationTest
     assert_equal "s3cr+et", captured_env["PGPASSWORD"]
   end
 
+  test "logs pg_dump's stderr with the password redacted when it fails, so the real cause is diagnosable" do
+    ENV["DATABASE_URL"] = "postgres://appuser:s3cr%2Bet@db.internal:5432/chatdox_production"
+    sign_in(@admin)
+
+    fake_stderr = 'pg_dump: error: connection to server failed: FATAL: password authentication failed for user "appuser" (using password: s3cr+et)'
+    fake_capture3 = lambda do |*_args, **_kwargs|
+      [ "", fake_stderr, Struct.new(:success?, :exitstatus).new(false, 1) ]
+    end
+
+    logged = capture_logger_errors do
+      with_singleton_method(Open3, :capture3, fake_capture3) do
+        post admin_db_backup_path
+      end
+    end
+
+    assert_redirected_to admin_dashboard_path
+    combined = logged.join("\n")
+    assert_match(/pg_dump exited with status 1/, combined)
+    assert_match(/connection to server failed/, combined)
+    assert_match(/authentication failed for user "appuser"/, combined)
+    assert_match(/\[REDACTED\]/, combined)
+    assert_no_match(/s3cr\+et/, combined)
+  end
+
+  test "does not corrupt the logged stderr when the password happens to be blank" do
+    ENV["DATABASE_URL"] = "postgres://appuser@db.internal:5432/chatdox_production"
+    sign_in(@admin)
+
+    fake_stderr = "pg_dump: error: something unrelated went wrong"
+    fake_capture3 = lambda do |*_args, **_kwargs|
+      [ "", fake_stderr, Struct.new(:success?, :exitstatus).new(false, 1) ]
+    end
+
+    logged = capture_logger_errors do
+      with_singleton_method(Open3, :capture3, fake_capture3) do
+        post admin_db_backup_path
+      end
+    end
+
+    assert_match(/something unrelated went wrong/, logged.join("\n"))
+  end
+
   private
 
   def sign_in(user)
@@ -87,5 +129,15 @@ class AdminDbBackupTest < ActionDispatch::IntegrationTest
     yield
   ensure
     object.define_singleton_method(method_name, original)
+  end
+
+  def capture_logger_errors
+    logged = []
+    original_error = Rails.logger.method(:error)
+    Rails.logger.define_singleton_method(:error) { |msg| logged << msg }
+    yield
+    logged
+  ensure
+    Rails.logger.define_singleton_method(:error, original_error)
   end
 end
