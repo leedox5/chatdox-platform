@@ -8,6 +8,7 @@
 
 - 이 저장소(`chatdox-platform`)는 **DEV** — 실제 코드가 사는 곳.
 - 커리큘럼/handoff 저장소는 **HQ** (`chatdox-curriculum`). 이 WSL 환경에서는 `/mnt/d/RubyOnRails/chatdox-curriculum`에 마운트되어 있다.
+- **이 저장소(chatdox-platform) 자체도 클론이 두 개다.** 지금 이 세션이 작업하는 `~/dev/chatdox-platform`(WSL 네이티브) 외에, `/mnt/d/RubyOnRails/chatdox-platform`(Windows 쪽, Tommy/다른 세션이 직접 씀)이 같은 origin(`github.com/leedox5/chatdox-platform`)을 본다. 2026-07-16에 그쪽에서 커밋(`e43e689`, CLAUDE.md에 피드백 직접 반영)이 origin에 먼저 push된 걸 모르고 있다가 뒤늦게 fetch/pull로 알아챘다 — **커밋 히스토리가 안 맞는 것 같으면 먼저 `git fetch origin`으로 뒤처진 건 아닌지 확인할 것.** D: 드라이브 클론은 건드리지 않는다(Tommy가 직접 쓰는 쪽이고, `git status`로 보면 거의 전 파일이 CRLF 때문에 modified로 뜨는 등 이쪽과 다른 상태라 함부로 손댈 대상이 아니다) — origin을 통해서만 간접적으로 주고받는다.
 - **`script/`에 HQ 연동 스크립트 3개가 있다 — 이름이 서로 안 비슷하니 매번 `ls script/`로 전체를 확인하고 얘기할 것, 하나만 보고 "이 방향은 스크립트가 없다"고 단정하지 말 것(2026-07-16 실수).**
   - `sync_handoff.sh` — HQ→DEV, handoff 패키지(request/result/STATUS) 전체 미러.
   - `push_handoff_to_curriculum.sh` — DEV→HQ, handoff 패키지 하나를 HQ inbox로 push.
