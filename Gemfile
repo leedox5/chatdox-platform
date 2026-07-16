@@ -62,6 +62,8 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+  # Preview sent emails in the browser instead of a real SMTP connection [https://github.com/ryanb/letter_opener]
+  gem "letter_opener"
 end
 
 gem "pg", "~> 1.6"
