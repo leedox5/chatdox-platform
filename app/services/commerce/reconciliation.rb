@@ -26,7 +26,7 @@ module Commerce
     end
 
     def call
-      orders = Order.includes(:refund_requests, order_items: :license, payment_transaction: :subscription).find_each
+      orders = Order.includes(:refund_requests, :payment_transaction, order_items: :license).find_each
       orders.each { |order| inspect_order(order) }
       inspect_license_overlaps
       inspect_duplicate_open_refunds
@@ -45,7 +45,6 @@ module Commerce
       add_issue(:terminal_order_with_license, order) if %w[failed canceled abandoned].include?(order.status) && order.licenses.any?
       add_issue(:payment_amount_mismatch, order) if transaction && transaction.amount != order.total_amount
       add_issue(:order_item_total_mismatch, order) unless order_item_totals_match?(order)
-      add_issue(:purchase_transaction_with_subscription, order) if transaction&.subscription_id.present?
       add_issue(:processed_payment_unfinalized, order) if processed_but_unfinalized?(order, transaction)
       add_issue(:abandoned_provider_success_conflict, order) if abandoned_success_conflict?(order, transaction)
       inspect_refunds(order)

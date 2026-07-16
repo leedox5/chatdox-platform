@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_150001) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_120000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
@@ -215,12 +215,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_150001) do
     t.string "provider_status"
     t.integer "purchase_order_id"
     t.string "status", default: "pending", null: false
-    t.integer "subscription_id"
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_payment_transactions_on_order_id", unique: true
     t.index ["provider", "provider_payment_id"], name: "index_payment_transactions_on_provider_and_provider_payment_id", unique: true
     t.index ["purchase_order_id"], name: "index_payment_transactions_on_purchase_order_id", unique: true
-    t.index ["subscription_id"], name: "index_payment_transactions_on_subscription_id"
   end
 
   create_table "premium_waitlists", force: :cascade do |t|
@@ -314,29 +312,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_150001) do
     t.index ["request_number"], name: "index_service_desk_requests_on_request_number", unique: true
   end
 
-  create_table "subscriptions", force: :cascade do |t|
-    t.boolean "active", default: false, null: false
-    t.string "billing_key"
-    t.datetime "cancel_at"
-    t.datetime "canceled_at"
-    t.datetime "created_at", null: false
-    t.datetime "current_period_end"
-    t.datetime "current_period_start"
-    t.string "order_id"
-    t.string "provider", null: false
-    t.string "provider_customer_id", null: false
-    t.string "status", default: "pending", null: false
-    t.string "toss_billing_key"
-    t.string "toss_customer_key"
-    t.string "toss_payment_key"
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["order_id"], name: "index_subscriptions_on_order_id", unique: true
-    t.index ["provider", "provider_customer_id"], name: "index_subscriptions_on_provider_and_provider_customer_id", unique: true
-    t.index ["toss_customer_key"], name: "index_subscriptions_on_toss_customer_key", unique: true
-    t.index ["user_id"], name: "index_subscriptions_on_user_id", unique: true
-  end
-
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
@@ -377,11 +352,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_150001) do
   add_foreign_key "orders", "orders", column: "retry_of_order_id"
   add_foreign_key "orders", "users"
   add_foreign_key "payment_transactions", "orders", column: "purchase_order_id"
-  add_foreign_key "payment_transactions", "subscriptions"
   add_foreign_key "product_offers", "products"
   add_foreign_key "refund_requests", "orders"
   add_foreign_key "refund_requests", "users"
   add_foreign_key "refund_requests", "users", column: "processed_by_id"
   add_foreign_key "service_desk_jobs", "service_desk_requests"
-  add_foreign_key "subscriptions", "users"
 end

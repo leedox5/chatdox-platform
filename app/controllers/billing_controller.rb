@@ -63,19 +63,11 @@ class BillingController < ApplicationController
     raise Pundit::NotAuthorizedError unless order.user == current_user
 
     gateway = Payments::Gateway.for(order.provider)
-    payment_attributes = if order.provider == "portone"
-      complete_portone_payment(
-        gateway,
-        expected_amount: order.total_amount,
-        expected_currency: order.currency
-      )
-    else
-      complete_toss_payment(
-        gateway,
-        expected_amount: order.total_amount,
-        expected_currency: order.currency
-      )
-    end
+    payment_attributes = complete_portone_payment(
+      gateway,
+      expected_amount: order.total_amount,
+      expected_currency: order.currency
+    )
 
     Commerce::OrderFinalizer.call!(order: order, payment: payment_attributes)
     respond_to_payment_success
@@ -84,23 +76,6 @@ class BillingController < ApplicationController
   def find_purchase_order
     public_id = params[:orderId].presence || params[:paymentId].presence
     Order.find_by(public_id: public_id) if public_id
-  end
-
-  def complete_toss_payment(gateway, expected_amount:, expected_currency:)
-    payment = gateway.confirm_payment!(
-      payment_key: params[:paymentKey],
-      order_id: params[:orderId],
-      amount: expected_amount
-    )
-
-    {
-      provider: "toss",
-      provider_payment_id: payment.fetch("paymentKey"),
-      order_id: payment.fetch("orderId"),
-      amount: payment.fetch("totalAmount"),
-      currency: payment.fetch("currency", expected_currency),
-      provider_payload: Payments::ProviderSnapshot.build(provider: "toss", payload: payment)
-    }
   end
 
   def complete_portone_payment(
@@ -152,7 +127,7 @@ class BillingController < ApplicationController
   end
 
   def respond_to_payment_reconciliation_failure
-    message = "결제는 확인됐지만 구독 반영에 실패했습니다. 고객센터에 문의해 주세요."
+    message = "결제는 확인됐지만 라이선스 반영에 실패했습니다. 고객센터에 문의해 주세요."
 
     if json_payment_request?
       render json: { ok: false, message: message }, status: :internal_server_error

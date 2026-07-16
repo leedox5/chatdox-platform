@@ -71,7 +71,6 @@ module Commerce
       [
         routes.billing_success_path,
         routes.billing_cancel_path,
-        routes.webhooks_toss_payments_path,
         routes.webhooks_portone_path
       ].all?(&:present?)
     end

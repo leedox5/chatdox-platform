@@ -32,7 +32,7 @@ class Admin::Commerce::OrdersController < Admin::BaseController
       :user,
       :refund_requests,
       :licenses,
-      payment_transaction: :subscription,
+      :payment_transaction,
       order_items: [ :product, :product_offer, :license ]
     ).strict_loading
   end

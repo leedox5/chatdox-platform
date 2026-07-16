@@ -19,12 +19,10 @@ class PaymentsProviderSnapshotTest < ActiveSupport::TestCase
   }.freeze
 
   test "explicit allowlist retains only provider status" do
-    %w[portone toss].each do |provider|
-      snapshot = Payments::ProviderSnapshot.build(provider: provider, payload: SENSITIVE_PAYLOAD)
+    snapshot = Payments::ProviderSnapshot.build(provider: "portone", payload: SENSITIVE_PAYLOAD)
 
-      assert_equal({ "status" => "PAID" }, snapshot)
-      assert_equal Payments::ProviderSnapshot::ALLOWED_KEYS, snapshot.keys
-    end
+    assert_equal({ "status" => "PAID" }, snapshot)
+    assert_equal Payments::ProviderSnapshot::ALLOWED_KEYS, snapshot.keys
   end
 
   test "unknown provider fails closed" do

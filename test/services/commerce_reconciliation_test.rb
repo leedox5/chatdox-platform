@@ -50,14 +50,6 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
 
     create_overlapping_licenses
 
-    transaction_with_subscription = create_order
-    subscription = transaction_with_subscription.user.create_subscription!(
-      provider: "toss",
-      provider_customer_id: "test-reconciliation-customer",
-      status: "active"
-    )
-    transaction_with_subscription.payment_transaction.update!(subscription: subscription)
-
     processed_unfinalized = create_order
     processed_unfinalized.payment_transaction.update!(
       status: "active",
@@ -73,7 +65,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
       paid_without_transaction paid_without_license stale_pending
       terminal_order_with_license payment_amount_mismatch
       order_item_total_mismatch overlapping_license
-      purchase_transaction_with_subscription processed_payment_unfinalized
+      processed_payment_unfinalized
     ].each { |code| assert_includes codes, code }
     assert_not report.ok?
     assert_equal before, database_snapshot
@@ -144,7 +136,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
       product_code: "chatdox",
       offer_code: @offer.code,
       requested_start_on: at.in_time_zone(KST).to_date,
-      provider: "toss",
+      provider: "portone",
       at: at
     )
   end
@@ -201,7 +193,7 @@ class CommerceReconciliationTest < ActiveSupport::TestCase
 
   def database_snapshot
     [
-      Order, OrderItem, PaymentTransaction, License, Subscription, RefundRequest,
+      Order, OrderItem, PaymentTransaction, License, RefundRequest,
       CommerceAuditEvent, ExternalAccountLink, ExternalAccessGrant,
       ExternalAccessTask, ExternalAccessEvent
     ].to_h do |model|

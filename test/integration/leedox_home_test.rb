@@ -574,13 +574,10 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
 
   test "billing order page still sends the user's email (not name) to the payment widgets" do
     Commerce::CatalogBootstrap.call!
-    original_env = %w[LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY TOSS_WEBHOOK_SECRET
+    original_env = %w[LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER
                        PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET].to_h { |key| [ key, ENV[key] ] }
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
     ENV["PAYMENT_PROVIDER"] = "portone"
-    ENV["TOSS_CLIENT_KEY"] = "test-client-key"
-    ENV["TOSS_SECRET_KEY"] = "test-secret-key"
-    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"
     ENV["PORTONE_API_SECRET"] = "test-api-secret"
     ENV["PORTONE_STORE_ID"] = "test-store-id"
     ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
@@ -660,7 +657,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
   end
 
   test "legacy checkout is a server-rendered inactive screen for guests and users" do
-    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
+    assert_no_difference "PaymentTransaction.count" do
       get billing_checkout_path
     end
 
@@ -674,20 +671,11 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     user = User.create!(name: "테스트 유저", email: "checkout-blocked@example.com", password: "password123")
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
-    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
+    assert_no_difference "PaymentTransaction.count" do
       get billing_checkout_path
     end
     assert_response :success
     assert_match(/신규 결제를 준비하고 있습니다/, response.body)
-  end
-
-  test "billing auth endpoint is blocked without issuing a billing key" do
-    assert_no_difference [ "Subscription.count", "PaymentTransaction.count" ] do
-      post billing_auths_path, params: { authKey: "must-not-be-used", billingKey: "must-not-be-used" }
-    end
-
-    assert_response :see_other
-    assert_redirected_to chatdox_path
   end
 
   test "Claudox product page marks chapter completion accurately against source chapter files" do

@@ -2,9 +2,9 @@ require "test_helper"
 
 class CommerceCheckoutTest < ActionDispatch::IntegrationTest
   PAYMENT_ENV_KEYS = %w[
-    LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY
-    TOSS_WEBHOOK_SECRET PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY
-    PORTONE_WEBHOOK_SECRET PAYMENT_PRICE_AMOUNT TOSS_PRICE_AMOUNT
+    LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER
+    PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY
+    PORTONE_WEBHOOK_SECRET PAYMENT_PRICE_AMOUNT
   ].freeze
 
   setup do
@@ -23,7 +23,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     @product.update!(sale_enabled: true)
     sign_in
 
-    assert_no_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count", "Subscription.count" ] do
+    assert_no_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ] do
       get billing_checkout_path
     end
     assert_response :success
@@ -51,18 +51,16 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_match(/7,700원/, response.body)
 
     assert_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ], 1 do
-      assert_no_difference "Subscription.count" do
-        post billing_orders_path, params: {
-          order: {
-            product_code: "chatdox",
-            offer_code: "chatdox-1m-v1",
-            requested_start_on: today,
-            total_amount: 1,
-            duration_months: 99,
-            currency: "USD"
-          }
+      post billing_orders_path, params: {
+        order: {
+          product_code: "chatdox",
+          offer_code: "chatdox-1m-v1",
+          requested_start_on: today,
+          total_amount: 1,
+          duration_months: 99,
+          currency: "USD"
         }
-      end
+      }
     end
 
     order = Order.order(:created_at).last
@@ -87,38 +85,12 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     (PAYMENT_ENV_KEYS - %w[LEEDOX_COMMERCE_ENABLED]).each { |key| ENV.delete(key) }
     sign_in
 
-    assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
+    assert_no_difference [ "Order.count", "PaymentTransaction.count" ] do
       get billing_checkout_path
       assert_response :success
       assert_match(/신규 결제를 준비하고 있습니다/, response.body)
       assert_select "script[src*='tosspayments']", count: 0
       assert_select "script[src*='portone']", count: 0
-
-      post billing_orders_path, params: {
-        order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
-      }
-      assert_redirected_to billing_checkout_path
-    end
-  end
-
-  test "explicit Toss runtime preserves the adapter but cannot open initial checkout" do
-    ENV.update(
-      "LEEDOX_COMMERCE_ENABLED" => "true",
-      "PAYMENT_PROVIDER" => "toss",
-      "TOSS_CLIENT_KEY" => "test-client-key",
-      "TOSS_SECRET_KEY" => "test-secret-key",
-      "TOSS_WEBHOOK_SECRET" => "test-webhook-secret"
-    )
-    @product.update!(sale_enabled: true)
-    sign_in
-
-    assert Payments::Configuration.current.ready?
-    assert_not Payments::Configuration.current.checkout_ready?
-    assert_instance_of Payments::TossGateway, Payments::Gateway.for("toss")
-    assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
-      get billing_checkout_path
-      assert_response :success
-      assert_match(/신규 결제를 준비하고 있습니다/, response.body)
 
       post billing_orders_path, params: {
         order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
@@ -167,15 +139,16 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     enable_chatdox_sales
     sign_in
     order = create_order
-    gateway = FakeTossGateway.new(order)
+    payment = {
+      "id" => order.public_id,
+      "amount" => { "total" => order.total_amount },
+      "currency" => order.currency,
+      "status" => "PAID"
+    }
 
-    with_singleton_method(Payments::Gateway, :for, ->(_provider) { gateway }) do
+    with_singleton_method(Portone::Client, :get_payment, ->(_payment_id) { payment }) do
       2.times do
-        get billing_success_path, params: {
-          orderId: order.public_id,
-          paymentKey: "callback-payment",
-          amount: 1
-        }
+        get billing_success_path, params: { paymentId: order.public_id }
         assert_redirected_to dashboard_path
       end
     end
@@ -183,16 +156,14 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal "paid", order.reload.status
     assert_equal 1, order.licenses.count
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
-    assert_equal({ "status" => "DONE" }, order.payment_transaction.reload.provider_payload)
-    assert_nil @user.reload.subscription
+    assert_equal({ "status" => "PAID" }, order.payment_transaction.reload.provider_payload)
   end
 
   test "success callback without matching order fails closed without legacy writes" do
     ENV["PAYMENT_PRICE_AMOUNT"] = "9900"
-    ENV["TOSS_PRICE_AMOUNT"] = "9900"
     sign_in
 
-    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count" ] do
       get billing_success_path, params: {
         orderId: "unmatched-order",
         paymentId: "unmatched-payment",
@@ -219,7 +190,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     )
     sign_in
 
-    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count", "Subscription.count" ] do
+    assert_no_difference [ "Order.count", "PaymentTransaction.count", "License.count" ] do
       get billing_success_path, params: { paymentId: other_order.public_id }
     end
 
@@ -228,36 +199,9 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_empty other_order.licenses
   end
 
-  test "Toss webhook resend finalizes the existing pending order only once" do
+  test "PortOne webhook resend keeps one order transaction and license" do
     enable_chatdox_sales
     order = create_order
-    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"
-    payment = {
-      "paymentKey" => "webhook-payment",
-      "orderId" => order.public_id,
-      "totalAmount" => order.total_amount,
-      "currency" => order.currency,
-      "status" => "DONE"
-    }
-
-    with_singleton_method(TossPayments::Client, :get_json, ->(_path) { payment }) do
-      assert_difference "License.count", 1 do
-        2.times do
-          post webhooks_toss_payments_path,
-            params: { secret: "test-webhook-secret", paymentKey: "webhook-payment" }.to_json,
-            headers: { "CONTENT_TYPE" => "application/json" }
-          assert_response :success
-        end
-      end
-    end
-
-    assert_equal 1, order.reload.licenses.count
-    assert_nil @user.reload.subscription
-  end
-
-  test "PortOne webhook resend keeps one order transaction and license without subscription" do
-    enable_chatdox_sales
-    order = create_order(provider: "portone")
     payload = {
       "type" => "Transaction.Paid",
       "data" => { "paymentId" => order.public_id }
@@ -278,7 +222,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     payment_lookup = ->(_payment_id) { payment }
     with_singleton_method(Portone::WebhookVerifier, :verify!, verifier) do
       with_singleton_method(Portone::Client, :get_payment, payment_lookup) do
-        assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
+        assert_no_difference [ "Order.count", "PaymentTransaction.count" ] do
           assert_difference "License.count", 1 do
             2.times do
               post webhooks_portone_path,
@@ -295,7 +239,6 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
     assert_equal 1, order.reload.licenses.count
     assert_equal({ "status" => "PAID" }, order.payment_transaction.reload.provider_payload)
-    assert_nil @user.reload.subscription
   end
 
   test "Dashboard and My Page show product license and order summaries" do
@@ -318,32 +261,9 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
   private
 
-  FakeTossGateway = Struct.new(:order) do
-    def confirm_payment!(payment_key:, order_id:, amount:)
-      raise "unexpected order" unless order_id == order.public_id
-      raise "unexpected server amount" unless amount == order.total_amount
-
-      {
-        "paymentKey" => payment_key,
-        "orderId" => order_id,
-        "totalAmount" => amount,
-        "currency" => order.currency,
-        "status" => "DONE",
-        "paymentMethod" => { "card" => { "number" => "sensitive-card" } },
-        "customerEmail" => "sensitive@example.com",
-        "token" => "sensitive-token",
-        "receiptUrl" => "https://sensitive.example/receipt",
-        "unknownFutureKey" => "sensitive-unknown"
-      }
-    end
-  end
-
   def enable_chatdox_sales
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
     ENV["PAYMENT_PROVIDER"] = "portone"
-    ENV["TOSS_CLIENT_KEY"] = "test-client-key"
-    ENV["TOSS_SECRET_KEY"] = "test-secret-key"
-    ENV["TOSS_WEBHOOK_SECRET"] = "test-webhook-secret"
     ENV["PORTONE_API_SECRET"] = "test-api-secret"
     ENV["PORTONE_STORE_ID"] = "test-store-id"
     ENV["PORTONE_CHANNEL_KEY"] = "test-channel-key"
@@ -355,7 +275,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     post user_session_path, params: { user: { email: @user.email, password: "password123" } }
   end
 
-  def create_order(provider: "toss")
+  def create_order(provider: "portone")
     Commerce::OrderCreator.call!(
       user: @user,
       product_code: "chatdox",
@@ -367,7 +287,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
   def payment_for(order)
     {
-      provider: "toss",
+      provider: "portone",
       provider_payment_id: "dashboard-payment",
       order_id: order.public_id,
       amount: order.total_amount,

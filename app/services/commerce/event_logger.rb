@@ -16,7 +16,6 @@ module Commerce
       commerce.reconciliation_anomaly.payment_amount_mismatch
       commerce.reconciliation_anomaly.order_item_total_mismatch
       commerce.reconciliation_anomaly.overlapping_license
-      commerce.reconciliation_anomaly.purchase_transaction_with_subscription
       commerce.reconciliation_anomaly.processed_payment_unfinalized
       commerce.reconciliation_anomaly.abandoned_provider_success_conflict
       commerce.reconciliation_anomaly.paid_order_open_refund

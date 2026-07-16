@@ -8,7 +8,7 @@
         <h1 class="mt-1 text-3xl font-bold text-gray-900">
           안녕하세요, <%= current_user.name %>님
         </h1>
-        <p class="mt-2 text-gray-600">구독·상품별 라이선스와 학습 흐름을 확인하고 다음 챕터로 이어가세요.</p>
+        <p class="mt-2 text-gray-600">상품별 라이선스와 학습 흐름을 확인하고 다음 챕터로 이어가세요.</p>
       </div>
 
       <%= link_to "전체 문서 보기",
@@ -20,18 +20,14 @@
       <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div class="flex items-center justify-between gap-3">
           <h2 class="font-semibold text-gray-900">이용 상태</h2>
-          <%= subscription_badge(current_user, @subscription) %>
+          <%= subscription_badge(current_user) %>
         </div>
 
         <p class="mt-5 text-sm text-gray-600">
-          <%= subscription_period_text(current_user, @subscription) %>
+          <%= subscription_period_text(current_user) %>
         </p>
 
-        <% if @subscription&.status == "past_due" %>
-          <%= link_to "상품 안내 확인",
-            chatdox_path(anchor: "pricing"),
-            class: "mt-4 inline-block text-sm font-semibold text-amber-700 hover:text-amber-800" %>
-        <% elsif current_user.subscribed? || current_user.licensed_for?("chatdox") %>
+        <% if current_user.licensed_for?("chatdox") %>
           <span class="mt-4 inline-block text-sm font-semibold text-emerald-700">전체 커리큘럼 이용 가능</span>
         <% else %>
           <%= link_to "판매 준비 상태 보기",
@@ -54,7 +50,7 @@
         <p class="mt-2 text-sm text-gray-600">
           <% if current_user.admin? %>
             관리자 권한으로 전체 문서를 볼 수 있습니다.
-          <% elsif current_user.subscribed? || current_user.licensed_for?("chatdox") %>
+          <% elsif current_user.licensed_for?("chatdox") %>
             Chatdox 이용 권한으로 전체 커리큘럼을 학습할 수 있습니다.
           <% elsif current_user.trial_active? %>
             Trial 기간 동안 일부 챕터를 학습할 수 있습니다.

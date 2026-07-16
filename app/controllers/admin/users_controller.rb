@@ -1,8 +1,6 @@
 class Admin::UsersController < Admin::BaseController
   def index
-    @users = User
-      .includes(:subscription)
-      .order(created_at: :desc)
+    @users = User.order(created_at: :desc)
   end
 
   def update

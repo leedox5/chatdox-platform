@@ -51,23 +51,20 @@ class CommerceCatalogTest < ActiveSupport::TestCase
     )
     assert_not offer.valid?
     assert_includes offer.errors[:total_amount], "must equal supply amount plus VAT"
+  end
 
-    user = User.create!(name: "테스트 유저", email: "legacy-transaction@example.com", password: "password123")
-    subscription = user.create_subscription!(
-      provider: "toss",
-      provider_customer_id: "legacy-customer",
-      status: "active"
-    )
-    transaction = subscription.payment_transactions.create!(
-      provider: "toss",
-      provider_payment_id: "legacy-payment",
-      order_id: "legacy-order",
+  test "payment transaction requires a purchase order" do
+    transaction = PaymentTransaction.new(
+      provider: "portone",
+      provider_payment_id: "no-order-payment",
+      order_id: "no-order",
       status: "active",
       amount: 9_900,
       currency: "KRW",
       provider_payload: {}
     )
-    assert_equal subscription, transaction.subscription
-    assert_nil transaction.purchase_order
+
+    assert_not transaction.valid?
+    assert_includes transaction.errors[:purchase_order], "must exist"
   end
 end

@@ -1,10 +1,6 @@
 <% content_for :title, "Chatdox 주문 확인" %>
 <% content_for :head do %>
-  <% if @payment_provider == "portone" %>
-    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
-  <% elsif @payment_provider == "toss" %>
-    <script src="https://js.tosspayments.com/v2/standard"></script>
-  <% end %>
+  <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 <% end %>
 
 <div class="min-h-screen bg-slate-50">
@@ -44,33 +40,19 @@
     error.classList.add("hidden");
 
     try {
-      <% if @payment_provider == "portone" %>
-        const response = await PortOne.requestPayment({
-          storeId: <%= raw json_escape(@portone_store_id.to_json) %>,
-          channelKey: <%= raw json_escape(@portone_channel_key.to_json) %>,
-          paymentId: <%= raw json_escape(@order.public_id.to_json) %>,
-          orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
-          totalAmount: <%= @order.total_amount %>,
-          currency: <%= raw json_escape(@order.currency.to_json) %>,
-          payMethod: "CARD",
-          customer: { email: <%= raw json_escape(current_user.email.to_json) %> },
-          redirectUrl: <%= raw json_escape(billing_success_url.to_json) %>
-        });
-        if (response.code) throw new Error(response.message || "결제가 취소되었습니다.");
-        window.location.href = <%= raw json_escape(billing_success_url.to_json) %> + "?paymentId=" + encodeURIComponent(response.paymentId);
-      <% else %>
-        const tossPayments = TossPayments(<%= raw json_escape(@toss_client_key.to_json) %>);
-        const payment = tossPayments.payment({ customerKey: <%= raw json_escape("user-#{current_user.id}".to_json) %> });
-        await payment.requestPayment({
-          method: "CARD",
-          amount: { currency: <%= raw json_escape(@order.currency.to_json) %>, value: <%= @order.total_amount %> },
-          orderId: <%= raw json_escape(@order.public_id.to_json) %>,
-          orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
-          customerEmail: <%= raw json_escape(current_user.email.to_json) %>,
-          successUrl: <%= raw json_escape(billing_success_url.to_json) %>,
-          failUrl: <%= raw json_escape(billing_cancel_url.to_json) %>
-        });
-      <% end %>
+      const response = await PortOne.requestPayment({
+        storeId: <%= raw json_escape(@portone_store_id.to_json) %>,
+        channelKey: <%= raw json_escape(@portone_channel_key.to_json) %>,
+        paymentId: <%= raw json_escape(@order.public_id.to_json) %>,
+        orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
+        totalAmount: <%= @order.total_amount %>,
+        currency: <%= raw json_escape(@order.currency.to_json) %>,
+        payMethod: "CARD",
+        customer: { email: <%= raw json_escape(current_user.email.to_json) %> },
+        redirectUrl: <%= raw json_escape(billing_success_url.to_json) %>
+      });
+      if (response.code) throw new Error(response.message || "결제가 취소되었습니다.");
+      window.location.href = <%= raw json_escape(billing_success_url.to_json) %> + "?paymentId=" + encodeURIComponent(response.paymentId);
     } catch (paymentError) {
       error.textContent = paymentError.message || "결제를 시작하지 못했습니다.";
       error.classList.remove("hidden");

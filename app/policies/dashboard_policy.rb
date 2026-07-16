@@ -4,7 +4,7 @@ class DashboardPolicy < ApplicationPolicy
   end
 
   def show_subscription?
-    user.present? && (user.trial_active? || user.subscribed?)
+    user.present? && (user.trial_active? || user.licensed_for?("chatdox"))
   end
 
   def admin_access?

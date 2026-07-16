@@ -33,8 +33,6 @@ class BillingOrdersController < ApplicationController
     )
     @portone_store_id = ENV.fetch("PORTONE_STORE_ID", "")
     @portone_channel_key = ENV.fetch("PORTONE_CHANNEL_KEY", "")
-    @toss_client_key = ENV.fetch("TOSS_CLIENT_KEY", "")
-    @payment_provider = @order.provider
   end
 
   def retry_preview

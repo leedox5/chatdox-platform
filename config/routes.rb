@@ -83,8 +83,6 @@ Rails.application.routes.draw do
   post "/billing/orders/:id/refund_requests", to: "refund_requests#create", as: :billing_order_refund_requests
   get "/refund_requests/:id", to: "refund_requests#show", as: :refund_request
 
-  post "/billing/auths", to: "billing_auths#create", as: :billing_auths
   resources :premium_waitlists, only: :create
-  post "/webhooks/toss_payments", to: "webhooks/toss_payments#receive"
   post "/webhooks/portone", to: "webhooks/portone#receive"
 end

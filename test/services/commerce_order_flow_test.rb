@@ -18,11 +18,9 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
     @previous_flag.nil? ? ENV.delete("LEEDOX_COMMERCE_ENABLED") : ENV["LEEDOX_COMMERCE_ENABLED"] = @previous_flag
   end
 
-  test "pending order snapshots catalog values and creates no subscription" do
+  test "pending order snapshots catalog values" do
     assert_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ], 1 do
-      assert_no_difference "Subscription.count" do
-        @order = create_order
-      end
+      @order = create_order
     end
 
     assert_equal "pending", @order.status
@@ -34,7 +32,6 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
         :product_code, :offer_code, :duration_months, :supply_amount,
         :vat_amount, :total_amount, :discount_bps
       ).first
-    assert_nil @order.payment_transaction.subscription_id
   end
 
   test "order and item snapshots remain unchanged when catalog changes and reject direct edits" do
@@ -61,42 +58,40 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
         product_code: "claudox",
         offer_code: @offer.code,
         requested_start_on: @at.to_date,
-        provider: "toss",
+        provider: "portone",
         at: @at
       )
     end
   end
 
   test "server verification rejects provider order amount and currency mismatches" do
-    %w[toss portone].each do |provider|
-      order = create_order(provider: provider)
-      {
-        provider: provider == "toss" ? "portone" : "toss",
-        order_id: "another-order",
-        amount: 1,
-        currency: "USD"
-      }.each do |field, bad_value|
-        bad_payment = payment_for(order, provider: provider).merge(field => bad_value)
+    order = create_order
+    {
+      provider: "other",
+      order_id: "another-order",
+      amount: 1,
+      currency: "USD"
+    }.each do |field, bad_value|
+      bad_payment = payment_for(order).merge(field => bad_value)
 
-        assert_raises(Commerce::OrderFinalizer::VerificationError) do
-          Commerce::OrderFinalizer.call!(order: order, payment: bad_payment, at: @at)
-        end
-        assert_equal "pending", order.reload.status
-        assert_empty order.licenses
+      assert_raises(Commerce::OrderFinalizer::VerificationError) do
+        Commerce::OrderFinalizer.call!(order: order, payment: bad_payment, at: @at)
       end
+      assert_equal "pending", order.reload.status
+      assert_empty order.licenses
     end
   end
 
-  test "approval is atomic and duplicate callback is idempotent without subscription" do
+  test "approval is atomic and duplicate callback is idempotent" do
     order = create_order
     payment = payment_for(order)
 
     assert_difference "License.count", 1 do
-      assert_no_difference [ "Order.count", "PaymentTransaction.count", "Subscription.count" ] do
+      assert_no_difference [ "Order.count", "PaymentTransaction.count" ] do
         Commerce::OrderFinalizer.call!(order: order, payment: payment, at: @at)
       end
     end
-    assert_no_difference [ "Order.count", "License.count", "PaymentTransaction.count", "Subscription.count" ] do
+    assert_no_difference [ "Order.count", "License.count", "PaymentTransaction.count" ] do
       Commerce::OrderFinalizer.call!(order: order.reload, payment: payment, at: @at + 1.minute)
     end
 
@@ -142,9 +137,9 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
 
   test "failed and canceled status sync rejects forged provider order amount and currency" do
     %i[provider order_id amount currency].each do |field|
-      order = create_order(provider: "portone")
+      order = create_order
       bad_value = {
-        provider: "toss",
+        provider: "other",
         order_id: "another-order",
         amount: 1,
         currency: "USD"
@@ -154,7 +149,7 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
         Commerce::OrderStatusSync.call!(
           order: order,
           status: "failed",
-          payment: payment_for(order, provider: "portone").merge(field => bad_value),
+          payment: payment_for(order).merge(field => bad_value),
           at: @at
         )
       end
@@ -188,12 +183,11 @@ class CommerceOrderFlowTest < ActiveSupport::TestCase
     assert_equal "paid", order.reload.status
     assert_equal 1, order.licenses.count
     assert_equal 1, PaymentTransaction.where(purchase_order: order).count
-    assert_nil @user.reload.subscription
   end
 
   private
 
-  def create_order(provider: "toss")
+  def create_order(provider: "portone")
     Commerce::OrderCreator.call!(
       user: @user,
       product_code: "chatdox",

@@ -67,7 +67,7 @@ class CommerceOperationsTest < ActiveSupport::TestCase
     order = create_order(at: @at - 31.minutes)
     Commerce::AbandonOrder.call!(order: order, actor: @admin, at: @at)
 
-    assert_no_difference [ "License.count", "Subscription.count" ] do
+    assert_no_difference "License.count" do
       Commerce::OrderFinalizer.call!(order: order, payment: payment_for(order), at: @at + 1.minute)
     end
 

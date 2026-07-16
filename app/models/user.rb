@@ -4,7 +4,6 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  has_one :subscription, dependent: :destroy
   has_many :chapter_progresses, dependent: :destroy
   has_many :orders, dependent: :restrict_with_error
   has_many :licenses, dependent: :restrict_with_error
@@ -38,12 +37,6 @@ class User < ApplicationRecord
 
   def trial_active?
     trial_remaining_seconds.positive?
-  end
-
-  def subscribed?
-    subscription&.status == "active" &&
-      subscription.current_period_end.present? &&
-      subscription.current_period_end > Time.current
   end
 
   def licensed_for?(product_code, at: Time.current)

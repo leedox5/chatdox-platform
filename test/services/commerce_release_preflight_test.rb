@@ -5,7 +5,7 @@ class CommerceReleasePreflightTest < ActiveSupport::TestCase
     Commerce::CatalogBootstrap.call!
     @previous_flag = ENV["LEEDOX_COMMERCE_ENABLED"]
     @payment_keys = %w[
-      PAYMENT_PROVIDER TOSS_CLIENT_KEY TOSS_SECRET_KEY TOSS_WEBHOOK_SECRET
+      PAYMENT_PROVIDER
       PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_WEBHOOK_SECRET
     ]
     @previous_payment_env = @payment_keys.to_h { |key| [ key, ENV[key] ] }

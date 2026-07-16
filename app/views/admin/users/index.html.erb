@@ -31,7 +31,7 @@
                 </td>
                 <td class="px-5 py-4 text-gray-700"><%= user.role %></td>
                 <td class="px-5 py-4">
-                  <%= subscription_badge(user, user.subscription) %>
+                  <%= subscription_badge(user) %>
                 </td>
                 <td class="px-5 py-4 text-gray-600">
                   <%= I18n.l(user.created_at.to_date, format: :long, locale: :ko) %>

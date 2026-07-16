@@ -1,6 +1,6 @@
 module Payments
   class Gateway
-    PROVIDERS = %w[toss portone].freeze
+    PROVIDERS = %w[portone].freeze
 
     def self.current
       provider = ENV.fetch("PAYMENT_PROVIDER")
@@ -10,10 +10,7 @@ module Payments
     end
 
     def self.for(provider)
-      {
-        "toss" => TossGateway,
-        "portone" => PortoneGateway
-      }.fetch(provider).new
+      { "portone" => PortoneGateway }.fetch(provider).new
     end
   end
 end

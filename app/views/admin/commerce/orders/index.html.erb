@@ -38,7 +38,7 @@
                 <td class="px-4 py-4"><strong><%= item&.product_name %></strong><p class="text-xs text-slate-500"><%= item&.duration_months %>개월 · <%= item&.offer_code %></p></td>
                 <td class="px-4 py-4"><%= order.provider %> · <%= order_status_label(order.status) %><% if order.status == "pending" %><p class="mt-1 font-bold <%= assessment.stale ? 'text-amber-700' : 'text-emerald-700' %>"><%= assessment.classification %></p><% end %></td>
                 <td class="px-4 py-4"><%= number_with_delimiter(order.total_amount) %>원<p class="text-xs text-slate-500"><%= number_with_delimiter(order.supply_amount) %> + VAT <%= number_with_delimiter(order.vat_amount) %></p></td>
-                <td class="px-4 py-4"><%= transaction&.status || "없음" %><p class="text-xs text-slate-500">Subscription <%= transaction&.subscription_id? ? "연결" : "없음" %></p></td>
+                <td class="px-4 py-4"><%= transaction&.status || "없음" %></td>
                 <td class="px-4 py-4"><%= order.licenses.map { |license| license.effective_status }.join(", ").presence || "없음" %></td>
                 <td class="px-4 py-4"><%= order.refund_requests.map { |request| refund_status_label(request.status) }.join(", ").presence || "없음" %><% if @reconciliation_issues[order.public_id].present? %><p class="mt-1 font-bold text-red-700"><%= @reconciliation_issues[order.public_id].map(&:code).join(", ") %></p><% end %></td>
               </tr>
