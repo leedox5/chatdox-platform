@@ -2,7 +2,7 @@ class RefsController < ApplicationController
   REFS_PATH = Rails.root.join("refs")
 
   REFERENCES = [
-    { id: "payment-00_overview", chapter_id: "09", slug: "payment/00_overview", title: "토스페이먼츠 / 포트원 결제 시스템" },
+    { id: "payment-00_overview", chapter_id: "09", slug: "payment/00_overview", title: "PortOne 결제 시스템" },
     { id: "payment-01_setup", chapter_id: "09", slug: "payment/01_setup", title: "환경 설정" },
     { id: "payment-02_implementation", chapter_id: "09", slug: "payment/02_implementation", title: "구현 상세" },
     { id: "payment-03_troubleshooting", chapter_id: "09", slug: "payment/03_troubleshooting", title: "문제 해결" },

@@ -32,7 +32,7 @@ class Curriculum
     { id: "06", slug: "06_database", title: "Database & Migrations" },
     { id: "07", slug: "07_authentication", title: "Authentication (Devise)" },
     { id: "08", slug: "08_authorization", title: "Authorization & 권한 관리" },
-    { id: "09", slug: "09_payment", title: "Payment (토스페이먼츠 / 포트원)" },
+    { id: "09", slug: "09_payment", title: "Payment (PortOne)" },
     { id: "10", slug: "10_dashboard", title: "사용자 대시보드" },
     { id: "11", slug: "11_admin", title: "관리자 대시보드" },
     { id: "12", slug: "12_email", title: "Email & 알림" },
