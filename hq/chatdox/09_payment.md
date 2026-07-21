@@ -1,543 +1,363 @@
-# 09. 결제 (Toss Payments 또는 PortOne)
+# 09. 결제 (PortOne)
 
-> 월 구독 결제를 구현합니다.
-> `PAYMENT_PROVIDER` 설정으로 토스페이먼츠 직접 연동과 포트원 V2 연동 중 하나를 선택합니다.
-> 공급자가 달라도 구독 상태와 애플리케이션의 결제 인터페이스는 동일하게 유지합니다.
-> 결제 성공, 실패, 취소, 갱신, 해지까지 구독 생명주기를 다룹니다.
+> Chatdox는 월 구독이 아니라 **자동 갱신 없는 기간제 선불 라이선스**를 판매합니다.
+> 결제 공급자는 **PortOne V2 하나만** 씁니다 — 처음엔 Toss Payments를 직접 연동했지만, PG 채널 교체 유연성 때문에 PortOne으로 마이그레이션하면서 신규 결제는 PortOne 경로만 남기고 강제했습니다.
+> 결제 성공/실패/취소, 그리고 "같은 결제를 두 번 시도했을 때 주문이 중복 생성되지 않는 것"까지 다룹니다.
 
 ---
 
 ## 📋 목표
 
-1. 토스페이먼츠 직접 연동과 포트원 V2 연동 구조 이해
-2. 공급자 중립 결제/구독 데이터 모델 설계
-3. 구독 시작 (월 9,900원 예시) 구현
-4. 결제 성공/실패/취소 처리
-5. 빌링키 기반 자동결제 구현
-6. 설정으로 결제 공급자 선택
-7. 공급자별 테스트 환경으로 검증
+1. PortOne V2 Browser SDK + REST API 연동 구조 이해
+2. `Product` / `ProductOffer` / `Order` / `OrderItem` / `License` / `PaymentTransaction` 데이터 모델 이해
+3. 체크아웃부터 라이선스 발급까지 전체 흐름 구현
+4. 서버 측 결제 검증(클라이언트 응답을 그대로 믿지 않는 원칙)
+5. 결제 실패/취소, 그리고 중복 주문 방지
+6. 웹훅으로 상태 동기화
 
 ---
 
-## 1️⃣ 결제 공급자 선택
+## 1️⃣ 왜 PortOne 하나만 쓰는가
 
-| 모드 | 적합한 경우 | 연동 대상 |
-|------|-------------|-----------|
-| `toss` | 토스페이먼츠만 직접 제어하려는 경우 | Toss Payments SDK/API |
-| `portone` | PG 채널 변경과 통합 운영이 필요한 경우 | PortOne Browser SDK/REST API V2 |
+포트원은 PG(카드사/간편결제사)가 아니라 **여러 PG를 연결해주는 결제 인프라**입니다. 포트원 콘솔에 실제 PG 채널을 등록하고 `PORTONE_CHANNEL_KEY`로 그 채널을 지정하는 식으로 동작합니다.
 
-포트원은 PG가 아니라 여러 PG를 연결하는 결제 인프라입니다. 포트원 모드에서는 포트원 콘솔에 실제 PG 채널을 등록하고 `PORTONE_CHANNEL_KEY`로 채널을 지정합니다.
+이 코드베이스엔 사실 지금도 Toss Payments 연동 코드(`TossGateway`, `TossPayments::Client`, 웹훅 컨트롤러)가 파일로는 남아있습니다 — 처음 Toss로 직접 연동했다가 PortOne으로 옮겨가는 과정에서 생긴 흔적입니다. 하지만 런타임에서는 강제로 막혀 있습니다.
 
-운영 중 기본 공급자를 변경해도 기존 빌링키가 자동 이전된다고 가정하면 안 됩니다. 신규 구독에는 현재 설정을 적용하고, 기존 구독의 갱신·취소·조회는 DB에 저장된 `provider`를 계속 사용합니다.
-
-### 결제 처리의 핵심 원칙
-
-```
-클라이언트 화면만 믿으면 안 된다.
-진짜 결제 상태는 선택한 공급자의 서버 승인/조회 API로 확정한다.
+```ruby
+# app/services/payments/gateway.rb (개념 발췌)
+def self.current
+  provider = ENV.fetch("PAYMENT_PROVIDER", nil)
+  raise "PortOne만 지원합니다" unless provider == "portone"
+  PortoneGateway.new
+end
 ```
 
-### 선택 이유
+`Payments::Configuration#checkout_ready?`도 provider가 `"portone"`이 아니면 항상 false를 반환합니다. **새 결제는 무조건 PortOne 경로로만 갈 수 있습니다.** 남아있는 Toss 코드는 과거에 이미 결제했던 고객 데이터를 조회하기 위한 것이지, 신규 결제 경로가 아닙니다.
 
-| 항목 | 토스페이먼츠 직접 연동 | 포트원 V2 |
-|------|------|------|
-| 한국 사업자 가입 | ✅ | ✅ (연결 PG 기준) |
-| 카드 결제 | ✅ | ✅ (채널 설정 기준) |
-| 자동결제(빌링) | ✅ | ✅ |
-| PG 채널 변경 | 직접 재연동 | 콘솔 채널 교체 |
-| 운영 편의성 | 토스 콘솔 중심 | 여러 PG 통합 운영 |
+> 💡 실전 교훈: "언젠가 필요할지도 모르니 두 공급자를 다 지원하자"는 설계는 코드량만 두 배로 늘립니다. 실제로 이 프로젝트는 초기엔 Toss/PortOne 이중 지원 구조였지만, GoLive 정리 과정에서 "Simple is best" 원칙에 따라 죽은 Toss 경로를 정리 대상으로 분류했습니다.
 
 ---
 
-## 2️⃣ 결제 아키텍처
+## 2️⃣ 이 서비스가 파는 것: 구독이 아니라 "기간제 라이선스"
 
-```
-[사용자]
-  ↓ 결제 버튼 클릭
-[Rails] GET /billing/checkout
-  ↓ 결제위젯 렌더링
-[Toss Payments 결제위젯]
-  ↓ 카드/간편결제 진행
-[Toss Payments]
-  ↓ successUrl 로 redirect
-[Rails] POST /billing/success
-  ↓ 결제 승인 API 호출
-[Toss Payments 결제 승인 API]
-  ↓ DB 상태 확정
-[subscriptions 테이블 업데이트]
+일반적인 SaaS 튜토리얼은 보통 "매달 자동 결제되는 구독"을 다룹니다. Chatdox는 다릅니다.
 
-[자동결제]
-  ↓ billingKey 저장
-[Rails Job] 매월 청구
-  ↓ 자동결제 승인 API
-[Toss Payments]
+| 항목 | 일반적인 SaaS 구독 | Chatdox |
+|---|---|---|
+| 결제 방식 | 매달 자동 청구(빌링키) | **선불 일회성 결제** |
+| 자동 갱신 | 있음 | **없음** |
+| 만료 시 | 자동 재결제 시도 | 접근 종료, 재구매는 새 주문 |
+| 필요한 기능 | 빌링키 발급, 정기 청구 Job, 결제 실패 재시도 | 필요 없음 |
+
+```text
+1개월  —   7,700원(VAT포함)
+3개월  —  23,100원
+6개월  —  41,580원 (10% 할인)
+12개월 —  73,920원 (20% 할인)
 ```
+
+자동 갱신이 없다는 건 코드가 훨씬 단순해진다는 뜻입니다 — 빌링키 저장, 정기 청구 스케줄러, 실패 시 재시도 로직이 전부 필요 없습니다. 라이선스 시작일부터 종료일까지 계산해서 접근 권한만 부여하면 됩니다.
 
 ---
 
 ## 3️⃣ 데이터 모델
 
-> 아래 3~8절은 기존 토스페이먼츠 직접 연동 예제입니다. 두 공급자를 지원하는 신규 구현은 9절의 공급자 중립 모델과 게이트웨이를 기준으로 작성합니다.
-
-### Subscription 테이블 예시
-
-```ruby
-# db/migrate/xxxx_create_subscriptions.rb
-
-create_table :subscriptions do |t|
-  t.references :user, null: false, foreign_key: true
-
-  t.string :toss_customer_key, null: false
-  t.string :toss_billing_key
-  t.string :toss_payment_key
-  t.string :order_id, null: false
-
-  t.string :status, null: false, default: "pending"
-  t.datetime :current_period_start
-  t.datetime :current_period_end
-  t.datetime :cancel_at
-  t.datetime :canceled_at
-
-  t.timestamps
-end
-
-add_index :subscriptions, :toss_customer_key, unique: true
-add_index :subscriptions, :order_id, unique: true
+```text
+User ─┬─ has_many Order ──┬─ has_many OrderItem ── belongs_to Product, ProductOffer
+      │                   │              └─ has_one License
+      │                   ├─ has_one  PaymentTransaction
+      │                   └─ has_many RefundRequest
+      └─ has_many License
 ```
 
-### 상태값 예시
+핵심 테이블 6개:
 
-| status | 의미 |
-|------|------|
-| `pending` | 결제 대기 |
-| `active` | 구독 활성 |
-| `past_due` | 결제 실패/지연 |
-| `canceled` | 해지됨 |
-| `expired` | 기간 만료 |
+```ruby
+# Product — 판매 대상(chatdox, claudox)
+t.string  :code, null: false          # "chatdox"
+t.string  :name, null: false
+t.boolean :active,       default: true
+t.boolean :sale_enabled, default: false   # 판매 스위치, 시딩만으로는 켜지지 않음
+
+# ProductOffer — 상품의 기간별 가격 옵션
+t.references :product, null: false
+t.string  :code, null: false          # "chatdox-1m-v1"
+t.integer :duration_months, null: false
+t.integer :supply_amount, null: false  # 공급가
+t.integer :vat_amount, null: false
+t.integer :total_amount, null: false   # 실제 결제 금액
+t.integer :discount_bps, default: 0    # 할인율(basis points)
+
+# Order — 구매 시도, 상태머신 pending → paid|failed|canceled|abandoned
+t.references :user, null: false
+t.string  :public_id, null: false      # 외부에 노출되는 주문 ID
+t.string  :provider, null: false       # "portone"
+t.string  :status, default: "pending"
+t.integer :total_amount, null: false   # 생성 시점 스냅샷, 이후 불변
+t.date    :requested_start_on
+
+# OrderItem — 구매 시점 Product+ProductOffer 스냅샷
+t.references :order, null: false
+t.references :product, null: false
+t.references :product_offer, null: false
+t.integer :duration_months, null: false
+
+# License — 실제 보유 권한
+t.references :user, null: false
+t.references :product, null: false
+t.references :order_item
+t.date :starts_on, null: false
+t.date :access_ends_at, null: false    # KST 자정 기준 계산
+t.string :status, default: "scheduled" # scheduled/active/canceled
+
+# PaymentTransaction — PG 연동 기록
+t.references :order, null: false
+t.string :provider, null: false
+t.string :provider_payment_id, null: false
+t.string :status, default: "pending"
+```
+
+`Order`가 생성되는 시점에 가격/기간을 **스냅샷으로 저장**하는 게 중요합니다. 나중에 `ProductOffer`의 가격이 바뀌어도, 이미 생성된 주문의 금액은 그대로 유지됩니다.
 
 ---
 
-## 4️⃣ 환경 설정
+## 4️⃣ 결제 흐름 전체 그림
 
-### Step 1: 환경 변수 설정
-
-```bash
-# .env (또는 Rails credentials)
-TOSS_CLIENT_KEY=test_ck_xxx
-TOSS_SECRET_KEY=test_sk_xxx
-TOSS_WEBHOOK_SECRET=whsec_xxx
-TOSS_PRICE_AMOUNT=9900
+```text
+[사용자] 오퍼 선택(1/3/6/12개월)
+  ↓
+[Rails] GET /billing/checkout — 판매 gate 확인, 오퍼 목록 표시
+  ↓ 오퍼 선택 후 제출
+[Rails] POST /billing/orders — pending Order + OrderItem + PaymentTransaction 생성
+  ↓ 주문 상세 페이지로 리다이렉트
+[Rails] GET /billing/orders/:id — PortOne 결제창 호출 버튼 렌더링
+  ↓ 버튼 클릭
+[PortOne Browser SDK] requestPayment()
+  ↓ 카드 결제 진행
+[PortOne] → redirectUrl로 이동
+  ↓
+[Rails] GET /billing/success — 서버가 PortOne REST API로 재검증
+  ↓ 검증 통과
+[Commerce::OrderFinalizer] Order → paid, License 발급
 ```
 
-### Step 2: 공통 헬퍼
-
-```ruby
-# app/services/toss_payments/client.rb
-require "base64"
-require "json"
-require "net/http"
-
-class TossPayments::Client
-  def self.basic_auth_header
-    secret_key = ENV.fetch("TOSS_SECRET_KEY")
-    "Basic #{Base64.strict_encode64("#{secret_key}:")}"
-  end
-
-  def self.post_json(url, payload)
-    uri = URI(url)
-    request = Net::HTTP::Post.new(uri)
-    request["Authorization"] = basic_auth_header
-    request["Content-Type"] = "application/json"
-    request.body = payload.to_json
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-      http.request(request)
-    end
-
-    JSON.parse(response.body)
-  end
-end
-```
+**"pending Order는 결제 완료 전에 이미 생성된다"**는 점이 중요합니다 — 사용자가 결제창을 열기만 하고 안 닫고, 취소하고, 다시 시도해도 그때마다 DB엔 흔적이 남습니다. 8️⃣에서 이 문제를 실제로 어떻게 다뤘는지 다룹니다.
 
 ---
 
-## 5️⃣ 결제위젯 연결
-
-### 결제 시작 컨트롤러
+## 5️⃣ 체크아웃 화면과 주문 생성
 
 ```ruby
-# app/controllers/billing_controller.rb
-
-class BillingController < ApplicationController
-  before_action :authenticate_user!
-
-  def checkout
-    @order_id = "chatdox-#{current_user.id}-#{Time.current.to_i}"
-    @amount = ENV.fetch("TOSS_PRICE_AMOUNT").to_i
+# app/controllers/billing_controller.rb (발췌)
+def checkout
+  @chatdox_product = Product.find_by(code: "chatdox")
+  unless Commerce::Sales.enabled_for?(@chatdox_product)
+    render :checkout   # "구매 준비 중" 화면
+    return
   end
 
-  def success
-    payment_key = params[:paymentKey]
-    order_id = params[:orderId]
-    amount = params[:amount].to_i
-
-    payment = TossPayments::Client.post_json(
-      "https://api.tosspayments.com/v1/payments/confirm",
-      { paymentKey: payment_key, orderId: order_id, amount: amount }
-    )
-
-    subscription = current_user.subscription || current_user.build_subscription
-    subscription.update!(
-      toss_customer_key: current_user.id.to_s,
-      toss_payment_key: payment["paymentKey"],
-      order_id: payment["orderId"],
-      status: payment["status"].downcase,
-      current_period_start: Time.current,
-      current_period_end: 1.month.from_now
-    )
-
-    redirect_to dashboard_path, notice: "결제가 완료되었습니다."
-  rescue StandardError => e
-    Rails.logger.error("Toss Payments confirm error: #{e.message}")
-    redirect_to dashboard_path, alert: "결제 승인에 실패했습니다."
+  configuration = Payments::Configuration.current
+  unless configuration.checkout_ready?
+    render :checkout
+    return
   end
 
-  def cancel
-    redirect_to dashboard_path, alert: "결제가 취소되었습니다."
-  end
+  authenticate_user!
+  return if performed?
+
+  @offers = @chatdox_product.product_offers.active.ordered.select(&:available_at?)
+  render :checkout_enabled
 end
 ```
 
-### 결제위젯 예시
+판매 여부(`sale_enabled`)와 결제 설정 완비 여부(`checkout_ready?`) **두 게이트를 모두 통과해야만** 실제 오퍼 목록과 구매 버튼이 보입니다. 둘 중 하나라도 막혀 있으면 "구매 준비 중" 화면만 보여줍니다.
+
+오퍼를 선택해 제출하면 `POST /billing/orders`가 새 pending Order를 만듭니다(구체적인 서비스 객체는 8️⃣ 참고).
+
+---
+
+## 6️⃣ PortOne 결제창 호출 (실제 코드)
 
 ```erb
-<!-- app/views/billing/checkout.html.erb -->
-<script src="https://js.tosspayments.com/v2/standard"></script>
+<!-- app/views/billing_orders/show.html.erb -->
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 
-<button id="pay-button" class="px-5 py-3 rounded-lg bg-blue-600 text-white font-semibold">
-  월 구독 시작
+<button id="payment-button">
+  <%= number_with_delimiter(@order.total_amount) %>원 결제하기
 </button>
 
 <script>
-  const tossPayments = TossPayments("<%= ENV.fetch('TOSS_CLIENT_KEY') %>");
-
-  document.getElementById("pay-button").addEventListener("click", async () => {
-    await tossPayments.requestPayment("카드", {
-      amount: <%= @amount %>,
-      orderId: "<%= @order_id %>",
-      orderName: "Chatdox 월 구독",
-      successUrl: "<%= billing_success_url %>",
-      failUrl: "<%= billing_cancel_url %>",
-      customerKey: "<%= current_user.id %>",
-      customerEmail: "<%= current_user.email %>",
-      customerName: "<%= current_user.email %>"
-    });
+  document.getElementById("payment-button").addEventListener("click", async () => {
+    try {
+      const response = await PortOne.requestPayment({
+        storeId: <%= raw json_escape(@portone_store_id.to_json) %>,
+        channelKey: <%= raw json_escape(@portone_channel_key.to_json) %>,
+        paymentId: <%= raw json_escape(@order.public_id.to_json) %>,
+        orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
+        totalAmount: <%= @order.total_amount %>,
+        currency: <%= raw json_escape(@order.currency.to_json) %>,
+        payMethod: "CARD",
+        customer: { email: <%= raw json_escape(current_user.email.to_json) %> },
+        redirectUrl: <%= raw json_escape(billing_success_url.to_json) %>
+      });
+      if (response.code) throw new Error(response.message || "결제가 취소되었습니다.");
+      window.location.href = <%= raw json_escape(billing_success_url.to_json) %> + "?paymentId=" + encodeURIComponent(response.paymentId);
+    } catch (paymentError) {
+      // 화면에 paymentError.message 표시
+    }
   });
 </script>
 ```
 
+> ⚠️ `response.code`가 존재하면 실패로 간주하고, `response.message`가 없으면 "결제가 취소되었습니다"라는 고정 문구를 보여줍니다. 실제로는 카드 거절, 채널 설정 오류, 도메인 미등록 등 다양한 원인이 전부 이 문구로 뭉뚱그려질 수 있습니다 — **진짜 원인은 PortOne 콘솔의 결제내역에서 확인해야** 합니다. 화면 문구 하나만 보고 "사용자가 취소했다"고 단정하면 안 됩니다.
+
+`paymentId`로 `@order.public_id`를 그대로 쓰는 게 핵심입니다 — 이렇게 해야 나중에 서버가 어떤 주문에 대한 결제인지 다시 찾을 수 있습니다.
+
 ---
 
-## 6️⃣ 자동결제(빌링키)
-
-### 빌링키 발급 흐름
+## 7️⃣ 서버 측 검증 — 클라이언트를 믿지 않는다
 
 ```text
-1. 구매자가 자동결제 동의 화면에서 인증
-2. redirect URL로 authKey + customerKey 수신
-3. 서버가 /v1/billing/authorizations/issue 호출
-4. billingKey 저장
-5. 다음 결제일에 billingKey로 자동 청구
+클라이언트 화면만 믿으면 안 된다.
+진짜 결제 상태는 PortOne 서버 조회 API로 확정한다.
 ```
 
-### 자동결제 승인 서비스
-
 ```ruby
-# app/services/toss_payments/billing_charge.rb
+# app/controllers/billing_controller.rb (발췌)
+def success
+  order = find_purchase_order
+  process_purchase_order_success(order)
+end
 
-class TossPayments::BillingCharge
-  def self.charge!(billing_key:, customer_key:, amount:, order_name:)
-    TossPayments::Client.post_json(
-      "https://api.tosspayments.com/v1/billing/#{billing_key}",
-      {
-        customerKey: customer_key,
-        amount: amount,
-        orderId: "renewal-#{Time.current.to_i}",
-        orderName: order_name
-      }
-    )
-  end
+private
+
+def process_purchase_order_success(order)
+  raise Pundit::NotAuthorizedError unless order.user == current_user
+
+  gateway = Payments::Gateway.for(order.provider)
+  payment = gateway.verify_payment!(
+    payment_id: params[:paymentId],
+    expected_amount: order.total_amount,
+    expected_currency: order.currency
+  )
+
+  Commerce::OrderFinalizer.call!(order: order, payment: payment_attributes)
+  redirect_to dashboard_path, notice: "결제가 완료되었습니다."
 end
 ```
 
-### 결제 수단 인증 후 billingKey 발급
-
-```ruby
-# app/controllers/billing_auths_controller.rb
-
-class BillingAuthsController < ApplicationController
-  before_action :authenticate_user!
-
-  def create
-    payment = TossPayments::Client.post_json(
-      "https://api.tosspayments.com/v1/billing/authorizations/issue",
-      { authKey: params[:authKey], customerKey: current_user.id.to_s }
-    )
-
-    current_user.subscription.update!(
-      toss_customer_key: payment["customerKey"],
-      toss_billing_key: payment["billingKey"],
-      status: "active"
-    )
-
-    redirect_to dashboard_path, notice: "자동결제가 활성화되었습니다."
-  end
-end
-```
-
----
-
-## 7️⃣ 결제 상태 동기화
-
-### 웹훅 또는 재조회 방식
-
-결제 상태는 아래 둘 중 하나로 동기화합니다.
-
-1. 결제 성공 콜백에서 승인 API 호출 후 바로 저장
-2. 상태 변경 웹훅을 수신하면 `paymentKey`로 다시 조회해서 최신 상태 반영
-
-```ruby
-# app/controllers/webhooks/toss_payments_controller.rb
-
-class Webhooks::TossPaymentsController < ApplicationController
-  skip_before_action :verify_authenticity_token
-
-  def receive
-    payload = JSON.parse(request.raw_post)
-    return head :bad_request if payload["secret"] != ENV.fetch("TOSS_WEBHOOK_SECRET")
-
-    payment_key = payload["paymentKey"]
-    payment = TossPayments::Client.post_json(
-      "https://api.tosspayments.com/v1/payments/#{payment_key}",
-      {}
-    )
-
-    subscription = Subscription.find_by(toss_payment_key: payment["paymentKey"])
-    return head :ok unless subscription
-
-    subscription.update!(status: payment["status"].downcase)
-    head :ok
-  rescue StandardError => e
-    Rails.logger.error("Toss webhook error: #{e.message}")
-    head :internal_server_error
-  end
-end
-```
-
----
-
-## 8️⃣ 자주 발생하는 문제
-
-| 문제 | 원인 | 대응 |
-|------|------|------|
-| 결제 완료했는데 권한 미반영 | 승인 API 누락 | 승인 응답 저장 후 재조회 |
-| 중복 결제 | 결제 버튼 중복 클릭 | order_id 유니크 처리 |
-| 자동결제 실패 | billingKey 미저장 | 빌링키 발급 여부 확인 |
-| 결제 취소 후 계속 접근 | status 동기화 누락 | status가 `active`일 때만 허용 |
-
-### 권한 체크 예시
-
-```ruby
-def subscribed?
-  subscription&.status == "active" &&
-    subscription.current_period_end.present? &&
-    subscription.current_period_end > Time.current
-end
-```
-
----
-
-## 9️⃣ PortOne V2 선택 연동
-
-### 공급자 중립 모델
-
-토스 전용 컬럼만 사용하면 공급자 변경 시 애플리케이션 전체를 수정해야 합니다. 신규 구현은 다음 필드를 사용합니다.
-
-```ruby
-# subscriptions
-t.string :provider, null: false                 # toss 또는 portone
-t.string :provider_customer_id, null: false
-t.string :billing_key
-t.string :status, null: false, default: "pending"
-
-# payment_transactions (결제 시도/이력)
-t.references :subscription, null: false, foreign_key: true
-t.string :provider, null: false
-t.string :provider_payment_id, null: false
-t.string :order_id, null: false
-t.string :status, null: false, default: "pending"
-t.integer :amount, null: false
-t.string :currency, null: false, default: "KRW"
-t.json :provider_payload
-
-add_index :payment_transactions, [:provider, :provider_payment_id], unique: true
-add_index :payment_transactions, :order_id, unique: true
-```
-
-기존 `toss_customer_key`, `toss_billing_key`, `toss_payment_key` 데이터가 있다면 배포 전에 중립 컬럼으로 백필하고, 충분한 검증 기간 뒤 기존 컬럼을 제거합니다. `billing_key`는 비밀 값으로 암호화하고 로그에 남기지 않습니다.
-
-### 환경 변수
-
-```bash
-PAYMENT_PROVIDER=toss             # toss 또는 portone
-PAYMENT_PRICE_AMOUNT=9900
-PAYMENT_CURRENCY=KRW
-
-# Toss 직접 연동
-TOSS_CLIENT_KEY=test_ck_xxx
-TOSS_SECRET_KEY=test_sk_xxx
-TOSS_WEBHOOK_SECRET=whsec_xxx
-
-# PortOne V2 연동
-PORTONE_STORE_ID=store-xxx
-PORTONE_CHANNEL_KEY=channel-key-xxx
-PORTONE_API_SECRET=portone-api-secret
-PORTONE_WEBHOOK_SECRET=portone-webhook-secret
-```
-
-API Secret과 Webhook Secret은 서버에서만 사용합니다. 브라우저에는 Store ID와 Channel Key만 전달합니다.
-
-### 게이트웨이 선택
-
-```ruby
-# app/services/payments/gateway.rb
-module Payments
-  class Gateway
-    def self.current
-      for(ENV.fetch("PAYMENT_PROVIDER", "toss"))
-    end
-
-    def self.for(provider)
-      {
-        "toss" => TossGateway,
-        "portone" => PortoneGateway
-      }.fetch(provider).new
-    end
-  end
-end
-```
-
-`current`는 신규 결제에만 사용합니다. 자동 갱신과 취소는 `Payments::Gateway.for(subscription.provider)`를 호출해야 설정 변경 후에도 기존 구독이 원래 공급자로 처리됩니다.
-
-### PortOne Browser SDK V2 결제 요청
-
-```erb
-<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
-<button id="portone-pay-button">월 구독 시작</button>
-
-<script>
-  document.getElementById("portone-pay-button").addEventListener("click", async () => {
-    const response = await PortOne.requestPayment({
-      storeId: "<%= ENV.fetch('PORTONE_STORE_ID') %>",
-      channelKey: "<%= ENV.fetch('PORTONE_CHANNEL_KEY') %>",
-      paymentId: "<%= @order_id %>",
-      orderName: "Chatdox 월 구독",
-      totalAmount: <%= @amount %>,
-      currency: "KRW",
-      payMethod: "CARD",
-      customer: { email: "<%= current_user.email %>" }
-    });
-
-    if (response.code !== undefined) return alert(response.message);
-
-    await fetch("<%= billing_success_path %>", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": document.querySelector("meta[name=csrf-token]").content
-      },
-      body: JSON.stringify({ paymentId: response.paymentId, orderId: "<%= @order_id %>" })
-    });
-  });
-</script>
-```
-
-### PortOne 서버 검증
-
-포트원 V2 API는 `Authorization: PortOne {PORTONE_API_SECRET}` 헤더를 사용합니다. SDK 성공 응답만으로 구독을 활성화하지 말고 서버에서 `GET https://api.portone.io/payments/{paymentId}`를 호출하여 다음을 검증합니다.
+`gateway.verify_payment!`는 요청 파라미터가 아니라 **PortOne 서버에 직접 조회**(`GET https://api.portone.io/payments/{paymentId}`)해서 다음을 확인합니다.
 
 1. 조회한 결제 ID가 서버가 발급한 주문 ID와 같은가
 2. 상태가 결제 완료 상태인가
-3. `amount.total`이 서버의 상품 가격과 같은가
+3. `amount.total`이 서버에 저장된 주문 금액과 같은가(주문 생성 시점 스냅샷)
 4. 통화가 `KRW`인가
 
-요청 파라미터의 금액을 기준으로 승인하지 않습니다. 서버 상품 가격과 공급자 조회 결과가 모두 같을 때만 `active`로 변경합니다.
-
-### PortOne 빌링키 결제
-
-브라우저에서 `PortOne.requestIssueBillingKey()`로 빌링키를 발급하고 즉시 서버로 전송합니다. 갱신 시 서버가 새 `paymentId`를 만든 뒤 아래 API를 호출합니다.
-
-```text
-POST https://api.portone.io/payments/{paymentId}/billing-key
-Authorization: PortOne {PORTONE_API_SECRET}
-Idempotency-Key: {갱신 건 고유 키}
-
-{
-  "billingKey": "...",
-  "orderName": "월 구독 갱신",
-  "amount": { "total": 9900 },
-  "currency": "KRW",
-  "customer": { "id": "customer-123" }
-}
-```
-
-타임아웃이 발생하면 새 결제 ID를 만들지 말고 같은 `paymentId`로 조회하거나 동일한 멱등 키로 재시도합니다.
-
-### PortOne 웹훅
-
-`POST /webhooks/portone` 엔드포인트를 별도로 둡니다. 원문 body와 포트원의 공식 검증 방식으로 서명을 확인하고, 이벤트의 `paymentId`로 결제를 다시 조회한 후 상태를 반영합니다. 이벤트 ID 또는 `(provider, provider_payment_id)` 고유 인덱스로 중복 처리를 막습니다.
-
-웹훅 payload만 믿어 상태를 변경하지 않으며, 처리 순서는 `서명 검증 → 중복 확인 → 서버 재조회 → 금액/상태 확인 → DB 트랜잭션`입니다.
+넷 중 하나라도 안 맞으면 결제를 확정하지 않습니다. **브라우저가 보낸 금액을 그대로 신뢰하지 않는다**는 원칙이 여기서 가장 중요합니다.
 
 ---
 
-## 🔟 공급자별 테스트 방법
+## 8️⃣ 결제 실패·취소·중복 처리 — 실전에서 실제로 겪은 문제
 
-### 샌드박스/테스트 키 사용
+### 중복 pending 주문 문제 (실제로 발생했던 버그)
 
-토스 모드는 토스페이먼츠 테스트 키를 사용합니다. 포트원 모드는 콘솔의 테스트 채널, Store ID, V2 API Secret을 사용합니다. 실제 운영 키와 테스트 키를 같은 환경에 섞지 않습니다.
+체크아웃 폼을 제출할 때마다(결제창을 닫고 다시 시도, 오퍼를 바꿔서 다시 시도) 아무 방지 장치 없이 매번 새 `Order`를 만들면 어떻게 될까요? 실제로 이 프로젝트에서 첫 실전 테스트를 하며 겪은 일입니다 — 실제 완료한 주문은 2건인데 "결제 대기" 주문이 4건이나 쌓여 있었습니다.
 
-### 확인 포인트
+원인은 단순했습니다.
 
-1. 결제위젯이 로드되는가
-2. `successUrl`로 `paymentKey/orderId/amount`가 전달되는가
-3. 승인 API가 성공하는가
-4. subscription 상태가 `active`로 바뀌는가
-5. billingKey 발급 후 자동결제가 되는가
-6. 같은 콜백/웹훅이 반복되어도 한 번만 반영되는가
-7. 기본 공급자를 바꿔도 기존 구독은 저장된 provider로 갱신되는가
+```ruby
+# 문제가 있던 버전 — 매번 무조건 새 Order 생성
+def call!
+  Order.create!(user: @user, status: "pending", ...)
+  # 이미 pending 주문이 있는지 확인하는 로직이 없었음
+end
+```
+
+해결책은 체크아웃 진입점에만 중복 방지 로직을 추가하는 것이었습니다.
+
+```ruby
+# app/services/commerce/checkout_submission.rb (요지)
+def call!
+  existing_pending = find_existing_pending(product)
+
+  if existing_pending
+    return existing_pending if existing_pending.order_items.first!.offer_code == @offer_code
+    return existing_pending unless Commerce::PendingOrderAssessment.evidence_free?(order: existing_pending)
+  end
+
+  ApplicationRecord.transaction do
+    replace_pending_order!(existing_pending) if existing_pending
+    Commerce::OrderCreator.call!(user: @user, product_code: @product_code, offer_code: @offer_code, ...)
+  end
+end
+```
+
+- **같은 오퍼로 재제출** → 새로 안 만들고 기존 pending 주문을 그대로 재사용
+- **다른 오퍼로 재제출** → PG가 아직 손대지 않은(`evidence_free?`) 게 확인되면 기존 주문을 안전하게 폐기하고 새로 생성
+- **paid 주문은 전혀 영향 없음** — pending 상태만 확인 대상
+
+> 💡 여기서 배운 것: 이 로직을 처음엔 저수준 `Commerce::OrderCreator`(주문을 실제로 만드는 서비스) 안에 직접 넣으려 했는데, 그러면 "재시도 흐름"이나 테스트 코드가 의도적으로 "같은 조건으로 독립된 주문 여러 개"를 만드는 경우까지 막혀버렸습니다. 그래서 dedup 로직은 **실제 체크아웃 폼 제출이라는 특정 진입점**(`CheckoutSubmission`)에만 얇게 씌우고, 저수준 생성 로직(`OrderCreator`) 자체는 건드리지 않았습니다. "여러 곳에서 재사용되는 저수준 함수"와 "한 화면의 특정 정책"을 같은 곳에 섞지 않는 게 핵심이었습니다.
+
+### 결제 취소/실패
+
+```ruby
+def cancel
+  redirect_to dashboard_path, alert: "결제가 취소되었습니다."
+end
+```
+
+결제 승인 검증(7️⃣)이 실패하면 `Order`는 `pending` 상태 그대로 남습니다 — 함부로 `failed`로 단정하지 않고, 사용자가 `/billing/orders/:id/retry`로 같은 주문을 안전하게 다시 시도할 수 있게 열어둡니다.
+
+---
+
+## 9️⃣ 웹훅으로 상태 동기화
+
+`POST /webhooks/portone` 엔드포인트를 별도로 둡니다. 처리 순서가 중요합니다.
+
+```text
+서명 검증 → 중복 확인 → 서버 재조회 → 금액/상태 확인 → DB 트랜잭션
+```
+
+웹훅 payload 내용만 믿고 상태를 바로 바꾸지 않습니다 — payload는 "이 결제ID를 다시 확인해봐"라는 신호일 뿐이고, 실제 상태는 항상 PortOne 서버에 재조회해서 확정합니다. `(provider, provider_payment_id)` 고유 인덱스로 같은 이벤트가 여러 번 와도 한 번만 반영되게 막습니다.
+
+---
+
+## 🔟 테스트 방법 (샌드박스)
+
+1. PortOne 콘솔에서 테스트 채널의 Store ID / Channel Key 발급
+2. `PAYMENT_PROVIDER=portone` + 테스트 채널 값으로 환경변수 설정
+3. `LEEDOX_COMMERCE_ENABLED=true`, 어드민 화면(11장 참고)에서 `Product.sale_enabled` 켜기
+4. 실제로 회원가입부터 체크아웃, 결제, 대시보드에서 라이선스 확인까지 전 과정을 사람이 직접 눌러본다
+
+확인 포인트:
+
+1. 결제창이 정상 로드되는가
+2. `redirectUrl`로 `paymentId`가 전달되는가
+3. 서버 재조회 검증이 통과하는가
+4. `License`가 정확한 시작일/종료일로 발급되는가
+5. 같은 콜백/웹훅이 반복되어도 한 번만 반영되는가
+6. 체크아웃을 여러 번 시도해도 pending 주문이 1개로 유지되는가
 
 ---
 
 ## ✅ 챕터 9 체크리스트
 
-- [ ] `PAYMENT_PROVIDER=toss|portone`으로 신규 결제 공급자를 선택할 수 있다
-- [ ] 토스페이먼츠 또는 포트원 SDK로 구독 결제를 시작할 수 있다
-- [ ] 승인 API로 결제 결과를 서버에서 확정한다
-- [ ] `active / past_due / canceled` 상태를 DB에 반영한다
-- [ ] billingKey 기반 자동결제를 구현했다
-- [ ] 샌드박스 결제수단으로 성공/실패 흐름을 검증했다
-- [ ] 기존 구독의 갱신은 DB에 저장된 provider를 사용한다
+- [ ] `Product`/`ProductOffer`/`Order`/`OrderItem`/`License`/`PaymentTransaction` 데이터 모델을 이해했다
+- [ ] `Commerce::Sales.enabled_for?` + `Payments::Configuration#checkout_ready?` 두 게이트를 통과해야 체크아웃이 열린다
+- [ ] PortOne Browser SDK로 결제창을 호출할 수 있다
+- [ ] 서버에서 PortOne API로 재조회해서 금액/상태를 검증한다(클라이언트 응답을 그대로 신뢰하지 않는다)
+- [ ] 같은 유저·같은 상품의 pending 주문이 중복 생성되지 않는다
+- [ ] 웹훅은 서명 검증 → 중복 확인 → 서버 재조회 순서로 처리한다
+- [ ] 샌드박스 채널로 성공/실패/재시도 흐름을 실제로 검증했다
 
 ### 공식 참고 문서
 
 - [PortOne V2 REST API 개요](https://developers.portone.io/api/rest-v2/overview?v=v2)
-- [PortOne V2 빌링키 발급](https://developers.portone.io/opi/ko/integration/start/v2/billing/issue?v=v2)
-- [PortOne V2 빌링키 결제](https://developers.portone.io/opi/ko/integration/start/v2/billing/payment?v=v2)
+- [PortOne V2 결제 연동](https://developers.portone.io/opi/ko/integration/start/v2/checkout?v=v2)
 - [PortOne V2 웹훅](https://developers.portone.io/opi/ko/integration/webhook/readme-v2?v=v2)
 
 ---
 
 ## ➡️ 다음 챕터
 
-10장에서는 사용자별 결제/구독 상태를 확인하고 관리할 수 있는 **대시보드**를 구현합니다.
+10장에서는 사용자별 라이선스/주문 상태를 확인할 수 있는 **대시보드**를 구현합니다.
