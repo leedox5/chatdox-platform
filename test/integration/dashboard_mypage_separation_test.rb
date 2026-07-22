@@ -76,10 +76,14 @@ class DashboardMypageSeparationTest < ActionDispatch::IntegrationTest
     get dashboard_path
     assert_response :success
 
-    assert_match(/Claudox 이용 중/, response.body)
-    assert_match(/Claudox 20\/20/, response.body)
-    assert_match(/Chatdox 미보유/, response.body)
-    assert_match(%r{Chatdox 5/20}, response.body)
+    doc = Nokogiri::HTML(response.body)
+    claudox_section = doc.at_css("section[aria-label='Claudox 현황']").text
+    chatdox_section = doc.at_css("section[aria-label='Chatdox 현황']").text
+
+    assert_match(/Claudox 이용 중/, claudox_section)
+    assert_match(%r{20/20}, claudox_section)
+    assert_match(/Chatdox 미보유/, chatdox_section)
+    assert_match(%r{5/20}, chatdox_section)
   end
 
   test "mobile navigation includes 대시보드 for a regular signed-in user, matching desktop" do

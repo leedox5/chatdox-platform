@@ -2,130 +2,120 @@
   <%= render "shared/header" %>
 
   <main class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p class="text-sm font-semibold uppercase tracking-wide text-blue-600">My Dashboard</p>
         <h1 class="mt-1 text-3xl font-bold text-gray-900">
           안녕하세요, <%= current_user.name %>님
         </h1>
-        <p class="mt-2 text-gray-600">지금까지의 학습 흐름을 확인하고 다음 챕터로 이어가세요.</p>
+        <p class="mt-2 text-gray-600">상품별 학습 현황을 확인하고 다음 챕터로 이어가세요.</p>
       </div>
+
+      <%= link_to "결제·라이선스 내역은 마이페이지에서 →",
+        mypage_path,
+        class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
     </header>
 
-    <section aria-label="이용 현황" class="grid gap-4 md:grid-cols-2">
-      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="font-semibold text-gray-900">이용 상태</h2>
+    <% if current_user.trial_active? %>
+      <p class="mb-6 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-700">
+        무료 Trial <%= current_user.trial_days_remaining %>일 남음 — 보유하지 않은 상품도 앞부분 챕터를 무료로 볼 수 있습니다.
+      </p>
+    <% end %>
 
-        <div class="mt-4 space-y-3">
-          <% Product.order(:code).each do |product| %>
-            <div class="flex items-center justify-between gap-3">
-              <span class="text-sm text-gray-600"><%= product_period_text(current_user, product) %></span>
-              <%= product_status_badge(current_user, product) %>
+    <div class="space-y-6">
+      <% @product_dashboards.each do |pd| %>
+        <% product = pd[:product] %>
+        <section aria-label="<%= product.name %> 현황" class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-lg font-bold text-gray-900"><%= product.name %></h2>
+            <%= product_status_badge(current_user, product) %>
+          </div>
+          <p class="mt-1 text-sm text-gray-600"><%= product_period_text(current_user, product) %></p>
+
+          <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-lg bg-gray-50 p-4">
+              <p class="text-sm font-semibold text-gray-500">접근 가능 문서</p>
+              <p class="mt-1 text-2xl font-bold text-gray-900"><%= pd[:accessible] %>/<%= pd[:total] %></p>
+              <p class="mt-1 text-xs text-gray-500">실제 문서 접근은 계정 권한에 따라 매번 확인됩니다.</p>
+            </div>
+
+            <div class="rounded-lg bg-gray-50 p-4">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold text-gray-500">학습 진도</p>
+                <strong class="text-lg text-blue-600"><%= pd[:progress_percent] %>%</strong>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">전체 <%= pd[:total] %>개 중 <%= pd[:completed_count] %>개 완료</p>
+              <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-200"
+                   role="progressbar"
+                   aria-label="<%= product.name %> 학습 진도"
+                   aria-valuenow="<%= pd[:progress_percent] %>"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+                <div class="h-full rounded-full bg-blue-600 transition-all" style="width: <%= pd[:progress_percent] %>%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4 lg:grid-cols-3">
+            <div class="rounded-lg border border-gray-100 p-5 lg:col-span-2">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="font-semibold text-gray-900">최근 완료한 챕터</h3>
+                <%= link_to "전체 보기", chapter_index_path(product.code), class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+              </div>
+
+              <% if pd[:recent_chapters].any? %>
+                <ul class="mt-3 divide-y divide-gray-100">
+                  <% pd[:recent_chapters].each do |chapter| %>
+                    <li class="flex items-center justify-between gap-4 py-3">
+                      <div class="min-w-0">
+                        <p class="text-xs text-gray-500">Chapter <%= chapter[:id] %></p>
+                        <p class="truncate text-sm font-medium text-gray-900"><%= chapter[:title] %></p>
+                      </div>
+                      <%= link_to "다시 보기",
+                        chapter_link_path(product.code, chapter[:id]),
+                        class: "shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <div class="mt-3 rounded-lg bg-gray-50 p-5 text-center">
+                  <p class="text-sm text-gray-600">아직 완료한 챕터가 없습니다.</p>
+                  <%= link_to "첫 챕터 시작",
+                    chapter_link_path(product.code, "01"),
+                    class: "mt-2 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+                </div>
+              <% end %>
+            </div>
+
+            <aside class="rounded-lg bg-gray-900 p-5 text-white">
+              <p class="text-xs font-semibold uppercase tracking-wide text-blue-300">Next Step</p>
+              <% if pd[:next_chapter] %>
+                <h3 class="mt-2 text-lg font-bold"><%= pd[:next_chapter][:title] %></h3>
+                <p class="mt-1 text-xs text-gray-300">Chapter <%= pd[:next_chapter][:id] %></p>
+                <%= link_to "이어서 학습",
+                  chapter_link_path(product.code, pd[:next_chapter][:id]),
+                  class: "mt-4 block rounded-lg bg-white px-4 py-2 text-center text-sm font-semibold text-gray-900 transition hover:bg-gray-100" %>
+              <% else %>
+                <h3 class="mt-2 text-lg font-bold">모든 챕터를 완료했습니다.</h3>
+                <p class="mt-1 text-xs text-gray-300">필요한 챕터를 다시 복습해 보세요.</p>
+              <% end %>
+            </aside>
+          </div>
+
+          <% if product.code == "chatdox" %>
+            <div class="mt-6 rounded-lg border border-indigo-100 bg-indigo-50 p-5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-950">Chatdox GitHub Lab</h3>
+                  <p class="mt-1 text-sm text-slate-600">Private Lab 초대와 만료 권한 회수에 사용할 본인 GitHub 계정을 관리합니다.</p>
+                </div>
+                <%= link_to "GitHub 연결 상태", github_access_path,
+                  class: "rounded-lg bg-indigo-700 px-4 py-2.5 text-center font-semibold text-white transition hover:bg-indigo-800" %>
+              </div>
             </div>
           <% end %>
-        </div>
-
-        <% if current_user.trial_active? %>
-          <p class="mt-4 text-sm font-semibold text-violet-700">
-            무료 Trial <%= current_user.trial_days_remaining %>일 남음 — 보유하지 않은 상품도 앞부분 챕터를 무료로 볼 수 있습니다.
-          </p>
-        <% end %>
-
-        <%= link_to "결제·라이선스 내역은 마이페이지에서 →",
-          mypage_path,
-          class: "mt-4 block text-sm font-semibold text-blue-600 hover:text-blue-700" %>
-      </article>
-
-      <article class="flex flex-col justify-center rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <p class="text-sm font-semibold text-gray-500">접근 가능 문서</p>
-        <div class="mt-3 space-y-1">
-          <% @accessible_chapter_stats.each do |stat| %>
-            <p class="text-xl font-bold text-gray-900"><%= stat[:product].name %> <%= stat[:accessible] %>/<%= stat[:total] %></p>
-          <% end %>
-        </div>
-        <p class="mt-2 text-sm text-gray-600">
-          실제 문서 접근은 계정 권한에 따라 매번 확인됩니다.
-        </p>
-      </article>
-    </section>
-
-    <section aria-label="GitHub Lab 연결" class="mt-5 rounded-lg border border-indigo-100 bg-indigo-50 p-6">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-slate-950">Chatdox GitHub Lab</h2>
-          <p class="mt-1 text-sm text-slate-600">Private Lab 초대와 만료 권한 회수에 사용할 본인 GitHub 계정을 관리합니다.</p>
-        </div>
-        <%= link_to "GitHub 연결 상태", github_access_path,
-          class: "rounded-lg bg-indigo-700 px-4 py-2.5 text-center font-semibold text-white transition hover:bg-indigo-800" %>
-      </div>
-    </section>
-
-    <section aria-label="학습 진도" class="mt-5 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-gray-900">학습 진도</h2>
-          <p class="mt-1 text-sm text-gray-600">
-            전체 <%= @total_chapters %>개 중 <%= @completed_count %>개 완료
-          </p>
-        </div>
-        <strong class="text-3xl text-blue-600"><%= @progress_percent %>%</strong>
-      </div>
-
-      <div class="mt-5 h-3 overflow-hidden rounded-full bg-gray-100"
-           role="progressbar"
-           aria-label="커리큘럼 학습 진도"
-           aria-valuenow="<%= @progress_percent %>"
-           aria-valuemin="0"
-           aria-valuemax="100">
-        <div class="h-full rounded-full bg-blue-600 transition-all"
-             style="width: <%= @progress_percent %>%"></div>
-      </div>
-    </section>
-
-    <section class="mt-6 grid gap-6 lg:grid-cols-3">
-      <article class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-lg font-bold text-gray-900">최근 완료한 챕터</h2>
-          <%= link_to "전체 보기", docs_path, class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
-        </div>
-
-        <% if @recent_chapters.any? %>
-          <ul class="mt-4 divide-y divide-gray-100">
-            <% @recent_chapters.each do |chapter| %>
-              <li class="flex items-center justify-between gap-4 py-4">
-                <div class="min-w-0">
-                  <p class="text-sm text-gray-500">Chapter <%= chapter[:id] %></p>
-                  <p class="truncate font-medium text-gray-900"><%= chapter[:title] %></p>
-                </div>
-                <%= link_to "다시 보기",
-                  doc_path(chapter[:id]),
-                  class: "shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700" %>
-              </li>
-            <% end %>
-          </ul>
-        <% else %>
-          <div class="mt-4 rounded-lg bg-gray-50 p-6 text-center">
-            <p class="text-gray-600">아직 완료한 챕터가 없습니다.</p>
-            <%= link_to "첫 챕터 시작",
-              doc_path("01"),
-              class: "mt-3 inline-block font-semibold text-blue-600 hover:text-blue-700" %>
-          </div>
-        <% end %>
-      </article>
-
-      <aside class="rounded-lg bg-gray-900 p-6 text-white shadow-sm">
-        <p class="text-sm font-semibold uppercase tracking-wide text-blue-300">Next Step</p>
-        <% if @next_chapter %>
-          <h2 class="mt-3 text-xl font-bold"><%= @next_chapter[:title] %></h2>
-          <p class="mt-2 text-sm text-gray-300">Chapter <%= @next_chapter[:id] %></p>
-          <%= link_to "이어서 학습",
-            doc_path(@next_chapter[:id]),
-            class: "mt-6 block rounded-lg bg-white px-4 py-2.5 text-center font-semibold text-gray-900 transition hover:bg-gray-100" %>
-        <% else %>
-          <h2 class="mt-3 text-xl font-bold">모든 챕터를 완료했습니다.</h2>
-          <p class="mt-2 text-sm text-gray-300">필요한 챕터를 다시 복습해 보세요.</p>
-        <% end %>
-      </aside>
-    </section>
+        </section>
+      <% end %>
+    </div>
   </main>
 </div>

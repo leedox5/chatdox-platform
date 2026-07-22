@@ -1,7 +1,7 @@
 class ClaudoxController < ApplicationController
   include ChapterImages
 
-  CLAUDOX_PATH = Rails.root.join("hq/claudox")
+  CLAUDOX_PATH = Claudox::CLAUDOX_PATH
 
   def index
     @chapters = available_chapters
@@ -38,20 +38,7 @@ class ClaudoxController < ApplicationController
   private
 
   def available_chapters
-    Dir.glob(CLAUDOX_PATH.join("[0-9][0-9]_*.md")).sort.filter_map do |file_path|
-      id = File.basename(file_path, ".md").split("_", 2).first
-      next unless (1..20).cover?(id.to_i)
-
-      chapter = {
-        id: id,
-        slug: File.basename(file_path, ".md"),
-        title: extract_title(file_path),
-        product_code: "claudox",
-        available: true
-      }
-
-      chapter.merge(accessible: DocPolicy.new(current_user, chapter).view?)
-    end
+    Claudox.all.map { |chapter| chapter.merge(accessible: DocPolicy.new(current_user, chapter).view?) }
   end
 
   def chapters_by_phase(chapters)
@@ -65,16 +52,6 @@ class ClaudoxController < ApplicationController
         total_count: phase_chapters.size
       )
     end
-  end
-
-  def extract_title(file_path)
-    File.foreach(file_path) do |line|
-      next unless line.start_with?("#")
-
-      return line.sub(/^#+\s*/, "").strip
-    end
-
-    File.basename(file_path, ".md").tr("_", " ")
   end
 
   def strip_leading_heading(raw_markdown)

@@ -1,4 +1,6 @@
 class Claudox
+  CLAUDOX_PATH = Rails.root.join("hq/claudox")
+
   PHASES = [
     {
       key: "part_1",
@@ -26,4 +28,40 @@ class Claudox
   def self.phases
     PHASES
   end
+
+  # Unlike Curriculum::CHAPTERS, Claudox has no hand-written chapter list --
+  # its content lives as loose markdown files, so the chapter list is derived
+  # by scanning the directory. Shared by ClaudoxController (chapter list/read
+  # page) and ChapterProgressesController/DashboardController (chapter
+  # progress + titles), so this scan only happens in one place.
+  def self.all
+    Dir.glob(CLAUDOX_PATH.join("[0-9][0-9]_*.md")).sort.filter_map do |file_path|
+      id = File.basename(file_path, ".md").split("_", 2).first
+      next unless (1..20).cover?(id.to_i)
+
+      {
+        id: id,
+        slug: File.basename(file_path, ".md"),
+        title: extract_title(file_path),
+        product_code: "claudox",
+        available: true
+      }
+    end
+  end
+
+  def self.find(id)
+    normalized_id = id.to_s.rjust(2, "0")
+    all.find { |chapter| chapter[:id] == normalized_id }
+  end
+
+  def self.extract_title(file_path)
+    File.foreach(file_path) do |line|
+      next unless line.start_with?("#")
+
+      return line.sub(/^#+\s*/, "").strip
+    end
+
+    File.basename(file_path, ".md").tr("_", " ")
+  end
+  private_class_method :extract_title
 end
