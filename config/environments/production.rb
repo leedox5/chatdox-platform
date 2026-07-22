@@ -60,17 +60,11 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "leedox.up.railway.app", protocol: "https" }
 
-  # Resend SMTP relay. Requires RESEND_API_KEY in the Railway environment --
-  # without it, delivery simply fails (raise_delivery_errors defaults to true here).
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address: "smtp.resend.com",
-    port: 587,
-    user_name: "resend",
-    password: ENV.fetch("RESEND_API_KEY", nil),
-    authentication: :plain,
-    enable_starttls_auto: true
-  }
+  # Resend HTTP API (not SMTP relay). Railway blocks outbound SMTP ports (587/465)
+  # but allows HTTPS (443), so SMTP delivery can't even open a connection there.
+  # Requires RESEND_API_KEY in the Railway environment -- without it, delivery
+  # simply fails (raise_delivery_errors defaults to true here).
+  config.action_mailer.delivery_method = :resend_api
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
