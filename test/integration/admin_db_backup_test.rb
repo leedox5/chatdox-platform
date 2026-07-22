@@ -39,9 +39,17 @@ class AdminDbBackupTest < ActionDispatch::IntegrationTest
     ENV["DATABASE_URL"] = "postgres://appuser:s3cret@db.internal:5432/chatdox_production"
     sign_in(@admin)
 
-    # pg_dump genuinely isn't installed in this dev/test environment either,
-    # so this exercises the real SystemCallError path, not a stub.
-    post admin_db_backup_path
+    # Simulate the binary being absent via Errno::ENOENT (a SystemCallError) --
+    # this used to rely on pg_dump genuinely not being installed in this
+    # dev/test environment, but that's no longer a safe assumption to make
+    # about any given machine this suite runs on, so it's stubbed instead.
+    fake_capture3 = lambda do |*_args, **_kwargs|
+      raise Errno::ENOENT, "pg_dump"
+    end
+
+    with_singleton_method(Open3, :capture3, fake_capture3) do
+      post admin_db_backup_path
+    end
 
     assert_redirected_to admin_dashboard_path
     follow_redirect!

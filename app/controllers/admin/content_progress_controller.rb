@@ -2,7 +2,7 @@ class Admin::ContentProgressController < Admin::BaseController
   CHATDOX_PATH = Rails.root.join("hq/chatdox")
   CLAUDOX_PATH = Rails.root.join("hq/claudox")
   CLAUDOX_PROGRESS_PATH = CLAUDOX_PATH.join("88_progress.md")
-  CLAUDOX_ROW_PATTERN = /^\|\s*\d+\s*\|\s*(.+?)\s*\|\s*\[.+?\]\((\d{2})_[a-z0-9_]+\.md\)\s*\|\s*\d+%\s*\|\s*(✅|⬜)\s*\|$/
+  CLAUDOX_ROW_PATTERN = /^\|\s*\d+\s*\|\s*(.+?)\s*\|\s*\[.+?\]\((\d{2})_[a-z0-9_]+\.md\)\s*\|\s*\d+%\s*\|\s*(✅|⬜|🟡)\s*\|$/
 
   def show
     @chatdox_chapters = Curriculum.all.map do |chapter|
