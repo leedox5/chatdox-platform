@@ -4,9 +4,6 @@ class DashboardController < ApplicationController
   def show
     authorize :dashboard, :access?
 
-    @licenses = current_user.licenses.includes(:product).order(starts_on: :asc)
-    @orders = current_user.orders.includes(:refund_requests, :payment_transaction, order_items: :license)
-      .order(created_at: :desc).limit(10)
     @completed_ids = current_user.chapter_progresses
       .completed
       .order(completed_at: :desc)

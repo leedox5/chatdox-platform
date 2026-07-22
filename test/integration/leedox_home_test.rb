@@ -860,7 +860,7 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     )
     post user_session_path, params: { user: { email: user.email, password: "password123" } }
 
-    get dashboard_path
+    get mypage_path
 
     assert_response :success
     assert_select "span", text: "결제 대기"

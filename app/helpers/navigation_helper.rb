@@ -6,13 +6,6 @@ module NavigationHelper
     [ [ "가격", pricing_path ] ]
   end
 
-  def mobile_navigation_items
-    return [ [ "대시보드", admin_dashboard_path ], [ "마이페이지", mypage_path ] ] if current_user&.admin?
-    return [ [ "마이페이지", mypage_path ] ] if user_signed_in?
-
-    []
-  end
-
   private
 
   def admin_navigation_items

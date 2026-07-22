@@ -1,0 +1,57 @@
+require "test_helper"
+
+class DashboardMypageSeparationTest < ActionDispatch::IntegrationTest
+  setup do
+    @user = User.create!(name: "테스트 유저", email: "dashboard-mypage-separation@example.com", password: "password123")
+    post user_session_path, params: { user: { email: @user.email, password: "password123" } }
+  end
+
+  test "dashboard is a learning hub: progress, recent chapters, next step, GitHub Lab, doc access -- no order/license ledger" do
+    get dashboard_path
+    assert_response :success
+
+    assert_match(/학습 진도/, response.body)
+    assert_match(/최근 완료한 챕터/, response.body)
+    assert_match(/Next Step/, response.body)
+    assert_match(/GitHub Lab/, response.body)
+    assert_match(/접근 가능 문서/, response.body)
+
+    assert_no_match(/상품별 라이선스/, response.body)
+    assert_select "[aria-label='상품별 라이선스']", count: 0
+    assert_select "a[href=?]", mypage_path, text: /마이페이지/
+  end
+
+  test "my page owns account info and the full order/license ledger -- no learning-progress mini block" do
+    get mypage_path
+    assert_response :success
+
+    assert_match(/계정 정보/, response.body)
+    assert_select "[aria-label='상품별 라이선스']"
+
+    assert_no_match(/학습 요약/, response.body)
+    assert_no_match(/완료한 챕터/, response.body)
+    assert_select "a[href=?]", dashboard_path, text: /대시보드/
+  end
+
+  test "trial remaining days moved into my page's 이용 상태 card, not deleted" do
+    @user.update!(created_at: 1.day.ago)
+    assert @user.trial_active?, "expected a fresh user to be in an active trial"
+
+    get mypage_path
+    assert_response :success
+    assert_match(/Trial 남은 기간/, response.body)
+  end
+
+  test "mobile navigation includes 대시보드 for a regular signed-in user, matching desktop" do
+    get root_path
+    assert_response :success
+
+    doc = Nokogiri::HTML(response.body)
+    desktop_labels = doc.css("header nav[aria-label='주요 내비게이션'] a").map(&:text)
+    mobile_labels = doc.css("nav[aria-label='모바일 내비게이션'] a").map(&:text)
+
+    assert_includes desktop_labels, "대시보드"
+    assert_includes mobile_labels, "대시보드"
+    assert_equal desktop_labels, mobile_labels
+  end
+end

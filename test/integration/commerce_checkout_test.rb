@@ -257,7 +257,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal({ "status" => "PAID" }, order.payment_transaction.reload.provider_payload)
   end
 
-  test "Dashboard and My Page show product license and order summaries" do
+  test "Dashboard is a learning hub (no order/license ledger) and My Page owns the full order summary" do
     enable_chatdox_sales
     sign_in
     order = create_order
@@ -265,14 +265,16 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
     get dashboard_path
     assert_response :success
-    assert_match(/상품별 라이선스/, response.body)
-    assert_match(/Chatdox/, response.body)
-    assert_match(/결제 완료/, response.body)
+    assert_match(/학습 진도/, response.body)
+    assert_no_match(/상품별 라이선스/, response.body)
+    assert_no_match(/결제 완료/, response.body)
+    assert_select "a[href=?]", mypage_path, text: /마이페이지/
 
     get mypage_path
     assert_response :success
     assert_match(/상품별 라이선스/, response.body)
     assert_match(/Chatdox/, response.body)
+    assert_match(/결제 완료/, response.body)
   end
 
   private

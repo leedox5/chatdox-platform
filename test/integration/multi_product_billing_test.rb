@@ -135,7 +135,7 @@ class MultiProductBillingTest < ActionDispatch::IntegrationTest
     assert_equal "chatdox", chatdox_order.licenses.first.product.code
 
     sign_in(@user)
-    get dashboard_path
+    get mypage_path
     assert_response :success
     doc = Nokogiri::HTML(response.body)
     order_rows = doc.css("[aria-label='상품별 라이선스'] li").map(&:text)

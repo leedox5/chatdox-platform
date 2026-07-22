@@ -155,14 +155,14 @@ class ManualBankTransferCheckoutTest < ActionDispatch::IntegrationTest
     assert_no_match(/결제 대기 중/, response.body)
   end
 
-  test "landing page and dashboard purchase links stay open without PortOne configured" do
+  test "landing page and my page purchase links stay open without PortOne configured" do
     get chatdox_path
     assert_response :success
     assert_no_match(/신규 결제 시스템을 준비 중이며 현재는 구매할 수 없습니다/, response.body)
     assert_select "a[href=?]", billing_checkout_path, text: /기간제 라이선스 구매/
 
     sign_in(@buyer)
-    get dashboard_path
+    get mypage_path
     assert_response :success
     assert_select "a[href=?]", billing_checkout_path, text: "Chatdox 구매"
   end
