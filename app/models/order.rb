@@ -1,4 +1,5 @@
 class Order < ApplicationRecord
+  MANUAL_PROVIDER = "manual"
   STATUSES = %w[pending paid failed canceled abandoned].freeze
   TRANSITIONS = {
     "pending" => %w[paid failed canceled abandoned],

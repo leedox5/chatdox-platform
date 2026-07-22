@@ -1,7 +1,6 @@
 class BillingOrdersController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_chatdox_sales_enabled
-  before_action :ensure_payment_configuration
 
   def create
     order = Commerce::CheckoutSubmission.call!(
@@ -9,7 +8,7 @@ class BillingOrdersController < ApplicationController
       product_code: order_params.fetch(:product_code),
       offer_code: order_params.fetch(:offer_code),
       requested_start_on: order_params[:requested_start_on],
-      provider: Payments::Configuration.current.provider
+      provider: checkout_provider
     )
 
     redirect_to billing_order_path(order.public_id)
@@ -31,8 +30,13 @@ class BillingOrdersController < ApplicationController
       start_on: @order.requested_start_on,
       duration_months: @order_item.duration_months
     )
-    @portone_store_id = ENV.fetch("PORTONE_STORE_ID", "")
-    @portone_channel_key = ENV.fetch("PORTONE_CHANNEL_KEY", "")
+
+    if @order.provider == Order::MANUAL_PROVIDER
+      @bank_transfer_account_info = ENV.fetch("BANK_TRANSFER_ACCOUNT_INFO", "")
+    else
+      @portone_store_id = ENV.fetch("PORTONE_STORE_ID", "")
+      @portone_channel_key = ENV.fetch("PORTONE_CHANNEL_KEY", "")
+    end
   end
 
   def retry_preview
@@ -60,7 +64,7 @@ class BillingOrdersController < ApplicationController
     order = Commerce::RetryOrder.call!(
       source_order: source_order,
       user: current_user,
-      provider: Payments::Configuration.current.provider
+      provider: checkout_provider
     )
     redirect_to billing_order_path(order.public_id), notice: "현재 상품 조건으로 새 주문을 만들었습니다."
   rescue Commerce::RetryOrder::Unavailable => e
@@ -80,16 +84,11 @@ class BillingOrdersController < ApplicationController
     redirect_to billing_checkout_path, alert: "신규 결제는 준비 중입니다."
   end
 
-  def ensure_payment_configuration
+  # PortOne when it's fully configured, manual bank transfer otherwise -- this
+  # is what lets checkout stay open even while PortOne approval is pending.
+  def checkout_provider
     configuration = Payments::Configuration.current
-    return if configuration.checkout_ready?
-
-    Commerce::EventLogger.log(
-      event: "commerce.gate_configuration_mismatch",
-      provider: configuration.provider,
-      status: "missing_configuration"
-    )
-    redirect_to billing_checkout_path, alert: "결제 설정을 준비 중입니다."
+    configuration.checkout_ready? ? configuration.provider : Order::MANUAL_PROVIDER
   end
 
   def retryable?(order, assessment)

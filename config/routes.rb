@@ -63,6 +63,7 @@ Rails.application.routes.draw do
     namespace :commerce do
       resources :orders, only: %i[index show], param: :id do
         post :abandon, on: :member
+        post :confirm_manual_payment, on: :member
       end
       resources :refund_requests, only: %i[show update], param: :id
       resources :products, only: %i[index update]

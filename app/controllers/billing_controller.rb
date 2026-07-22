@@ -8,17 +8,6 @@ class BillingController < ApplicationController
       return
     end
 
-    configuration = Payments::Configuration.current
-    unless configuration.checkout_ready?
-      Commerce::EventLogger.log(
-        event: "commerce.gate_configuration_mismatch",
-        provider: configuration.provider,
-        status: "missing_configuration"
-      )
-      render :checkout
-      return
-    end
-
     authenticate_user!
     return if performed?
 

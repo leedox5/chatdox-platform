@@ -53,6 +53,13 @@ bin/rails commerce:preflight PROVIDER=<sandbox-provider>
 
 `provider_configuration=passed`가 아니면 판매 gate를 열지 않는다.
 
+### 3-1. PortOne 미승인 구간의 무통장입금 fallback
+
+PortOne 자체 승인(채널 심사 결과 대기 등)이 아직 끝나지 않은 상태에서도, `Product.sale_enabled`만 켜져 있으면 체크아웃은 자동으로 무통장입금 경로(provider `manual`)로 열린다 — PortOne이 `provider_configuration=passed` 상태가 되면 다음 결제부터 자동으로 PortOne으로 돌아간다(둘 중 하나를 명시적으로 고르는 UI는 없다).
+
+- `BANK_TRANSFER_ACCOUNT_INFO` — 주문 확인 화면에 그대로 노출되는 입금 계좌 안내 문구(줄바꿈 가능). 실제 계좌 정보는 이 문서·커밋·티켓에 남기지 않고 secret store에서 직접 주입한다.
+- 입금 확인은 전적으로 수동이다: `/admin/commerce/orders/:id`에서 관리자가 실제 입금을 확인한 뒤 "입금 확인" 액션을 눌러야 라이선스가 발급된다. 자동 확인/자동 취소는 없다.
+
 ## 4. 자동 테스트와 대조
 
 ```sh

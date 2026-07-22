@@ -1,6 +1,7 @@
 <% content_for :title, "Chatdox 주문 확인" %>
+<% manual = @order.provider == Order::MANUAL_PROVIDER %>
 <% content_for :head do %>
-  <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+  <% unless manual %><script src="https://cdn.portone.io/v2/browser-sdk.js"></script><% end %>
 <% end %>
 
 <div class="min-h-screen bg-slate-50">
@@ -23,40 +24,55 @@
       <p class="mt-4 break-keep rounded-xl bg-slate-50 p-4 text-xs leading-5 text-slate-600">자동 갱신되지 않는 일회성 선불 결제입니다. 결제 금액과 라이선스 기간은 서버에 저장된 주문을 기준으로 다시 검증합니다.</p>
     </section>
 
-    <button id="payment-button" type="button" class="mt-6 w-full rounded-xl bg-blue-600 px-6 py-3.5 font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-      <%= number_with_delimiter(@order.total_amount) %>원 결제하기
-    </button>
-    <p id="payment-error" class="mt-3 hidden text-sm font-semibold text-red-700" role="alert"></p>
+    <% if manual %>
+      <section class="mt-6 rounded-2xl border border-blue-200 bg-blue-50/60 p-6" aria-labelledby="bank-transfer-title">
+        <h2 id="bank-transfer-title" class="text-lg font-bold text-slate-900">무통장입금 안내</h2>
+        <dl class="mt-4 divide-y divide-blue-100 text-sm">
+          <div class="flex justify-between gap-4 py-3"><dt class="text-slate-600">입금 계좌</dt><dd class="whitespace-pre-line text-right font-semibold text-slate-900"><%= @bank_transfer_account_info.presence || "계좌 정보를 확인 중입니다. 잠시 후 다시 시도해 주세요." %></dd></div>
+          <div class="flex justify-between gap-4 py-3"><dt class="text-slate-600">입금자명/메모</dt><dd class="font-mono font-bold text-blue-700"><%= manual_transfer_reference(@order) %></dd></div>
+        </dl>
+        <p class="mt-4 break-keep rounded-xl bg-white p-4 text-xs leading-5 text-slate-600">
+          입금하실 때 입금자명 또는 메모에 위 참조번호(<strong><%= manual_transfer_reference(@order) %></strong>)를 남겨주세요. 입금 확인은 관리자가 수동으로 진행하며, <strong>24시간 이내 확인 후 라이선스가 발급됩니다.</strong> 발급이 지연되면 고객센터로 문의해 주세요.
+        </p>
+      </section>
+    <% else %>
+      <button id="payment-button" type="button" class="mt-6 w-full rounded-xl bg-blue-600 px-6 py-3.5 font-bold text-white transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+        <%= number_with_delimiter(@order.total_amount) %>원 결제하기
+      </button>
+      <p id="payment-error" class="mt-3 hidden text-sm font-semibold text-red-700" role="alert"></p>
+    <% end %>
   </main>
 
   <%= render "shared/footer" %>
 </div>
 
-<script>
-  document.getElementById("payment-button")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    const error = document.getElementById("payment-error");
-    button.disabled = true;
-    error.classList.add("hidden");
+<% unless manual %>
+  <script>
+    document.getElementById("payment-button")?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      const error = document.getElementById("payment-error");
+      button.disabled = true;
+      error.classList.add("hidden");
 
-    try {
-      const response = await PortOne.requestPayment({
-        storeId: <%= raw json_escape(@portone_store_id.to_json) %>,
-        channelKey: <%= raw json_escape(@portone_channel_key.to_json) %>,
-        paymentId: <%= raw json_escape(@order.public_id.to_json) %>,
-        orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
-        totalAmount: <%= @order.total_amount %>,
-        currency: <%= raw json_escape(@order.currency.to_json) %>,
-        payMethod: "CARD",
-        customer: { email: <%= raw json_escape(current_user.email.to_json) %> },
-        redirectUrl: <%= raw json_escape(billing_success_url.to_json) %>
-      });
-      if (response.code) throw new Error(response.message || "결제가 취소되었습니다.");
-      window.location.href = <%= raw json_escape(billing_success_url.to_json) %> + "?paymentId=" + encodeURIComponent(response.paymentId);
-    } catch (paymentError) {
-      error.textContent = paymentError.message || "결제를 시작하지 못했습니다.";
-      error.classList.remove("hidden");
-      button.disabled = false;
-    }
-  });
-</script>
+      try {
+        const response = await PortOne.requestPayment({
+          storeId: <%= raw json_escape(@portone_store_id.to_json) %>,
+          channelKey: <%= raw json_escape(@portone_channel_key.to_json) %>,
+          paymentId: <%= raw json_escape(@order.public_id.to_json) %>,
+          orderName: <%= raw json_escape("#{@order_item.product_name} #{@order_item.duration_months}개월".to_json) %>,
+          totalAmount: <%= @order.total_amount %>,
+          currency: <%= raw json_escape(@order.currency.to_json) %>,
+          payMethod: "CARD",
+          customer: { email: <%= raw json_escape(current_user.email.to_json) %> },
+          redirectUrl: <%= raw json_escape(billing_success_url.to_json) %>
+        });
+        if (response.code) throw new Error(response.message || "결제가 취소되었습니다.");
+        window.location.href = <%= raw json_escape(billing_success_url.to_json) %> + "?paymentId=" + encodeURIComponent(response.paymentId);
+      } catch (paymentError) {
+        error.textContent = paymentError.message || "결제를 시작하지 못했습니다.";
+        error.classList.remove("hidden");
+        button.disabled = false;
+      }
+    });
+  </script>
+<% end %>

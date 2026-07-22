@@ -18,6 +18,9 @@
           <div><dt class="text-slate-500">사용자</dt><dd><%= masked_email(@order.user) %></dd></div>
           <div><dt class="text-slate-500">상태</dt><dd><%= order_status_label(@order.status) %></dd></div>
           <div><dt class="text-slate-500">Provider</dt><dd><%= @order.provider %></dd></div>
+          <% if @order.provider == Order::MANUAL_PROVIDER %>
+            <div><dt class="text-slate-500">무통장입금 참조번호</dt><dd class="font-mono font-bold"><%= manual_transfer_reference(@order) %></dd></div>
+          <% end %>
           <div><dt class="text-slate-500">금액</dt><dd><%= number_with_delimiter(@order.supply_amount) %> + VAT <%= number_with_delimiter(@order.vat_amount) %> = <%= number_with_delimiter(@order.total_amount) %>원</dd></div>
           <div><dt class="text-slate-500">요청 시작일</dt><dd><%= @order.requested_start_on %></dd></div>
           <div><dt class="text-slate-500">생성/결제/확정</dt><dd><%= @order.created_at %><br><%= @order.paid_at || "-" %><br><%= @order.finalized_at || "-" %></dd></div>
@@ -34,6 +37,9 @@
           <div><dt class="text-slate-500">정리 가능</dt><dd><%= @assessment.safe_to_abandon ? "가능" : "불가/확인 필요" %></dd></div>
         </dl>
         <% if @assessment.safe_to_abandon %><%= button_to "결제 이탈로 정리", abandon_admin_commerce_order_path(@order.public_id), data: { turbo_confirm: "PG 성공 흔적이 없음을 확인했습니까?" }, class: "mt-5 rounded-lg bg-amber-600 px-4 py-2 font-bold text-white" %><% end %>
+        <% if @order.provider == Order::MANUAL_PROVIDER && @order.status == "pending" %>
+          <%= button_to "입금 확인 (라이선스 발급)", confirm_manual_payment_admin_commerce_order_path(@order.public_id), data: { turbo_confirm: "은행 계좌에서 입금(참조번호 #{manual_transfer_reference(@order)})을 실제로 확인했습니까?" }, class: "mt-5 rounded-lg bg-blue-600 px-4 py-2 font-bold text-white" %>
+        <% end %>
       </section>
     </div>
 

@@ -25,6 +25,15 @@ class Admin::Commerce::OrdersController < Admin::BaseController
     redirect_to admin_commerce_order_path(params[:id]), alert: "PG 확인이 필요한 주문은 정리할 수 없습니다."
   end
 
+  def confirm_manual_payment
+    order = order_scope.find_by!(public_id: params[:id])
+    Commerce::ConfirmManualPayment.call!(order: order, actor: current_user)
+    redirect_to admin_commerce_order_path(order.public_id), notice: "입금을 확인하고 라이선스를 발급했습니다."
+  rescue Commerce::ConfirmManualPayment::Unavailable => e
+    Rails.logger.warn("Commerce manual payment confirmation rejected: #{e.class.name}")
+    redirect_to admin_commerce_order_path(params[:id]), alert: "무통장입금 대기 중인 주문만 확인할 수 있습니다."
+  end
+
   private
 
   def order_scope

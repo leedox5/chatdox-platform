@@ -1,6 +1,11 @@
 module Payments
   class Gateway
-    PROVIDERS = %w[portone].freeze
+    # "manual" (Order::MANUAL_PROVIDER) is included here because this list also
+    # doubles as the Order/PaymentTransaction#provider allowlist -- it is NOT a
+    # gateway this class can resolve. `for` deliberately has no "manual" entry,
+    # so a manual-provider order accidentally routed through Payments::Gateway
+    # fails loudly instead of silently doing nothing.
+    PROVIDERS = %w[portone manual].freeze
 
     def self.current
       provider = ENV.fetch("PAYMENT_PROVIDER")

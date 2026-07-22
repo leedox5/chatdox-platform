@@ -4,7 +4,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
   PAYMENT_ENV_KEYS = %w[
     LEEDOX_COMMERCE_ENABLED PAYMENT_PROVIDER
     PORTONE_API_SECRET PORTONE_STORE_ID PORTONE_CHANNEL_KEY
-    PORTONE_WEBHOOK_SECRET PAYMENT_PRICE_AMOUNT
+    PORTONE_WEBHOOK_SECRET PAYMENT_PRICE_AMOUNT BANK_TRANSFER_ACCOUNT_INFO
   ].freeze
 
   setup do
@@ -79,24 +79,35 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_match(/자동 갱신되지 않는 일회성 선불 결제/, response.body)
   end
 
-  test "enabled sale gates with missing PG configuration fail closed without exposing values" do
+  test "enabled sale with missing PG configuration falls back to manual bank transfer checkout" do
     ENV["LEEDOX_COMMERCE_ENABLED"] = "true"
     @product.update!(sale_enabled: true)
     (PAYMENT_ENV_KEYS - %w[LEEDOX_COMMERCE_ENABLED]).each { |key| ENV.delete(key) }
+    ENV["BANK_TRANSFER_ACCOUNT_INFO"] = "카카오뱅크 3333-01-1234567 (예금주 리독스)"
     sign_in
+    today = Time.current.in_time_zone(Commerce::PeriodCalculator::KST).to_date
 
-    assert_no_difference [ "Order.count", "PaymentTransaction.count" ] do
-      get billing_checkout_path
-      assert_response :success
-      assert_match(/신규 결제를 준비하고 있습니다/, response.body)
-      assert_select "script[src*='tosspayments']", count: 0
-      assert_select "script[src*='portone']", count: 0
+    get billing_checkout_path
+    assert_response :success
+    assert_no_match(/신규 결제를 준비하고 있습니다/, response.body)
+    assert_select "input[name='order[offer_code]']", count: 4
 
+    assert_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ], 1 do
       post billing_orders_path, params: {
-        order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
+        order: { product_code: "chatdox", offer_code: "chatdox-1m-v1", requested_start_on: today }
       }
-      assert_redirected_to billing_checkout_path
     end
+
+    order = Order.order(:created_at).last
+    assert_equal "manual", order.provider
+    assert_redirected_to billing_order_path(order.public_id)
+
+    follow_redirect!
+    assert_response :success
+    assert_select "script[src*='portone']", count: 0
+    assert_match(/카카오뱅크 3333-01-1234567/, response.body)
+    assert_match(/24시간 이내 확인 후 라이선스가 발급됩니다/, response.body)
+    assert_match(Regexp.new(Regexp.escape(order.public_id.delete("-").first(8).upcase)), response.body)
   end
 
   test "existing Chatdox period is displayed as a fixed extension date" do
