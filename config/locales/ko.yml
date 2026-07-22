@@ -1,4 +1,12 @@
 ko:
+  # Only the attributes Devise's own flash messages interpolate (e.g.
+  # devise.failure.invalid's %{authentication_keys}) -- humanizing every
+  # model attribute into Korean is out of scope for this round.
+  activerecord:
+    attributes:
+      user:
+        email: "이메일"
+        password: "비밀번호"
   date:
     formats:
       long: "%Y년 %-m월 %-d일"

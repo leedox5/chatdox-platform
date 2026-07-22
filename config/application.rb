@@ -34,6 +34,18 @@ module ChatdoxPlatform
     # in config/environments, which are processed later.
     #
     config.time_zone = "Asia/Seoul"
+    config.i18n.default_locale = :ko
+    # Rails/ActiveModel/ActiveRecord/Devise only ship English translations for
+    # their own built-in messages (validation errors, etc.) -- this app has no
+    # ko.yml coverage for those and isn't attempting to add it. Without a
+    # fallback, any of those untranslated lookups would render as
+    # "translation missing: ko...." instead of silently staying in English.
+    # This must name :en explicitly -- `fallbacks = true` falls back to
+    # I18n.default_locale, which is :ko itself now, so it would be a no-op.
+    # Has to be set for every environment, not just production, since
+    # I18n.locale defaults straight from I18n.default_locale everywhere (the
+    # app never sets it per-request).
+    config.i18n.fallbacks = [ :en ]
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Don't generate system test files.

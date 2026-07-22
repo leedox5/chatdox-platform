@@ -66,10 +66,6 @@ Rails.application.configure do
   # simply fails (raise_delivery_errors defaults to true here).
   config.action_mailer.delivery_method = :resend_api
 
-  # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
-  # the I18n.default_locale when a translation cannot be found).
-  config.i18n.fallbacks = true
-
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 
