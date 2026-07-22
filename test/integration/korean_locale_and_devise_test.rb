@@ -50,10 +50,20 @@ class KoreanLocaleAndDeviseTest < ActionDispatch::IntegrationTest
     assert_no_match(/[a-zA-Z]{4,}/, visible_text.gsub(user.email, ""))
   end
 
-  test "flash alert box sits with a small gap below the navbar, not flush against it" do
+  test "flash alert box sits 2-3px below the navbar (close, not floating away from it)" do
+    # Header height, computed from the actual Tailwind values (--spacing: .25rem,
+    # text-sm line-height 20px, border-b 1px) rather than guessed at:
+    #   mobile (<768px, hamburger h-10=40px content):        12 + 40 + 12 + 1 = 65px
+    #   desktop (>=768px, nav buttons py-2+text-sm=36px):    12 + 36 + 12 + 1 = 61px
+    mobile_header_height = 65
+    desktop_header_height = 61
+
     get dashboard_path
     follow_redirect!
-    assert_select "div[data-controller=flash].top-28.sm\\:top-32"
+    assert_select "div[data-controller=flash].top-\\[68px\\].md\\:top-\\[64px\\]"
+
+    assert_includes 2..3, 68 - mobile_header_height
+    assert_includes 2..3, 64 - desktop_header_height
   end
 
   test "existing explicit locale: :ko overrides on docs and claudox pages still render Korean dates (no regression)" do
