@@ -30,6 +30,9 @@ class ClaudoxController < ApplicationController
     raw_markdown = File.read(file_path)
 
     @content_html = render_markdown(strip_leading_heading(raw_markdown))
+    @chapter_progress = if user_signed_in?
+      current_user.chapter_progresses.find_by(chapter_id: @current_id, product_code: "claudox")
+    end
   end
 
   private

@@ -10,14 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_22_120000) do
   create_table "chapter_progresses", force: :cascade do |t|
     t.string "chapter_id", null: false
     t.datetime "completed_at"
     t.datetime "created_at", null: false
+    t.string "product_code", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
-    t.index ["user_id", "chapter_id"], name: "index_chapter_progresses_on_user_id_and_chapter_id", unique: true
+    t.index ["user_id", "chapter_id", "product_code"], name: "idx_on_user_id_chapter_id_product_code_a1d40a0cbd", unique: true
     t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
   end
 

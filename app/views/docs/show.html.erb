@@ -97,12 +97,12 @@
 
               <% if @chapter_progress&.completed? %>
                 <%= button_to "완료 표시 취소",
-                  chapter_progresses_path(chapter_id: @current_id),
+                  chapter_progresses_path(chapter_id: @current_id, product_code: "chatdox"),
                   method: :delete,
                   class: "rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-100" %>
               <% else %>
                 <%= button_to "이 챕터 완료",
-                  chapter_progresses_path(chapter_id: @current_id),
+                  chapter_progresses_path(chapter_id: @current_id, product_code: "chatdox"),
                   method: :post,
                   class: "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700" %>
               <% end %>

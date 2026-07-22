@@ -5,6 +5,7 @@ class DashboardController < ApplicationController
     authorize :dashboard, :access?
 
     @completed_ids = current_user.chapter_progresses
+      .where(product_code: "chatdox")
       .completed
       .order(completed_at: :desc)
       .pluck(:chapter_id)
