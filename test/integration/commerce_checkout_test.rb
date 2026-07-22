@@ -145,7 +145,10 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
         order: { product_code: "claudox", offer_code: "chatdox-1m-v1", requested_start_on: Date.current }
       }
     end
-    assert_redirected_to billing_checkout_path
+    # Redirects back to Claudox's own checkout, not Chatdox's -- the whole
+    # point of generalizing this gate was to stop it defaulting to whichever
+    # product used to be the only one that existed.
+    assert_redirected_to billing_checkout_path("claudox")
   end
 
   test "success callback resend finalizes one order and one license" do

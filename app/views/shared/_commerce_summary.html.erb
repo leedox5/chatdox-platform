@@ -1,8 +1,13 @@
 <section aria-label="상품별 라이선스" class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+  <% purchasable_products = Product.order(:code).select { |product| Commerce::Sales.enabled_for?(product) } %>
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h2 class="text-lg font-bold text-gray-900">상품별 라이선스</h2>
-    <% if Commerce::Sales.enabled_for_code?("chatdox") %>
-      <%= link_to "Chatdox 구매", billing_checkout_path, class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+    <% if purchasable_products.any? %>
+      <div class="flex flex-wrap gap-4">
+        <% purchasable_products.each do |product| %>
+          <%= link_to "#{product.name} 구매", billing_checkout_path_for(product.code), class: "text-sm font-semibold text-blue-600 hover:text-blue-700" %>
+        <% end %>
+      </div>
     <% else %>
       <span class="text-sm font-semibold text-slate-500">신규 판매 준비 중</span>
     <% end %>
@@ -39,7 +44,7 @@
                   <%= link_to "환불 요청 확인", refund_request_path(open_refund.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
                 <% elsif order.status == "paid" %>
                   <%= link_to "환불 요청", new_billing_order_refund_request_path(order.public_id), class: "font-semibold text-indigo-700 hover:underline" %>
-                <% elsif (order.status == "abandoned" || (order.status == "pending" && Commerce::PendingOrderAssessment.call(order: order).safe_to_abandon)) && Commerce::Sales.enabled_for_code?("chatdox") %>
+                <% elsif (order.status == "abandoned" || (order.status == "pending" && Commerce::PendingOrderAssessment.call(order: order).safe_to_abandon)) && Commerce::Sales.enabled_for_code?(order.order_items.first&.product_code) %>
                   <%= link_to "새 주문으로 재시도", retry_billing_order_path(order.public_id), class: "font-semibold text-blue-700 hover:underline" %>
                 <% end %>
               </div>

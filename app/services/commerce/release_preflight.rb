@@ -19,14 +19,12 @@ module Commerce
     def call
       configuration = Payments::Configuration.new(provider: @provider)
       chatdox = Product.find_by(code: "chatdox")
-      claudox = Product.find_by(code: "claudox")
       checks = [
         check("migration", migrations_current?, "schema is current"),
         check("catalog_products", Product.where(code: %w[chatdox claudox]).count == 2, "expected product codes exist"),
         check("chatdox_offers", chatdox&.product_offers&.count == 4, "expected four offers"),
         check("global_sale_gate", !Commerce::Sales.globally_enabled?, "must remain disabled before approval"),
-        check("chatdox_sale_gate", chatdox.present? && !chatdox.sale_enabled?, "must remain disabled before approval"),
-        check("claudox_sale_gate", claudox.present? && !claudox.sale_enabled?, "sale disabled before approval"),
+        *product_sale_gate_checks,
         runtime_provider_check,
         configuration_check(configuration),
         check("callback_routes", callback_routes_present?, "callback and webhook routes recognized")
@@ -35,6 +33,15 @@ module Commerce
     end
 
     private
+
+    # One check per existing product, however many there end up being --
+    # so a newly seeded product is covered automatically without this file
+    # needing another named check added for it every time.
+    def product_sale_gate_checks
+      Product.order(:code).map do |product|
+        check("#{product.code}_sale_gate", !product.sale_enabled?, "must remain disabled before approval")
+      end
+    end
 
     def check(name, passed, detail)
       Check.new(name: name, status: passed ? "passed" : "failed", detail: detail)

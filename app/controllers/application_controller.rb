@@ -11,7 +11,16 @@ class ApplicationController < ActionController::Base
 
   before_action :configure_permitted_parameters, if: :devise_controller?
 
+  helper_method :billing_checkout_path_for
+
   private
+
+  # Chatdox omits the :product_code segment (bare /billing/checkout) so every
+  # existing link/bookmark/test built before checkout supported other
+  # products keeps resolving to the exact same URL.
+  def billing_checkout_path_for(product_code)
+    product_code.to_s == "chatdox" ? billing_checkout_path : billing_checkout_path(product_code)
+  end
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [ :name ])

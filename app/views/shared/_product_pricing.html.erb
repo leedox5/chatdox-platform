@@ -1,15 +1,20 @@
+<%# locals: (product_code:) %>
+<% pricing_product = Product.find_by(code: product_code) %>
+<% pricing_sales_enabled = Commerce::Sales.enabled_for?(pricing_product) %>
+<% pricing_offers = pricing_product&.product_offers&.active&.ordered || ProductOffer.none %>
+
 <section id="pricing" class="bg-white py-10 sm:py-16">
   <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
     <div class="mb-10">
-      <h2 class="break-keep text-3xl font-extrabold tracking-tight text-slate-900">Chatdox 기간별 이용 안내</h2>
+      <h2 class="break-keep text-3xl font-extrabold tracking-tight text-slate-900"><%= pricing_product&.name || product_code %> 기간별 이용 안내</h2>
       <p class="mt-3 max-w-2xl break-keep text-slate-600">자동 갱신 없는 기간제 선불 라이선스이며, 아래 금액은 모두 VAT가 포함된 실제 결제 예정 금액입니다.</p>
-      <% unless @chatdox_sales_enabled %>
+      <% unless pricing_sales_enabled %>
         <p class="mt-4 max-w-2xl rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">신규 결제 시스템을 준비 중이며 현재는 구매할 수 없습니다.</p>
       <% end %>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <% @chatdox_offers.each do |offer| %>
+      <% pricing_offers.each do |offer| %>
         <article class="rounded-2xl border border-blue-100 bg-blue-50/60 p-6 text-center">
           <h3 class="text-lg font-bold text-slate-900"><%= offer.duration_months %>개월</h3>
           <p class="mt-3 text-3xl font-black text-slate-950"><%= number_to_currency(offer.total_amount, unit: "원", format: "%n%u", precision: 0) %></p>
@@ -24,10 +29,10 @@
     </div>
 
     <div class="mt-8 max-w-3xl rounded-2xl border border-slate-200 bg-slate-50 p-6">
-      <p class="break-keep text-sm leading-6 text-slate-700">라이선스 기간에는 유료 문서와 기간 중 추가되는 콘텐츠, Chatdox Lab의 최신 버전에 접근할 수 있습니다.</p>
+      <p class="break-keep text-sm leading-6 text-slate-700">라이선스 기간에는 이용 기간 중 추가되는 콘텐츠를 포함해, 해당 상품에 포함된 모든 콘텐츠에 접근할 수 있습니다.</p>
       <p class="mt-2 break-keep text-sm leading-6 text-slate-600">환불 가능 여부와 금액은 서비스 시작일, 이용 내역 및 구매 기간을 확인한 뒤 환불 정책에 따라 처리합니다.</p>
-      <% if @chatdox_sales_enabled %>
-        <%= link_to "기간제 라이선스 구매", billing_checkout_path,
+      <% if pricing_sales_enabled %>
+        <%= link_to "기간제 라이선스 구매", billing_checkout_path_for(product_code),
           class: "mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700" %>
       <% else %>
         <span class="mt-5 inline-flex cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-6 py-3 text-sm font-semibold text-slate-600" aria-disabled="true">구매 준비 중</span>

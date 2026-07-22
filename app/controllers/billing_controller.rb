@@ -2,8 +2,10 @@ class BillingController < ApplicationController
   before_action :authenticate_user!, except: :checkout
 
   def checkout
-    @chatdox_product = Product.find_by(code: "chatdox")
-    unless Commerce::Sales.enabled_for?(@chatdox_product)
+    @product_code = params[:product_code].presence || "chatdox"
+    @product = Product.find_by(code: @product_code)
+    unless Commerce::Sales.enabled_for?(@product)
+      @product_landing_path = product_landing_path_for(@product_code)
       render :checkout
       return
     end
@@ -11,9 +13,9 @@ class BillingController < ApplicationController
     authenticate_user!
     return if performed?
 
-    @offers = @chatdox_product.product_offers.active.ordered.select(&:available_at?)
+    @offers = @product.product_offers.active.ordered.select(&:available_at?)
     @existing_license = current_user.licenses
-      .where(product: @chatdox_product)
+      .where(product: @product)
       .not_canceled
       .where("access_ends_at > ?", Time.current)
       .order(last_usable_on: :desc)
@@ -47,6 +49,17 @@ class BillingController < ApplicationController
   end
 
   private
+
+  # Every product with its own marketing landing page gets a real mapping
+  # here; anything else (no dedicated landing page yet) falls back to root
+  # rather than guessing at a URL that doesn't exist.
+  def product_landing_path_for(product_code)
+    case product_code
+    when "chatdox" then chatdox_path(anchor: "pricing")
+    when "claudox" then claudox_path
+    else root_path
+    end
+  end
 
   def process_purchase_order_success(order)
     raise Pundit::NotAuthorizedError unless order.user == current_user

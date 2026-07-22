@@ -4,9 +4,8 @@ class PagesController < ApplicationController
   end
 
   def chatdox
-    @chatdox_product = Product.find_by(code: "chatdox")
-    @chatdox_offers = @chatdox_product&.product_offers&.active&.ordered || ProductOffer.none
-    @chatdox_sales_enabled = Commerce::Sales.enabled_for?(@chatdox_product)
+    # Pricing is rendered by shared/_product_pricing, which looks up the
+    # product/offers/sales-enabled state itself from product_code alone.
   end
 
   def getting_started; end

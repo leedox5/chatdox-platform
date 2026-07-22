@@ -638,11 +638,12 @@ class LeedoxHomeTest < ActionDispatch::IntegrationTest
     assert_match(/실제 구성과 목차/, response.body)
     assert_match(/포함 항목 \/ 미포함 항목/, response.body)
     assert_match(/FAQ/, response.body)
-    assert_match(/판매 준비 중/, response.body)
+    assert_match(/구매 준비 중/, response.body)
     assert_no_match(/9,900원|평생 접근|1년 무료 업데이트|7일 이내 100% 환불/, response.body)
     assert_select "a[href=?]", claudox_read_path, text: /읽기 시작하기/
     assert_select "a[href=?]", claudox_chapter_path("01"), minimum: 1
     assert_select "a[href=?]", billing_checkout_path, count: 0
+    assert_select "a[href=?]", billing_checkout_path("claudox"), count: 0
   end
 
   test "signed-in product pages also keep the legacy checkout link hidden" do

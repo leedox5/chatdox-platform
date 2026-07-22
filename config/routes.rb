@@ -75,7 +75,7 @@ Rails.application.routes.draw do
 
   resource :github_access, only: %i[show create], controller: :github_access
 
-  get  "/billing/checkout", to: "billing#checkout", as: :billing_checkout
+  get  "/billing/checkout(/:product_code)", to: "billing#checkout", as: :billing_checkout
   get  "/billing/success",  to: "billing#success",   as: :billing_success
   post "/billing/success",  to: "billing#success"
   get  "/billing/cancel",   to: "billing#cancel",    as: :billing_cancel
