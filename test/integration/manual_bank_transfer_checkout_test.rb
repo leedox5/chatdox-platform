@@ -30,6 +30,7 @@ class ManualBankTransferCheckoutTest < ActionDispatch::IntegrationTest
     get billing_checkout_path
     assert_response :success
     assert_no_match(/신규 결제를 준비하고 있습니다/, response.body)
+    assert_select "input[type='submit'][value=?]", "주문하기"
 
     assert_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ], 1 do
       post billing_orders_path, params: {
@@ -45,6 +46,9 @@ class ManualBankTransferCheckoutTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "script[src*='portone']", count: 0
     assert_select "#payment-button", count: 0
+    assert_select "h1", text: /주문이 접수되었습니다/
+    assert_match(/결제 대기 중/, response.body)
+    assert_no_match(/주문 내용을 확인해 주세요/, response.body)
     assert_match(/카카오뱅크 3333-01-1234567/, response.body)
     assert_match(/24시간 이내 확인 후 라이선스가 발급됩니다/, response.body)
     reference = order.public_id.delete("-").first(8).upcase
@@ -146,7 +150,9 @@ class ManualBankTransferCheckoutTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "script[src*='portone']"
     assert_select "#payment-button"
+    assert_select "h1", text: "주문 내용을 확인해 주세요"
     assert_no_match(/무통장입금 안내/, response.body)
+    assert_no_match(/결제 대기 중/, response.body)
   end
 
   test "landing page and dashboard purchase links stay open without PortOne configured" do

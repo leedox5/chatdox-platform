@@ -48,6 +48,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='order[offer_code]']", count: 4
     assert_select "input[name='order[requested_start_on]'][min=?][max=?]", today.iso8601, (today + 7.days).iso8601
+    assert_select "input[type='submit'][value=?]", "주문하기"
     assert_match(/7,700원/, response.body)
 
     assert_difference [ "Order.count", "OrderItem.count", "PaymentTransaction.count" ], 1 do
@@ -75,6 +76,7 @@ class CommerceCheckoutTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_response :success
+    assert_select "h1", text: "주문 내용을 확인해 주세요"
     assert_match(/7,700원/, response.body)
     assert_match(/자동 갱신되지 않는 일회성 선불 결제/, response.body)
   end
