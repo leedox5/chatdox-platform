@@ -656,6 +656,30 @@ user.valid_password?('wrong')
 
 ---
 
+## 💡 실전 사례 — 기본 언어를 한국어로 바꿨더니 벌어진 일
+
+Devise 기본 문구(로그인 성공/실패, 비밀번호 리셋 메일 제목 등)는 전부 영어입니다. 이걸 한국어로 바꾸려고 Rails 앱의 기본 로케일을 한국어로 지정했는데, 그 순간 예상치 못한 곳이 깨질 뻔했습니다.
+
+```ruby
+# config/application.rb — 원래 있던 설정
+config.i18n.default_locale = :ko
+config.i18n.fallbacks = true   # 문제의 원인
+```
+
+`fallbacks = true`는 내부적으로 `I18n::Locale::Fallbacks.new(I18n.default_locale)`로 해석됩니다. 즉 "번역이 없으면 기본 로케일로 대체하라"는 뜻인데, 기본 로케일 자체가 `:ko`가 되어버리면 **한국어 번역이 없을 때 한국어로 대체하라**는, 자기 자신을 가리키는 의미 없는 설정이 되어버립니다. 그 결과 `devise.ko.yml`에 없는 키(예: 일반 폼 검증 메시지)를 만나면 "Translation missing"이 화면에 그대로 노출될 뻔했습니다.
+
+```ruby
+# config/application.rb — 수정 후
+config.i18n.default_locale = :ko
+config.i18n.fallbacks = [:en]   # 명시적으로 영어를 폴백으로 지정
+```
+
+`fallbacks`를 `true`(암묵적 자기참조) 대신 배열로 명시하면, 한국어 번역이 없는 키는 영어로라도 안전하게 대체됩니다.
+
+> 💡 실전 교훈: `default_locale`을 바꾸는 건 그 로케일 파일 하나만의 문제가 아닙니다. `fallbacks` 같은 다른 i18n 설정이 `default_locale`을 암묵적으로 참조하고 있다면, 함께 재검토해야 합니다.
+
+---
+
 ## 🔟 체크리스트
 
 ### 준비

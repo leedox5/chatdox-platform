@@ -1,7 +1,7 @@
 # 09. 결제 (PortOne)
 
 > Chatdox는 월 구독이 아니라 **자동 갱신 없는 기간제 선불 라이선스**를 판매합니다.
-> 결제 공급자는 **PortOne V2 하나만** 씁니다 — 처음엔 Toss Payments를 직접 연동했지만, PG 채널 교체 유연성 때문에 PortOne으로 마이그레이션하면서 신규 결제는 PortOne 경로만 남기고 강제했습니다.
+> 결제 공급자는 **PortOne V2 하나만** 씁니다 — 처음엔 Toss Payments를 직접 연동했지만, PG 채널 교체 유연성 때문에 PortOne으로 마이그레이션하면서 신규 결제는 PortOne 경로만 남기고 강제했습니다. (이후 카카오페이 심사 문제로 계좌이체를 임시 추가한 사연은 1️⃣1️⃣에서 다룹니다.)
 > 결제 성공/실패/취소, 그리고 "같은 결제를 두 번 시도했을 때 주문이 중복 생성되지 않는 것"까지 다룹니다.
 
 ---
@@ -14,6 +14,8 @@
 4. 서버 측 결제 검증(클라이언트 응답을 그대로 믿지 않는 원칙)
 5. 결제 실패/취소, 그리고 중복 주문 방지
 6. 웹훅으로 상태 동기화
+7. PG 심사가 막혔을 때의 대안 결제 수단(계좌이체) 설계
+8. 하나의 결제 인프라로 여러 상품을 지원하도록 일반화하기
 
 ---
 
@@ -340,6 +342,79 @@ end
 
 ---
 
+## 1️⃣1️⃣ 카카오페이 심사가 막혔을 때 — 계좌이체로 우회하기
+
+실제 서비스 오픈을 준비하며 카카오페이 채널을 열려고 했더니, 조건이 하나 걸려 있었습니다. **실제로 구매 가능한 상품이 2~3주간 라이브 상태로 운영되고 있어야** 심사가 진행된다는 것이었습니다. 그런데 정작 카드 결제(PortOne 채널) 승인 자체도 다른 채널 심사에 걸려 진행이 막혀 있었습니다 — 상품을 열려면 심사가 필요하고, 심사를 받으려면 상품이 열려 있어야 하는 순환 구조였습니다.
+
+이 순환을 끊는 방법은 카드/간편결제가 아닌 **수동 계좌이체**였습니다. PG 심사가 전혀 필요 없는, 가장 오래된 결제 방식으로 일단 "구매 가능한 상품"을 만드는 것이었습니다.
+
+```ruby
+# app/models/order.rb
+MANUAL_PROVIDER = "manual"
+
+# app/services/payments/gateway.rb
+PROVIDERS = %w[portone manual].freeze
+
+def self.for(provider)
+  case provider
+  when "portone" then PortoneGateway.new
+  # "manual"은 의도적으로 매핑하지 않는다 — 자동 결제 검증 대상이 아니기 때문
+  else raise "지원하지 않는 provider: #{provider}"
+  end
+end
+```
+
+계좌이체는 PG가 대신 검증해주지 않으므로, 결제 확정도 사람이 직접 처리합니다.
+
+```ruby
+# app/services/commerce/confirm_manual_payment.rb (요지)
+def call!
+  raise "이미 처리된 주문입니다" unless @order.provider == Order::MANUAL_PROVIDER
+  Commerce::OrderFinalizer.call!(order: @order, payment: manual_payment_attributes)
+end
+```
+
+어드민이 실제 입금을 은행 앱으로 확인한 뒤 "입금 확인" 버튼을 누르면, 카드 결제와 똑같은 `Commerce::OrderFinalizer`를 재사용해 라이선스를 발급합니다. 결제 방식은 다르지만 "주문이 확정되면 무슨 일이 벌어지는가"는 하나로 유지한 것입니다. 처리 기한은 24시간 SLA로 안내했습니다.
+
+> 💡 실전 교훈: 첫 설계안에는 "관리자 확인 버튼 하나만 있으면 된다"고 생각했지만, 실제 구현 과정에서 놓쳤던 관문이 세 개 더 나왔습니다(이미 처리된 주문의 재확정 방지, 계좌이체 주문에서 카드 전용 검증 로직이 잘못 타지 않게 분기, 어드민 권한 체크). 결제처럼 "돈이 걸린" 기능은 처음 떠올린 happy path보다 항상 숨은 분기가 많습니다.
+
+## 1️⃣2️⃣ 결제 인프라를 상품 무관하게 만들기
+
+계좌이체로 카카오페이 심사용 상품 하나(Chatdox)는 열었지만, 곧 두 번째 상품(Claudox)도 판매를 시작하려 하면서 문제가 드러났습니다. `billing_controller`가 애초부터 `Product.find_by(code: "chatdox")`처럼 **Chatdox 하나만 알도록 하드코딩**되어 있었던 것입니다. "상품 데이터만 새로 만들면 자동으로 반영될 것"이라는 첫 가정은 틀렸습니다.
+
+체크아웃 경로 전체를 상품 코드로 파라미터화했습니다.
+
+```ruby
+# app/controllers/billing_controller.rb (개념 발췌)
+def checkout
+  @product = Product.find_by!(code: params[:product_code] || "chatdox")
+  @provider = checkout_provider_for(@product)
+  # ...
+end
+
+private
+
+def checkout_provider_for(product)
+  Commerce::Sales.manual_only?(product) ? Order::MANUAL_PROVIDER : "portone"
+end
+```
+
+```ruby
+# config/routes.rb
+get "/billing/checkout(/:product_code)", to: "billing#checkout"
+```
+
+가격 카드도 상품별로 따로 두지 않고, `product_code` 하나만 받으면 스스로 `Product`/`ProductOffer`/판매 상태를 조회해 렌더링하는 공용 partial로 바꿨습니다.
+
+```erb
+<!-- app/views/shared/_product_pricing.html.erb -->
+<%= render "shared/product_pricing", product_code: "claudox" %>
+```
+
+이 구조가 실제로 상품 무관한지는 **세 번째 가상 상품**을 만들어 검증했습니다. 컨트롤러/뷰 코드를 한 줄도 안 건드리고 새 상품이 그대로 체크아웃까지 도는 걸 확인한 뒤에야 이 리팩터링을 완료로 표시했습니다.
+
+---
+
 ## ✅ 챕터 9 체크리스트
 
 - [ ] `Product`/`ProductOffer`/`Order`/`OrderItem`/`License`/`PaymentTransaction` 데이터 모델을 이해했다
@@ -349,6 +424,8 @@ end
 - [ ] 같은 유저·같은 상품의 pending 주문이 중복 생성되지 않는다
 - [ ] 웹훅은 서명 검증 → 중복 확인 → 서버 재조회 순서로 처리한다
 - [ ] 샌드박스 채널로 성공/실패/재시도 흐름을 실제로 검증했다
+- [ ] PG 심사가 막힌 상황에서 계좌이체 같은 대안 결제 수단을 설계할 수 있다
+- [ ] 결제 컨트롤러/라우트/뷰를 특정 상품에 종속되지 않게 파라미터화할 수 있다
 
 ### 공식 참고 문서
 
