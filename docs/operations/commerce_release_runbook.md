@@ -26,7 +26,7 @@ bin/rails db:seed
 bin/rails runner 'puts Product.order(:code).pluck(:code, :sale_enabled).inspect; puts ProductOffer.order(:code).pluck(:code, :total_amount, :currency).inspect'
 ```
 
-출력에서 상품 code 2개, Chatdox Offer 4개, Claudox Offer 0개와 승인된 catalog 금액을 대조한다. 운영자의 기존 active/판매 기간 값은 bootstrap이 덮어쓰지 않으므로 별도로 확인한다.
+출력에서 상품 code 2개, Chatdox Offer 4개, Claudox Offer 4개(Chatdox 금액의 정확히 50%)와 승인된 catalog 금액을 대조한다. 두 상품 모두 Offer가 있어도 `sale_enabled`는 별개로 관리되므로, `claudox_sale_gate` preflight 체크가 확인하는 것은 어디까지나 `sale_enabled: false` 여부이지 Offer 존재 여부가 아니다. 운영자의 기존 active/판매 기간 값은 bootstrap이 덮어쓰지 않으므로 별도로 확인한다.
 
 ## 3. PG 환경과 URL
 

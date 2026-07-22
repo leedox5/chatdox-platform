@@ -5,19 +5,30 @@ class CommerceCatalogTest < ActiveSupport::TestCase
     Commerce::CatalogBootstrap.call!
   end
 
-  test "catalog separates products and installs exact Chatdox offers only" do
+  test "catalog separates products and installs exact Chatdox and Claudox offers" do
     chatdox = Product.find_by!(code: "chatdox")
     claudox = Product.find_by!(code: "claudox")
 
     assert_equal [ "chatdox", "claudox" ], Product.order(:code).pluck(:code)
     assert_equal false, claudox.sale_enabled?
-    assert_empty claudox.product_offers
     assert_equal [
       [ "chatdox-1m-v1", 1, 7_000, 700, 7_700, 0 ],
       [ "chatdox-3m-v1", 3, 21_000, 2_100, 23_100, 0 ],
       [ "chatdox-6m-v1", 6, 37_800, 3_780, 41_580, 1_000 ],
       [ "chatdox-12m-v1", 12, 67_200, 6_720, 73_920, 2_000 ]
     ], chatdox.product_offers.ordered.pluck(
+      :code, :duration_months, :supply_amount, :vat_amount, :total_amount, :discount_bps
+    )
+
+    # Claudox pricing is exactly 50% of the matching Chatdox offer, discount_bps tiers unchanged.
+    assert_equal chatdox.product_offers.ordered.pluck(:duration_months, :discount_bps),
+      claudox.product_offers.ordered.pluck(:duration_months, :discount_bps)
+    assert_equal [
+      [ "claudox-1m-v1", 1, 3_500, 350, 3_850, 0 ],
+      [ "claudox-3m-v1", 3, 10_500, 1_050, 11_550, 0 ],
+      [ "claudox-6m-v1", 6, 18_900, 1_890, 20_790, 1_000 ],
+      [ "claudox-12m-v1", 12, 33_600, 3_360, 36_960, 2_000 ]
+    ], claudox.product_offers.ordered.pluck(
       :code, :duration_months, :supply_amount, :vat_amount, :total_amount, :discount_bps
     )
   end

@@ -26,7 +26,7 @@ module Commerce
         check("chatdox_offers", chatdox&.product_offers&.count == 4, "expected four offers"),
         check("global_sale_gate", !Commerce::Sales.globally_enabled?, "must remain disabled before approval"),
         check("chatdox_sale_gate", chatdox.present? && !chatdox.sale_enabled?, "must remain disabled before approval"),
-        check("claudox_sale_gate", claudox.present? && !claudox.sale_enabled? && claudox.product_offers.empty?, "sale disabled and no offers"),
+        check("claudox_sale_gate", claudox.present? && !claudox.sale_enabled?, "sale disabled before approval"),
         runtime_provider_check,
         configuration_check(configuration),
         check("callback_routes", callback_routes_present?, "callback and webhook routes recognized")
